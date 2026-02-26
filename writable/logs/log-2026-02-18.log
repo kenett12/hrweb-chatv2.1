@@ -1,0 +1,434 @@
+DEBUG - 2026-02-18 00:45:18 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:45:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:45:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:45:52 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:45:54 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2026-02-18 00:45:54 --> Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 5 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 00:45:54 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'tsr.username' in 'field list'
+[Method: GET, Route: superadmin/client-management]
+in SYSTEMPATH\Database\BaseConnection.php on line 724.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 2 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 4 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 5 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 00:45:54 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 310.
+ 1 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 4 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 6 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 7 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 00:45:54 --> [Caused by] mysqli_sql_exception: Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 5 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2026-02-18 00:45:57 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:45:57 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:03 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:03 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:29 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:29 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:35 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:36 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:38 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-02-18 00:46:39 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "tsr/tickets/index.php"
+[Method: GET, Route: tsr/tickets]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(226): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('tsr/tickets/index.php')
+ 2 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('tsr/tickets/index', [], true)
+ 3 APPPATH\Controllers\Tsr\TicketHandler.php(22): view('tsr/tickets/index', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Tsr\TicketHandler->index()
+ 5 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Tsr\TicketHandler))
+ 6 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2026-02-18 00:46:45 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:45 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:50 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:51 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 00:46:53 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2026-02-18 00:46:53 --> Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 5 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 00:46:53 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'tsr.username' in 'field list'
+[Method: GET, Route: superadmin/client-management]
+in SYSTEMPATH\Database\BaseConnection.php on line 724.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 2 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 4 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 5 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 00:46:53 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 310.
+ 1 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 4 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 6 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 7 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 00:46:53 --> [Caused by] mysqli_sql_exception: Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 5 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2026-02-18 01:11:11 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:17:34 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:17:34 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:17:45 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:17:45 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:17:54 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2026-02-18 02:17:54 --> Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 5 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 02:17:54 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'tsr.username' in 'field list'
+[Method: GET, Route: superadmin/client-management]
+in SYSTEMPATH\Database\BaseConnection.php on line 724.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 2 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 4 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 5 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 02:17:54 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 310.
+ 1 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 4 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 6 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 7 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-02-18 02:17:54 --> [Caused by] mysqli_sql_exception: Unknown column 'tsr.username' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = \'client\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `users`.`id`, `users`.`email`, `users`.`status`, `users`.`assigned_tsr_id`, `clients`.`company_name`, `clients`.`hr_contact`, `tsr`.`username` as `tsr_name`
+FROM `users`
+JOIN `clients` ON `clients`.`user_id` = `users`.`id`
+LEFT JOIN `users` as `tsr` ON `tsr`.`id` = `users`.`assigned_tsr_id`
+WHERE `users`.`role` = :users.role:', [...], false)
+ 5 APPPATH\Controllers\Admin\ClientController.php(27): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Admin\ClientController->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\ClientController))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2026-02-18 02:21:36 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:21:43 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:21:46 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:21:47 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:21:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:21:50 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:21:51 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:21:52 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:22:10 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:22:11 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:22:13 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:24:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:24:51 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:24:54 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:24:55 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:25:06 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:25:06 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:25:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-02-18 02:25:22 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "tsr/tickets/index.php"
+[Method: GET, Route: tsr/tickets]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(226): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('tsr/tickets/index.php')
+ 2 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('tsr/tickets/index', [], true)
+ 3 APPPATH\Controllers\Tsr\TicketHandler.php(22): view('tsr/tickets/index', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Tsr\TicketHandler->index()
+ 5 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Tsr\TicketHandler))
+ 6 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2026-02-18 02:27:39 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:27:39 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:55:58 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:55:58 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:58:33 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:58:33 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:58:40 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:58:40 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:58:55 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:00 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:33 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:34 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:38 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:39 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:41 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:44 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:47 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 02:59:51 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:00:00 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:00:06 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:00:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:02:29 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:02:31 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:03:06 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:03:09 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:05:01 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:05:03 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:05:07 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:05:09 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:11:07 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:17 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:20 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:23 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:25 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:27 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:28 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:32 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:29:35 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:31:57 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:32:00 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:32:06 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:32:08 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:32:31 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:34:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:34:28 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:37:24 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:37:27 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:39:19 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:39:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:41:08 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:41:10 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:41:59 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:42:01 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:42:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:42:51 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:43:04 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:43:13 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:43:59 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:46:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:46:50 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:47:38 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:47:41 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:49:06 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:49:09 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:49:11 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:49:25 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:49:27 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:49:31 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:50:28 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:50:30 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 03:54:19 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 05:06:32 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 06:52:25 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 06:54:09 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-18 06:59:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.

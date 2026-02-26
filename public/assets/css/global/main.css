@@ -1,0 +1,142 @@
+/* Pulse HR - Fully Colorful Professional Palette */
+:root {
+    /* Base Neutrals */
+    --primary-text: #111827;
+    --muted-text: #6b7280;
+    --bg-main: #f9fafb;
+    --sidebar-border: #f3f4f6;
+
+    /* The Vibrant Palette */
+    --clr-charcoal: #696C6F;
+    --clr-green: #20ae5c;
+    --clr-cyan: #3297ca;
+    --clr-blue: #1e72af;
+    --clr-yellow: #ffc338;
+    --clr-red: #eb6063;
+
+    /* Semantic Button Mappings */
+    --btn-primary-bg: var(--clr-charcoal);
+    --btn-success-bg: var(--clr-green);
+    --btn-info-bg: var(--clr-cyan);
+    --btn-accent-bg: var(--clr-blue);
+    --btn-warning-bg: var(--clr-yellow);
+    --btn-danger-bg: var(--clr-red);
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--primary-text);
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.01em;
+}
+
+/* --- Colorful Button System --- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 12px;
+    padding: 10px 24px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Specific Button Colors */
+.btn-primary {
+    background-color: var(--btn-primary-bg);
+    box-shadow: 0 4px 12px rgba(105, 108, 111, 0.15);
+}
+
+.btn-success {
+    background-color: var(--btn-success-bg);
+    box-shadow: 0 4px 12px rgba(32, 174, 92, 0.2);
+}
+
+.btn-info {
+    background-color: var(--btn-info-bg);
+    box-shadow: 0 4px 12px rgba(50, 151, 202, 0.2);
+}
+
+.btn-accent {
+    background-color: var(--btn-accent-bg);
+    box-shadow: 0 4px 12px rgba(30, 114, 175, 0.2);
+}
+
+.btn-warning {
+    background-color: var(--btn-warning-bg);
+    box-shadow: 0 4px 12px rgba(255, 195, 56, 0.2);
+    color: #111827;
+}
+
+.btn-danger {
+    background-color: var(--btn-danger-bg);
+    box-shadow: 0 4px 12px rgba(235, 96, 99, 0.2);
+}
+
+/* --- Badge System (Status Indicators) --- */
+.badge {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.badge-active {
+    background-color: rgba(32, 174, 92, 0.1);
+    color: var(--clr-green);
+    border: 1px solid rgba(32, 174, 92, 0.2);
+}
+
+.badge-inactive {
+    background-color: rgba(235, 96, 99, 0.1);
+    color: var(--clr-red);
+    border: 1px solid rgba(235, 96, 99, 0.2);
+}
+
+.badge-pending {
+    background-color: rgba(255, 195, 56, 0.1);
+    color: #b48a1d;
+    border: 1px solid rgba(255, 195, 56, 0.2);
+}
+
+/* --- Sidebar Vibrant Indicators --- */
+.nav-active-blue {
+    background-color: rgba(30, 114, 175, 0.05);
+    color: var(--clr-blue) !important;
+    border-left: 4px solid var(--clr-blue);
+}
+
+.nav-active-cyan {
+    background-color: rgba(50, 151, 202, 0.05);
+    color: var(--clr-cyan) !important;
+    border-left: 4px solid var(--clr-cyan);
+}
+
+.nav-active-green {
+    background-color: rgba(32, 174, 92, 0.05);
+    color: var(--clr-green) !important;
+    border-left: 4px solid var(--clr-green);
+}
+
+/* Checkbox Color */
+input[type="checkbox"] {
+    accent-color: var(--clr-green);
+}
