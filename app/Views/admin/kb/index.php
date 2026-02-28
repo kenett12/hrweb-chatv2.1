@@ -151,7 +151,7 @@
                                 </td>
                                 <td class="px-6 py-5 font-bold text-sm text-slate-800"><?= esc($art['question']) ?></td>
                                 <td class="px-10 py-5 text-right">
-                                    <button onclick="openDeleteModal('<?= base_url('superadmin/kb/delete/'.$art['id']) ?>')" 
+                                    <button onclick="confirmAction(event, '<?= base_url('superadmin/kb/delete/'.$art['id']) ?>', 'Delete this guide?', 'This will also delete the uploaded images. This action cannot be undone.', 'Delete', '#eb6063')" 
                                             class="w-9 h-9 rounded-xl bg-red-50 text-red-500 border border-red-100 transition-all hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md">
                                         <i class="fas fa-trash-alt text-xs"></i>
                                     </button>
@@ -211,21 +211,7 @@
     </div>
 </div>
 
-<div id="delete-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-6 transition-opacity">
-    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
-        <div class="p-10 text-center">
-            <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fas fa-trash-alt text-3xl text-red-500"></i>
-            </div>
-            <h3 class="font-black text-slate-900 text-xl mb-2">Delete this guide?</h3>
-            <p class="text-sm text-slate-500 font-medium">This will also delete the uploaded images. This action cannot be undone.</p>
-        </div>
-        <div class="flex p-5 gap-4 bg-slate-50 border-t border-slate-100">
-            <button onclick="document.getElementById('delete-modal').classList.add('hidden')" class="flex-1 py-3.5 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 transition-colors hover:bg-slate-100">Cancel</button>
-            <a id="confirm-delete-link" href="#" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-red-500 text-center shadow-md transition-all hover:bg-red-600 hover:shadow-lg">Delete</a>
-        </div>
-    </div>
-</div>
+
 
 <script>
     /**
@@ -277,9 +263,6 @@
         el.classList.add('ring-2', 'ring-clr-blue/20');
     }
     
-    function openDeleteModal(url) { 
-        document.getElementById('confirm-delete-link').href = url; 
-        document.getElementById('delete-modal').classList.remove('hidden'); 
-    }
+
 </script>
 <?= $this->endSection() ?>

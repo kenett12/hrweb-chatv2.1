@@ -31,7 +31,7 @@
                     <div class="p-6 text-center text-gray-400 text-xs font-medium">Loading...</div>
                 </div>
                 <div class="p-3 border-t border-gray-50 bg-gray-50 text-center">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Global Event Stream</span>
+                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">All Notifications</span>
                 </div>
             </div>
         </div>

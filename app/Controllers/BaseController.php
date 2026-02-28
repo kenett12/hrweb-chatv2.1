@@ -56,5 +56,50 @@ abstract class BaseController extends Controller
             'userEmail'  => $this->session->get('email'),
             'isLoggedIn' => $this->session->get('isLoggedIn')
         ];
+
+        // 3. Automated Analytics Tracking for Clients
+        if ($this->session->get('role') === 'client') {
+            $this->recordAnalytics();
+        }
+    }
+
+    /**
+     * recordAnalytics
+     * Background tracking for visitors and page views.
+     */
+    protected function recordAnalytics()
+    {
+        $db = \Config\Database::connect();
+        $userId = $this->session->get('id');
+        $sessionId = session_id();
+        $ip = $this->request->getIPAddress();
+        $today = date('Y-m-d');
+
+        // 1. Always track as Page View
+        $db->table('analytics')->insert([
+            'client_id'  => $userId,
+            'type'       => 'page_view',
+            'ip_address' => $ip,
+            'session_id' => $sessionId,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // 2. Track as Visitor if first time for this session today
+        $exists = $db->table('analytics')
+                    ->where('client_id', $userId)
+                    ->where('session_id', $sessionId)
+                    ->where('type', 'visitor')
+                    ->where('created_at >=', $today . ' 00:00:00')
+                    ->countAllResults();
+
+        if ($exists === 0) {
+            $db->table('analytics')->insert([
+                'client_id'  => $userId,
+                'type'       => 'visitor',
+                'ip_address' => $ip,
+                'session_id' => $sessionId,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
     }
 }

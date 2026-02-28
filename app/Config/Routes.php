@@ -55,6 +55,8 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin'], function($routes) 
 // --- Client Routes ---
 $routes->group('client', ['filter' => 'auth:client'], function($routes) {
     $routes->get('dashboard', 'Client\Dashboard::index');
+    $routes->get('settings', 'Client\Dashboard::settings');
+    $routes->post('settings/update', 'Client\Dashboard::updateSettings');
     
     // ── FIXED CHAT ROUTES ───────────────────────────────────────
     // 1. Match the base 'client/chat' to the new directory view

@@ -70,7 +70,7 @@
                                         title="Edit Account">
                                         <span class="material-symbols-outlined text-[20px]">edit_square</span>
                                     </button>
-                                    <button
+                                    <button onclick="confirmAction(event, '<?= base_url('superadmin/tsr-management/delete/'.$tsr['id']) ?>', 'Delete TSR Account?', 'WARNING: This action cannot be undone and will permanently revoke their system access!', 'Yes, delete it', '#eb6063')"
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#eb6063] hover:bg-red-50 rounded-xl transition-all"
                                         title="Remove Account">
                                         <span class="material-symbols-outlined text-[20px]">delete</span>
@@ -140,9 +140,14 @@
                 <div>
                     <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Temp
                         Password</label>
-                    <input type="password" name="password"
-                        class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#3297ca]/10 focus:border-[#3297ca] outline-none transition-all text-gray-900 font-semibold"
-                        required>
+                    <div class="relative">
+                        <input type="password" name="password" id="tsr_password"
+                            class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#3297ca]/10 focus:border-[#3297ca] outline-none transition-all text-gray-900 font-semibold pr-12"
+                            required>
+                        <button type="button" onclick="togglePassword('tsr_password', 'eyeIconTsr')" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors flex items-center focus:outline-none">
+                            <span class="material-symbols-outlined notranslate text-[22px]" id="eyeIconTsr">visibility</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -155,4 +160,21 @@
         </form>
     </div>
 </div>
+
+<script>
+    /**
+     * Toggles password visibility between text and dots
+     */
+    function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const eyeIcon = document.getElementById(iconId);
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.textContent = 'visibility_off';
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.textContent = 'visibility';
+        }
+    }
+</script>
 <?= $this->endSection() ?>

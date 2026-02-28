@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'System Registry' ?> | Pulse HR</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -16,10 +16,22 @@
 
     <link rel="stylesheet" href="<?= base_url('assets/css/global/main.css') ?>?v=<?= time() ?>">
 
+    <script>
+        // Prevent FOUC (Flash of Unstyled Content) for the sidebar collapse state
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-is-collapsed');
+        }
+    </script>
+
     <?= $this->renderSection('styles') ?>
 </head>
 
 <body class="bg-[#f9fafb] text-gray-900 h-screen flex overflow-hidden">
+
+    <!-- Global Preloader Overlay -->
+    <div id="globalPreloader">
+        <div class="preloader-spinner"></div>
+    </div>
 
     <?php if (!url_is('login*') && !url_is('auth*')): ?>
         <?= $this->include('shared/sidebar') ?>

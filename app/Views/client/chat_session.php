@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support | HRWeb Inc.</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="<?= base_url('assets/css/client/chat-ui.css') ?>">
 
@@ -97,7 +97,7 @@
                     <span id="connection-dot-main" class="absolute bottom-0 right-0 h-3 w-3 bg-gray-400 rounded-full border-2 border-white transition-colors duration-300"></span>
                 </div>
                 <div>
-                    <h1 class="text-[15px] font-bold text-gray-900 leading-tight" style="font-family:'DM Sans',sans-serif">HRWeb Support</h1>
+                    <h1 class="text-[15px] font-bold text-gray-900 leading-tight" style="font-family:'Roboto',sans-serif">HRWeb Support</h1>
                     <div class="flex items-center gap-1.5 mt-0.5">
                         <span id="connection-dot" class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span>
                         <span id="connection-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Connecting...</span>
@@ -132,7 +132,7 @@
                     </div>
                     <div class="flex flex-col gap-0.5 <?= $isMe ? 'items-end' : '' ?>">
                         <?php if ($isNewGroup): ?>
-                            <span class="text-[10px] font-semibold text-gray-400 px-1 <?= $isMe ? 'text-right' : '' ?>" style="font-family:'DM Sans',sans-serif">
+                            <span class="text-[10px] font-semibold text-gray-400 px-1 <?= $isMe ? 'text-right' : '' ?>" style="font-family:'Roboto',sans-serif">
                                 <?php 
                                     if ($isBot) {
                                         echo 'HRWeb Bot';
@@ -422,7 +422,7 @@
                         ${iconHtml}
                     </div>
                     <div class="flex flex-col gap-0.5 ${isMe ? 'items-end' : ''}">
-                        <span class="text-[10px] font-semibold text-gray-400 px-1 ${isMe ? 'text-right' : ''}" style="font-family:'DM Sans',sans-serif">
+                        <span class="text-[10px] font-semibold text-gray-400 px-1 ${isMe ? 'text-right' : ''}" style="font-family:'Roboto',sans-serif">
                             ${displayName}
                         </span>
                         <div class="msg-bubble ${isMe ? 'msg-user' : 'msg-bot'}">

@@ -62,7 +62,7 @@
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#1e72af] hover:bg-blue-50 rounded-xl transition-all">
                                         <span class="material-symbols-outlined text-[20px]">edit_square</span>
                                     </button>
-                                    <button onclick="confirmClientDelete(<?= $client['id'] ?>)"
+                                    <button onclick="confirmAction(event, '<?= base_url('superadmin/client-management/delete/'.$client['id']) ?>', 'Delete Corporate Client?', 'WARNING: This action cannot be undone and will permanently revoke their system access!', 'Yes, delete it', '#eb6063')"
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#eb6063] hover:bg-red-50 rounded-xl transition-all">
                                         <span class="material-symbols-outlined text-[20px]">delete</span>
                                     </button>
@@ -134,9 +134,14 @@
                         <div>
                             <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Temp
                                 Password</label>
-                            <input type="password" name="password"
-                                class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#3297ca]/10 focus:border-[#3297ca] outline-none transition-all text-gray-900 font-semibold"
-                                required>
+                            <div class="relative">
+                                <input type="password" name="password" id="add_client_password"
+                                    class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#3297ca]/10 focus:border-[#3297ca] outline-none transition-all text-gray-900 font-semibold pr-12"
+                                    required>
+                                <button type="button" onclick="togglePassword('add_client_password', 'eyeIconAddClient')" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors flex items-center focus:outline-none">
+                                    <span class="material-symbols-outlined notranslate text-[22px]" id="eyeIconAddClient">visibility</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -205,9 +210,14 @@
                         <div>
                             <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">New
                                 Password <span class="text-gray-400 normal-case font-normal">(Optional)</span></label>
-                            <input type="password" name="password"
-                                class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#3297ca]/10 focus:border-[#3297ca] outline-none transition-all text-gray-900 font-semibold"
-                                placeholder="Leave blank to keep current">
+                            <div class="relative">
+                                <input type="password" name="password" id="edit_client_password"
+                                    class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#3297ca]/10 focus:border-[#3297ca] outline-none transition-all text-gray-900 font-semibold pr-12"
+                                    placeholder="Leave blank to keep current">
+                                <button type="button" onclick="togglePassword('edit_client_password', 'eyeIconEditClient')" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors flex items-center focus:outline-none">
+                                    <span class="material-symbols-outlined notranslate text-[22px]" id="eyeIconEditClient">visibility</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -257,26 +267,21 @@
         toggleModal('editClientModal');
     }
 
-    function confirmClientDelete(id) {
-        Swal.fire({
-            title: 'Delete Corporate Client?',
-            text: "WARNING: This action cannot be undone and will permanently revoke their system access!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#eb6063',
-            cancelButtonColor: '#9ca3af',
-            confirmButtonText: '<span class="font-bold tracking-wider uppercase text-xs">Yes, delete it</span>',
-            cancelButtonText: '<span class="font-bold tracking-wider uppercase text-xs">Cancel</span>',
-            customClass: {
-                popup: 'rounded-3xl',
-                confirmButton: 'rounded-xl px-6 py-3',
-                cancelButton: 'rounded-xl px-6 py-3'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = `<?= base_url('superadmin/client-management/delete') ?>/${id}`;
-            }
-        });
+    // confirmClientDelete is removed in favor of global confirmAction
+
+    /**
+     * Toggles password visibility between text and dots
+     */
+    function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const eyeIcon = document.getElementById(iconId);
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.textContent = 'visibility_off';
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.textContent = 'visibility';
+        }
     }
 </script>
 <?= $this->endSection() ?>

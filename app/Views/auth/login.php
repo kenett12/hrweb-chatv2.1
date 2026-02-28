@@ -6,12 +6,12 @@
     <title>Login | HRWeb Inc.</title>
     
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
     <style>
         /* Set base font */
-        body { font-family: 'DM Sans', sans-serif; }
+        body { font-family: 'Roboto', sans-serif; }
 
         /* Material Symbols Rendering Fix */
         .material-symbols-outlined {
@@ -55,6 +55,11 @@
     </style>
 </head>
 <body class="bg-white">
+
+<!-- Global Preloader Overlay -->
+<div id="globalPreloader" style="background-color: #ffffff;">
+    <div class="preloader-spinner"></div>
+</div>
 
 <div class="flex h-screen overflow-hidden">
     <div class="hidden lg:block lg:w-[65%] relative bg-cover bg-center" 
@@ -112,10 +117,10 @@
                         <?= form_password([
                             'name' => 'password',
                             'id' => 'password',
-                            'class' => 'input-vibrant w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all',
+                            'class' => 'input-vibrant w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all pr-12',
                             'required' => 'required'
                         ]) ?>
-                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors flex items-center">
+                        <button type="button" onclick="togglePassword('password', 'eyeIcon')" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors flex items-center focus:outline-none">
                             <span class="material-symbols-outlined notranslate text-[22px]" id="eyeIcon">visibility</span>
                         </button>
                     </div>
@@ -148,9 +153,9 @@
     /**
      * Toggles password visibility between text and dots
      */
-    function togglePassword() {
-        const passwordInput = document.getElementById('password');
-        const eyeIcon = document.getElementById('eyeIcon');
+    function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const eyeIcon = document.getElementById(iconId);
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
             eyeIcon.textContent = 'visibility_off';
@@ -160,6 +165,8 @@
         }
     }
 </script>
+</script>
 
+<script src="<?= base_url('assets/js/global/utils.js') ?>?v=<?= time() ?>"></script>
 </body>
 </html>
