@@ -31,10 +31,85 @@ class TsrController extends BaseController
         $builder->where('users.role', 'tsr');
         $query = $builder->get();
 
-        // 3. Populate shared viewData for the Sidebar and Header
         $this->viewData['title'] = 'TSR Management';
         $this->viewData['page_title'] = 'Technical Support Accounts';
-        $this->viewData['tsr_list'] = $query->getResultArray();
+        $tsrList = $query->getResultArray();
+        
+        // --- KPI Calculations ---
+        // 1. Fetch system settings for min target
+        $minTargetQuery = $db->table('system_settings')->where('setting_key', 'min_tsr_leads')->get()->getRow();
+        $minTarget = $minTargetQuery ? (int)$minTargetQuery->setting_value : 10;
+        
+        // 2. Fetch all clients to tally assignments
+        $clientsQuery = $db->table('clients')->select('company_name, hr_contact')->get()->getResultArray();
+        
+        // Detail Assignments Array: [ ['company' => 'A', 'lead' => '', 'co1' => '', 'co2' => ''], ... ]
+        $detailedAssignments = [];
+        
+        // Initialize KPI array per TSR
+        $kpiData = [];
+        foreach ($tsrList as $tsr) {
+            $kpiData[$tsr['email']] = [
+                'name' => $tsr['full_name'],
+                'leads' => 0,
+                'coleads' => 0,
+                'utilization' => 0
+            ];
+        }
+
+        foreach ($clientsQuery as $client) {
+            $contacts = json_decode($client['hr_contact'], true);
+            if (is_array($contacts)) {
+                $lead = $contacts['lead'] ?? null;
+                $co1 = $contacts['co1'] ?? null;
+                $co2 = $contacts['co2'] ?? null;
+                
+                // Add to detailed assignments list regardless of whether they have assignments or not
+                $detailedAssignments[] = [
+                    'company' => $client['company_name'],
+                    'lead' => $lead,
+                    'co1' => $co1,
+                    'co2' => $co2
+                ];
+
+                // Tally Lead
+                if ($lead && isset($kpiData[$lead])) {
+                    $kpiData[$lead]['leads']++;
+                }
+                
+                // Tally Co-Lead (Only count unique distinct co-leads for the client if they are the same person assigned twice accidentally)
+                $uniqueCoLeads = array_unique(array_filter([$co1, $co2]));
+                foreach ($uniqueCoLeads as $coTsr) {
+                    if (isset($kpiData[$coTsr])) {
+                        // Optional: if a TSR is already a lead, do not count as a co-lead for the SAME company, even if selected.
+                        if ($coTsr !== $lead) {
+                            $kpiData[$coTsr]['coleads']++;
+                        }
+                    }
+                }
+            } else {
+                // If the contacts array is empty, invalid, or legacy format without lead/co1 targets, still add empty state to map
+                $detailedAssignments[] = [
+                    'company' => $client['company_name'],
+                    'lead' => null,
+                    'co1' => null,
+                    'co2' => null
+                ];
+            }
+        }
+
+        // Compute % Utilization based on Leads
+        foreach ($kpiData as $email => &$data) {
+            if ($minTarget > 0) {
+                $data['utilization'] = round(($data['leads'] / $minTarget) * 100);
+            }
+        }
+        unset($data);
+
+        $this->viewData['tsr_list'] = $tsrList;
+        $this->viewData['kpi_data'] = $kpiData;
+        $this->viewData['detailed_assignments'] = $detailedAssignments;
+        $this->viewData['min_target'] = $minTarget;
 
         // 4. Load the view from the organized sub-folder
         return view('admin/pages/tsr_management', $this->viewData);
@@ -48,10 +123,53 @@ class TsrController extends BaseController
         $userModel = new UserModel();
         $tsrModel = new TsrModel();
 
-        $email = $this->request->getPost('email');
+        $emailPrefix = $this->request->getPost('email_prefix');
+        $email = $emailPrefix ? strtolower($emailPrefix . '@hrweb.ph') : '';
+        
         $password = $this->request->getPost('password');
         $fullName = $this->request->getPost('full_name');
         $empId = $this->request->getPost('employee_id');
+
+        // Validation Rules
+        $validationRules = [
+            'full_name' => [
+                'rules' => 'required|min_length[3]|max_length[100]|alpha_space',
+                'errors' => [
+                    'alpha_space' => 'Full name can only contain alphabetical characters and spaces.'
+                ]
+            ],
+            'employee_id' => [
+                'rules' => 'required|regex_match[/^[A-Za-z]{3}-\d{4}$/]|is_unique[tsrs.employee_id]',
+                'errors' => [
+                    'regex_match' => 'Employee ID must be exactly 3 letters followed by 4 numbers (e.g., AAA-0000).',
+                    'is_unique' => 'This Employee ID is already registered.'
+                ]
+            ],
+            'email_prefix' => [
+                'rules' => 'required|regex_match[/^[a-zA-Z0-9_\.]+$/]',
+                'errors' => [
+                    'regex_match' => 'Email prefix can only contain letters, numbers, dots, and underscores.'
+                ]
+            ],
+            'password' => [
+                'rules' => 'required|min_length[8]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/]',
+                'errors' => [
+                    'regex_match' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
+                    'min_length' => 'Password must be at least 8 characters long.'
+                ]
+            ]
+        ];
+
+        if (!$this->validate($validationRules)) {
+            $errors = $this->validator->getErrors();
+            $firstError = reset($errors);
+            return redirect()->back()->withInput()->with('error', $firstError);
+        }
+
+        // Manual uniqueness check since we combined the email manually
+        if ($userModel->where('email', $email)->first()) {
+            return redirect()->back()->withInput()->with('error', 'This Email Address is already registered.');
+        }
 
         // Step A: Insert into the Parent 'users' table
         $userData = [
@@ -75,5 +193,27 @@ class TsrController extends BaseController
         }
 
         return redirect()->back()->with('error', 'Failed to create account.');
+    }
+
+    /**
+     * Delete a TSR account and its related user record
+     */
+    public function delete($id)
+    {
+        $userModel = new UserModel();
+        $tsrModel = new TsrModel();
+
+        // Verify the user is a TSR before deleting
+        $user = $userModel->find($id);
+        if ($user && $user['role'] === 'tsr') {
+            // Delete the related tsrs sub-record first
+            $tsrModel->where('user_id', $id)->delete();
+
+            if ($userModel->delete($id)) {
+                return redirect()->back()->with('success', 'TSR account deleted successfully.');
+            }
+        }
+
+        return redirect()->back()->with('error', 'Failed to delete TSR account.');
     }
 }

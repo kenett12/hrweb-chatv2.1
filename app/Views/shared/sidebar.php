@@ -107,6 +107,13 @@
                     class="material-symbols-outlined nav-icon text-[22px] transition-colors shrink-0 <?= url_is("superadmin/tickets*") ? "text-[#1e72af]" : "group-hover:text-[#1e72af]" ?>">confirmation_number</span>
                 <span class="sidebar-text text-[15px] whitespace-nowrap overflow-hidden">All Support Tickets</span>
             </a>
+
+            <a href="<?= base_url("superadmin/system-management") ?>"
+                class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all group <?= url_is("superadmin/system-management*") ? "bg-purple-50/50 text-[#8b5cf6] font-bold" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900" ?>" title="System Settings">
+                <span
+                    class="material-symbols-outlined nav-icon text-[22px] transition-colors shrink-0 <?= url_is("superadmin/system-management*") ? "text-[#8b5cf6]" : "group-hover:text-[#8b5cf6]" ?>">settings_alert</span>
+                <span class="sidebar-text text-[15px] whitespace-nowrap overflow-hidden">System Settings</span>
+            </a>
         <?php endif; ?>
 
         <?php if ($userRole === "client"): ?>

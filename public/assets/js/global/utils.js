@@ -60,22 +60,83 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // 3. Form Submit Button Loading State
+    // 3. Form Submit Button Loading State & Global Confirmation
     document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function () {
-            // Find the submit button natively
-            const submitBtn = this.querySelector('button[type="submit"], input[type="submit"]');
+        form.addEventListener('submit', function (e) {
+            const formEl = this;
+            const submitBtn = formEl.querySelector('button[type="submit"], input[type="submit"]');
 
-            if (submitBtn && !submitBtn.classList.contains('btn-loading')) {
-                // If it's a login button or general button, keep its width via computed style
-                submitBtn.style.width = submitBtn.offsetWidth + 'px';
-                submitBtn.style.height = submitBtn.offsetHeight + 'px';
+            // Skip forms with `.no-confirm` or specific IDs that shouldn't prompt
+            const fId = (formEl.id || '').toLowerCase();
+            const excludeWords = ['chat', 'reply', 'login', 'forgot', 'reset', 'search', 'filter'];
+            const isExcluded = formEl.classList.contains('no-confirm') ||
+                excludeWords.some(w => fId.includes(w));
 
-                // Add the loading spinner CSS class
-                submitBtn.classList.add('btn-loading');
+            const method = (formEl.getAttribute('method') || '').toUpperCase();
 
-                // Set original text aside in case we need it, but the CSS hides it anyway
-                submitBtn.setAttribute('data-original-text', submitBtn.innerHTML);
+            // Function to handle loading state visuals
+            const setLoadingState = () => {
+                if (submitBtn && !submitBtn.classList.contains('btn-loading')) {
+                    submitBtn.style.width = submitBtn.offsetWidth + 'px';
+                    submitBtn.style.height = submitBtn.offsetHeight + 'px';
+                    submitBtn.classList.add('btn-loading');
+                    submitBtn.setAttribute('data-original-text', submitBtn.innerHTML);
+                }
+            };
+
+            // Only prompt for POST forms that aren't excluded
+            if (method === 'POST' && !isExcluded) {
+                // If the user already confirmed via SweetAlert
+                if (formEl.dataset.confirmed === 'true') {
+                    setLoadingState();
+                    return; // Let native submission proceed
+                }
+
+                // Pause submission to ask for confirmation
+                e.preventDefault();
+
+                // 🚨 BUG FIX: Ensure HTML5 Validation runs first!
+                if (!formEl.checkValidity()) {
+                    formEl.reportValidity(); // Shows native browser tooltips
+                    return; // Stop here, do not show SweetAlert
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Confirm Submission?',
+                        text: 'Are you sure you want to proceed and save this entry?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3297ca',
+                        cancelButtonColor: '#9ca3af',
+                        confirmButtonText: '<span class="font-bold tracking-wider uppercase text-xs">Yes, Proceed</span>',
+                        cancelButtonText: '<span class="font-bold tracking-wider uppercase text-xs">Review</span>',
+                        customClass: {
+                            popup: 'rounded-3xl',
+                            confirmButton: 'rounded-xl px-6 py-3',
+                            cancelButton: 'rounded-xl px-6 py-3'
+                        },
+                        didOpen: () => {
+                            document.querySelector('.swal2-container').style.zIndex = '9999';
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            formEl.dataset.confirmed = 'true'; // Set flag
+                            setLoadingState(); // UI feedback
+                            formEl.submit(); // Manually submit
+                        }
+                    });
+                } else {
+                    // Fallback to native browser alert
+                    if (confirm('Are you sure you want to proceed with this entry?')) {
+                        formEl.dataset.confirmed = 'true';
+                        setLoadingState();
+                        formEl.submit();
+                    }
+                }
+            } else {
+                // For GET forms or excluded forms, just apply the loading state
+                setLoadingState();
             }
         });
     });
@@ -130,6 +191,9 @@ function confirmAction(e, url, title, text, confirmBtnText = 'Yes, continue', co
                 popup: 'rounded-3xl',
                 confirmButton: 'rounded-xl px-6 py-3',
                 cancelButton: 'rounded-xl px-6 py-3'
+            },
+            didOpen: () => {
+                document.querySelector('.swal2-container').style.zIndex = '9999';
             }
         }).then((result) => {
             if (result.isConfirmed) {

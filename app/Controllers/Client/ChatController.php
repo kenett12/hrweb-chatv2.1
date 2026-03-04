@@ -147,15 +147,22 @@ class ChatController extends BaseController
                 $rawAnswerToSave = "[ARTICLE_ID:" . $bestMatch['id'] . "]\n" . $bestMatch['answer'];
                 $replyToReturn = $this->renderBotContent($rawAnswerToSave);
             } else {
-                $rawAnswerToSave = "I'm sorry, I don't recognize that request yet. Try using keywords related to your issue.";
-                $replyToReturn = $rawAnswerToSave;
+                // === SMART AI RAG INTEGRATION ===
+                helper('rag'); // Load the smart helper
+                $contextChunks = searchContextSync($userMsg, 10);
+                
+                // Log unanswered queries for manual KB improvement since there was no exact match or context
+                if (empty($contextChunks)) {
+                    $db->table('bot_unanswered_queries')->insert([
+                        'client_id'  => $userId,
+                        'user_query' => esc($rawMsg), 
+                        'created_at' => date('Y-m-d H:i:s')
+                    ]);
+                }
 
-                // Log unanswered queries for manual KB improvement
-                $db->table('bot_unanswered_queries')->insert([
-                    'client_id'  => $userId,
-                    'user_query' => esc($rawMsg), 
-                    'created_at' => date('Y-m-d H:i:s')
-                ]);
+                // Call Ollama regardless of context so it can handle greetings and general conversation
+                $rawAnswerToSave = callOllamaSync($userMsg, $contextChunks);
+                $replyToReturn = nl2br(parseBasicMarkdown($rawAnswerToSave));
             }
 
             $this->saveToThread($ticketId, $userId, $rawMsg, $rawAnswerToSave);
@@ -187,6 +194,7 @@ class ChatController extends BaseController
                 'reply' => $replyToReturn
             ]);
         } catch (\Throwable $e) {
+            log_message('critical', $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->response->setStatusCode(500)->setJSON(['error' => $e->getMessage()]);
         }
     }

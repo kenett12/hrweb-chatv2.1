@@ -64,8 +64,15 @@
                 <i class="fas fa-id-card-alt text-xl"></i>
             </div>
             <div class="pr-4">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Primary HR Contact</p>
-                <p class="text-base font-black text-gray-900"><?= $hr_contact ?></p>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assigned HR Representatives</p>
+                <?php 
+                    $contacts = json_decode($hr_contact, true);
+                    if (is_array($contacts) && !empty($contacts)) {
+                        echo '<p class="text-base font-black text-gray-900 leading-tight">'.implode('<br>', array_map('esc', $contacts)).'</p>';
+                    } else {
+                        echo '<p class="text-base font-black text-gray-900">'.esc($hr_contact).'</p>';
+                    }
+                ?>
             </div>
         </div>
     </div>

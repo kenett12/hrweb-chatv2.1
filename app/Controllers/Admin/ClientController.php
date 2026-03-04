@@ -7,7 +7,7 @@ use App\Models\UserModel;
 use App\Models\ClientModel;
 
 /**
- * ClientController handles corporate client accounts.
+ * ClientController handles corporate client accounts and sub-accounts.
  */
 class ClientController extends BaseController
 {
@@ -19,10 +19,9 @@ class ClientController extends BaseController
 
         $db = \Config\Database::connect();
 
-        $builder = $db->table('users');
-        $builder->select('users.id, users.email, users.status, clients.company_name, clients.hr_contact');
-        $builder->join('clients', 'clients.user_id = users.id');
-        $builder->where('users.role', 'client');
+        $builder = $db->table('clients');
+        $builder->select('clients.id as client_id, clients.company_name, clients.hr_contact, (SELECT COUNT(id) FROM users WHERE users.client_id = clients.id) as account_count');
+        $builder->orderBy('clients.id', 'DESC');
         $query = $builder->get();
 
         $this->viewData['title'] = 'Client Management';
@@ -42,85 +41,153 @@ class ClientController extends BaseController
 
     public function store()
     {
-        $userModel = new UserModel();
         $clientModel = new ClientModel();
 
+        $companyName = $this->request->getPost('company_name');
+        
+        $leadTsr = $this->request->getPost('lead_tsr');
+        $coTsr1 = $this->request->getPost('co_tsr_1');
+        $coTsr2 = $this->request->getPost('co_tsr_2');
+
+        // Create structured JSON object
+        $hrContactData = [
+            'lead' => $leadTsr,
+            'co1'  => $coTsr1,
+            'co2'  => $coTsr2
+        ];
+        $hrContactJson = json_encode($hrContactData);
+
+        if ($clientModel->insert([
+            'user_id' => null, // No main user ID anymore
+            'company_name' => $companyName,
+            'hr_contact' => $hrContactJson
+        ])) {
+            return redirect()->back()->with('success', 'Corporate Company created successfully.');
+        }
+
+        return redirect()->back()->with('error', 'Failed to create corporate company.');
+    }
+
+    public function update($id)
+    {
+        $clientModel = new ClientModel();
+
+        $companyName = $this->request->getPost('company_name');
+        
+        $leadTsr = $this->request->getPost('lead_tsr');
+        $coTsr1 = $this->request->getPost('co_tsr_1');
+        $coTsr2 = $this->request->getPost('co_tsr_2');
+
+        // Create structured JSON object
+        $hrContactData = [
+            'lead' => $leadTsr,
+            'co1'  => $coTsr1,
+            'co2'  => $coTsr2
+        ];
+        $hrContactJson = json_encode($hrContactData);
+
+        $clientRecord = $clientModel->find($id);
+        if ($clientRecord) {
+            $clientModel->update($id, [
+                'company_name' => $companyName,
+                'hr_contact'   => $hrContactJson
+            ]);
+            return redirect()->back()->with('success', 'Company updated successfully.');
+        }
+
+        return redirect()->back()->with('error', 'Company record not found.');
+    }
+
+    public function delete($id)
+    {
+        $clientModel = new ClientModel();
+        $userModel = new UserModel();
+
+        $clientRecord = $clientModel->find($id);
+        if ($clientRecord) {
+            // Delete all sub-accounts under this company first
+            $userModel->where('client_id', $id)->delete();
+            
+            // Delete the company
+            if ($clientModel->delete($id)) {
+                return redirect()->back()->with('success', 'Company and all associated accounts deleted successfully.');
+            }
+        }
+
+        return redirect()->back()->with('error', 'Failed to delete company.');
+    }
+
+    // --- SUB-ACCOUNT METHODS ---
+
+    public function getAccounts($clientId)
+    {
+        if ($this->session->get('role') !== 'superadmin') {
+            return $this->response->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $userModel = new UserModel();
+        $accounts = $userModel->select('id, email, status, client_role')
+                              ->where('client_id', $clientId)
+                              ->where('role', 'client')
+                              ->findAll();
+
+        return $this->response->setJSON($accounts);
+    }
+
+    public function storeAccount()
+    {
+        $userModel = new UserModel();
+
+        $clientId = $this->request->getPost('client_id');
         $email = $this->request->getPost('email');
         $password = $this->request->getPost('password');
-        $companyName = $this->request->getPost('company_name');
-        $hrContact = $this->request->getPost('hr_contact');
+        $clientRole = $this->request->getPost('client_role');
 
         $userData = [
             'email' => $email,
             'password' => password_hash($password, PASSWORD_DEFAULT),
             'role' => 'client',
+            'client_id' => $clientId,
+            'client_role' => $clientRole,
             'status' => 'active'
         ];
 
         if ($userModel->insert($userData)) {
-            $newUserId = $userModel->insertID();
-
-            $clientModel->insert([
-                'user_id' => $newUserId,
-                'company_name' => $companyName,
-                'hr_contact' => $hrContact
-            ]);
-
-            return redirect()->back()->with('success', 'Client Account created successfully.');
+            return redirect()->back()->with('success', 'Sub-Account created successfully.');
         }
 
-        return redirect()->back()->with('error', 'Failed to create account.');
+        return redirect()->back()->with('error', 'Failed to create sub-account.');
     }
 
-    public function update($id)
+    public function updateAccount($id)
     {
         $userModel = new UserModel();
-        $clientModel = new ClientModel();
 
-        $companyName = $this->request->getPost('company_name');
-        $hrContact = $this->request->getPost('hr_contact');
-        
-        // Update user's email if provided
         $email = $this->request->getPost('email');
-        if (!empty($email)) {
-            $userModel->update($id, ['email' => $email]);
-        }
-
-        // Handle optional password update
         $password = $this->request->getPost('password');
-        if (!empty($password)) {
-            $userModel->update($id, ['password' => password_hash($password, PASSWORD_DEFAULT)]);
+        $clientRole = $this->request->getPost('client_role');
+
+        $updateData = [];
+        if (!empty($email)) $updateData['email'] = $email;
+        if (!empty($password)) $updateData['password'] = password_hash($password, PASSWORD_DEFAULT);
+        if (!empty($clientRole)) $updateData['client_role'] = $clientRole;
+
+        if (!empty($updateData)) {
+            if ($userModel->update($id, $updateData)) {
+                return redirect()->back()->with('success', 'Sub-Account updated successfully.');
+            }
         }
 
-        // Update client specific data using user_id as the foreign key reference
-        // Note: The param $id is the user.id, so we must find the client record by user_id
-        $clientRecord = $clientModel->where('user_id', $id)->first();
-        if ($clientRecord) {
-            $clientModel->update($clientRecord['id'], [
-                'company_name' => $companyName,
-                'hr_contact'   => $hrContact
-            ]);
-            return redirect()->back()->with('success', 'Client updated successfully.');
-        }
-
-        return redirect()->back()->with('error', 'Client record not found.');
+        return redirect()->back()->with('error', 'Failed to update sub-account.');
     }
 
-    public function delete($id)
+    public function deleteAccount($id)
     {
         $userModel = new UserModel();
-        $clientModel = new ClientModel();
-
-        // The user ID is sent. Delete the client first, then the user.
-        $clientRecord = $clientModel->where('user_id', $id)->first();
-        if ($clientRecord) {
-            $clientModel->delete($clientRecord['id']);
-        }
-        
         if ($userModel->delete($id)) {
-            return redirect()->back()->with('success', 'Client account deleted successfully.');
+            return redirect()->back()->with('success', 'Sub-Account deleted successfully.');
         }
 
-        return redirect()->back()->with('error', 'Failed to delete client account.');
+        return redirect()->back()->with('error', 'Failed to delete sub-account.');
     }
 }

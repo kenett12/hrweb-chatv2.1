@@ -25,10 +25,18 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin'], function($routes) 
     $routes->get('dashboard', 'Admin\Dashboard::index');
     $routes->get('tsr-management', 'Admin\TsrController::index');
     $routes->post('tsr-management/store', 'Admin\TsrController::store'); 
+    $routes->get('tsr-management/delete/(:num)', 'Admin\TsrController::delete/$1');
     $routes->get('client-management', 'Admin\ClientController::index');
     $routes->post('client-management/store', 'Admin\ClientController::store');
     $routes->post('client-management/update/(:num)', 'Admin\ClientController::update/$1');
     $routes->get('client-management/delete/(:num)', 'Admin\ClientController::delete/$1');
+
+    // Sub-Account Routes
+    $routes->get('client-management/accounts/(:num)', 'Admin\ClientController::getAccounts/$1');
+    $routes->post('client-management/store-account', 'Admin\ClientController::storeAccount');
+    $routes->post('client-management/update-account/(:num)', 'Admin\ClientController::updateAccount/$1');
+    $routes->get('client-management/delete-account/(:num)', 'Admin\ClientController::deleteAccount/$1');
+    
     $routes->get('tickets', 'Admin\TicketController::index');
     $routes->get('tickets/view/(:num)', 'Admin\TicketController::view/$1');
     $routes->post('tickets/reply/(:num)', 'Admin\TicketController::reply/$1');
@@ -38,6 +46,11 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin'], function($routes) 
     $routes->post('kb/store', 'Admin\KBController::store');        // Save New Article + Image
     $routes->post('kb/storeCategory', 'Admin\KBController::storeCategory'); // Save New Category
     $routes->get('kb/delete/(:num)', 'Admin\KBController::delete/$1');
+    // ────────────────────────────────────────────────────────────
+
+    // ── SYSTEM MANAGEMENT ROUTES ────────────────────────────────
+    $routes->get('system-management', 'Admin\SystemController::index');
+    $routes->post('system-management/update', 'Admin\SystemController::update');
     // ────────────────────────────────────────────────────────────
 });
 
