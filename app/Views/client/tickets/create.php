@@ -1,37 +1,35 @@
 <?= $this->extend('layouts/main_layout') ?>
 
 <?= $this->section('content') ?>
-<div class="p-8 max-w-4xl mx-auto">
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">Submit New Ticket</h2>
-        <p class="text-gray-500 text-sm">Fill in the details below to reach our team.</p>
+<div class="px-8 py-6 max-w-4xl mx-auto">
+    <div class="fiori-page-header mb-6">
+        <div>
+            <h2 class="fiori-page-title text-xl">Submit New Ticket</h2>
+            <p class="fiori-page-subtitle">Fill in the details below to reach our team.</p>
+        </div>
     </div>
 
     <form action="<?= base_url('client/tickets/store') ?>" method="post" enctype="multipart/form-data"
-        class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
+        class="fiori-card p-6 space-y-4">
         <?= csrf_field() ?>
 
         <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Subject</label>
-            <input type="text" name="subject"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#1e72af] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                placeholder="What is the issue?" required>
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Subject</label>
+            <input type="text" name="subject" class="fiori-input" placeholder="What is the issue?" required>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Category</label>
-                <select name="category"
-                    class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-[#1e72af]">
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Category</label>
+                <select name="category" class="fiori-input">
                     <?php foreach ($categories as $cat): ?>
                         <option value="<?= esc($cat['name']) ?>"><?= esc($cat['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Priority</label>
-                <select name="priority"
-                    class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-[#1e72af]">
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Priority</label>
+                <select name="priority" class="fiori-input">
                     <option value="Low">Low</option>
                     <option value="Medium" selected>Medium</option>
                     <option value="High">High</option>
@@ -40,8 +38,8 @@
             </div>
         </div>
 
-        <div class="space-y-2">
-            <label class="block text-sm font-bold text-gray-700">Attach Photo (Optional)</label>
+        <div class="space-y-2 mt-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider" style="color:var(--fiori-text-secondary);">Attach Photo (Optional)</label>
             <div id="dropzone"
                 class="relative group border-2 border-dashed border-gray-200 hover:border-[#1e72af] hover:bg-blue-50/30 rounded-2xl p-8 transition-all duration-300 text-center cursor-pointer">
                 <input type="file" name="attachment" id="attachment" accept="image/*"
@@ -70,19 +68,14 @@
             </div>
         </div>
 
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
-            <textarea name="description" rows="5"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-[#1e72af]"
-                placeholder="Describe your issue in detail..." required></textarea>
+        <div class="mt-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Description</label>
+            <textarea name="description" rows="5" class="fiori-input" placeholder="Describe your issue in detail..." required></textarea>
         </div>
 
-        <div class="flex items-center gap-4 pt-4 border-t border-gray-50">
-            <button type="submit"
-                class="px-8 py-3 bg-[#1e72af] text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">Submit
-                Ticket</button>
-            <a href="<?= base_url('client/tickets') ?>"
-                class="px-8 py-3 bg-gray-50 text-gray-500 rounded-xl font-bold hover:bg-gray-100 transition-all">Cancel</a>
+        <div class="flex items-center gap-3 pt-4 border-t mt-4" style="border-color:var(--fiori-border);">
+            <button type="submit" class="btn btn-accent">Submit Ticket</button>
+            <a href="<?= base_url('client/tickets') ?>" class="fiori-btn--regular" style="padding:0 16px; display:inline-flex; align-items:center; height:36px; border:1px solid var(--fiori-border); border-radius:4px; font-size:0.8125rem; font-weight:500; text-decoration:none;">Cancel</a>
         </div>
     </form>
 </div>

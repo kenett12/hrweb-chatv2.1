@@ -43,20 +43,22 @@ class QueueDisplayController extends BaseController
         foreach ($tickets as $ticket) {
             if ($ticket['status'] === 'In Progress') {
                 $response['now_serving'][] = [
-                    'ticket_number' => '#' . $ticket['id'],
+                    'ticket_number' => $ticket['ticket_number'],
                     'client'        => $ticket['client_name'] ?? 'Guest',
                     'counter'       => $ticket['staff_name'] ?? 'Counter 1',
                     'subject'       => $ticket['subject'] ?? 'No Subject',
                     'priority'      => $ticket['priority'] ?? 'Normal',
-                    'category'      => $ticket['category'] ?? 'General'
+                    'category'      => $ticket['category'] ?? 'General',
+                    'creator'       => $ticket['creator_name'] ?? ''
                 ];
             } elseif ($ticket['status'] === 'Open') {
                 $response['waiting'][] = [
-                    'ticket_number' => '#' . $ticket['id'],
+                    'ticket_number' => $ticket['ticket_number'],
                     'client'        => $ticket['client_name'] ?? 'Guest',
                     'subject'       => $ticket['subject'] ?? 'No Subject',
                     'priority'      => $ticket['priority'] ?? 'Normal',
-                    'category'      => $ticket['category'] ?? 'General'
+                    'category'      => $ticket['category'] ?? 'General',
+                    'creator'       => $ticket['creator_name'] ?? ''
                 ];
             }
         }

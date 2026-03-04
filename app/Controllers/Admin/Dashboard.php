@@ -19,7 +19,7 @@ class Dashboard extends BaseController
     public function index()
     {
         // Safety check: ensure only superadmins can access this logic
-        if ($this->session->get('role') !== 'superadmin') {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
             return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
         }
 

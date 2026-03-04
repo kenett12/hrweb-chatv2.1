@@ -2,16 +2,16 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,600&display=swap');
 
 :root {
-    --clr-charcoal: #696C6F;
-    --clr-green: #20ae5c;
-    --clr-cyan: #3297ca;
-    --clr-blue: #1e72af;
-    --clr-yellow: #ffc338;
-    --clr-red: #eb6063;
-    --bg-main: #f9fafb;
-    --bg-chat: #f4f6f9;
-    --bubble-radius: 1.25rem;
-    --font-chat: 'Roboto', sans-serif;
+    --clr-charcoal: #32363a;
+    --clr-green: #107E3E;
+    --clr-cyan: #0A6ED1;
+    --clr-blue: #0A6ED1;
+    --clr-yellow: #E9730C;
+    --clr-red: #BB0000;
+    --bg-main: #f7f7f7;
+    --bg-chat: #f7f7f7;
+    --bubble-radius: 4px;
+    --font-chat: '72', 'Inter', sans-serif;
 }
 
 /* ─── Base ──────────────────────────────────────────── */
@@ -459,7 +459,7 @@ aside:last-of-type .p-8 {
 
 /* ─── Left Nav Sidebar ───────────────────────────────── */
 aside:first-of-type {
-    border-radius: 1.5rem !important;
+    /* Removed custom border-radius to inherit from Fiori */
 }
 
 /* ─── Search Input ───────────────────────────────────── */

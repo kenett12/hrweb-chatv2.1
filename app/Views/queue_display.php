@@ -5,496 +5,390 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Support Queue | HRWeb</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+        :root {
+            /* ── Sync with HRWeb main.css ── */
+            --fiori-shell-bg: #0f1e2e;
+            --fiori-shell-text: #ffffff;
+            --fiori-page-bg: #f7f7f7;
+            --fiori-surface: #ffffff;
+            --fiori-border: #d9d9d9;
+            --fiori-blue: #0A6ED1;
+            --fiori-blue-light: #e8f3ff;
+            --fiori-positive: #107e3e;
+            --fiori-positive-light: #f1fdf6;
+            --fiori-negative: #bb0000;
+            --fiori-negative-light: #fff0f0;
+            --fiori-warning: #e9730c;
+            --fiori-warning-light: #fff3e0;
+            --fiori-text-base: #32363a;
+            --fiori-text-secondary: #6a6d70;
+            --fiori-text-muted: #89919a;
+            --fiori-card-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.08);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #f1f5f9;
-            color: #111;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--fiori-page-bg);
+            color: var(--fiori-text-base);
             overflow: hidden;
             height: 100vh;
             width: 100vw;
             display: flex;
             flex-direction: column;
+            font-size: 16px; /* High base size for TV */
         }
 
-        /* ── Header ─────────────────────────────────── */
-        .site-header {
+        /* ── Fiori Shell Header ── */
+        .fiori-shell-header {
+            height: 48px;
+            background: var(--fiori-shell-bg);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2.5rem;
-            height: 90px;
-            background: #fff;
-            border-bottom: 4px solid #1f2937;
+            padding: 0 1rem;
             flex-shrink: 0;
+            z-index: 100;
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.15);
         }
 
-        .site-header img { height: 52px; width: auto; }
-
-        .live-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #1f2937;
-            color: #fff;
-            padding: 8px 20px;
-            border-radius: 100px;
-            font-weight: 800;
-            font-size: 13px;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-        }
-
-        .live-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: #22c55e;
-            box-shadow: 0 0 6px rgba(34,197,94,0.7);
-            animation: ping 1.5s ease-in-out infinite;
-        }
-
-        @keyframes ping {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .clock-area { text-align: right; }
-        .clock-area .date { font-size: 12px; font-weight: 700; color: #6b7280; letter-spacing: 0.1em; text-transform: uppercase; }
-        .clock-area .time { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 900; color: #111; letter-spacing: 0.05em; }
-
-        /* ── Main Grid ───────────────────────────────── */
-        .main-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 0;
-            overflow: hidden;
-        }
-
-        /* ── Now Serving Panel ───────────────────────── */
-        .panel-serving {
-            background: #fff;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #e5e7eb;
-        }
-
-        .panel-title {
+        .shell-logo {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 18px 32px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e5e7eb;
-            flex-shrink: 0;
+            color: #fff;
         }
 
-        .panel-title h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 900;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: #111827;
+        .shell-logo img {
+            height: 24px;
+            filter: brightness(0) invert(1);
         }
 
-        .serving-grid {
+        .shell-app-name {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .shell-clock {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: rgba(255,255,255,0.85);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        #clock { font-weight: 700; color: #fff; font-size: 15px; }
+
+        /* ── Main Layout (50/50 Split) ── */
+        .fiori-page-content {
             flex: 1;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            padding: 20px 24px;
-            overflow-y: auto;
-            align-content: start;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            overflow: hidden; /* We scroll the cards, not the page */
         }
 
-        .serving-grid::-webkit-scrollbar { display: none; }
-
-        .serving-card {
-            background: #f8fafc;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 20px;
+        /* ── Fiori Card Components ── */
+        .fiori-card {
+            background: var(--fiori-surface);
+            border: 1px solid var(--fiori-border);
+            border-radius: 4px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.08); /* Matches main.css */
+            overflow: hidden;
+            height: 100%;
         }
 
-        .serving-card.is-new {
-            animation: cardIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-            border-color: #22c55e;
-            box-shadow: 0 0 16px rgba(34,197,94,0.2);
-        }
-
-        @keyframes cardIn {
-            0%   { opacity: 0; transform: scale(0.9); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        .serving-num {
-            font-family: 'Outfit', sans-serif;
-            font-size: 3rem;
-            font-weight: 900;
-            line-height: 1;
-            color: #111827;
-            letter-spacing: -0.02em;
-        }
-
-        .serving-agent {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: #9ca3af;
-        }
-
-        .serving-agent span {
-            display: block;
-            color: #374151;
-            font-size: 14px;
-            letter-spacing: 0.05em;
-            margin-top: 2px;
-        }
-
-        .priority-tag {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 10px;
-            border-radius: 100px;
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            border: 1px solid #e5e7eb;
-            background: #f3f4f6;
-            color: #6b7280;
-            width: fit-content;
-        }
-
-        .priority-tag.urgent{ background: #fee2e2; color: #b91c1c; border-color: #fca5a5; font-weight: 900; }
-        .priority-tag.high  { background: #ffedd5; color: #c2410c; border-color: #fdba74; }
-        .priority-tag.medium{ background: #fef3c7; color: #d97706; border-color: #fde68a; }
-        .priority-tag.low   { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; }
-
-        /* ── Waiting Panel ───────────────────────────── */
-        .panel-waiting {
-            background: #f0f4f8;
-            display: flex;
-            flex-direction: column;
-            color: #111;
-        }
-
-        .panel-waiting .panel-title {
-            background: #f1f5f9;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .panel-waiting .panel-title h2 { color: #1f2937; }
-
-        .queue-badge {
-            margin-left: auto;
-            background: #1f2937;
-            color: #fff;
-            font-size: 13px;
-            font-weight: 900;
-            padding: 4px 14px;
-            border-radius: 100px;
-            letter-spacing: 0.1em;
-        }
-
-        .waiting-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .waiting-list::-webkit-scrollbar { display: none; }
-
-        .waiting-card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-left: 4px solid #374151;
-            border-radius: 10px;
-            padding: 14px 16px;
+        .fiori-card__header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--fiori-border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            transition: box-shadow 0.15s;
+            background: #fafafa;
+            flex-shrink: 0;
+            z-index: 5;
         }
 
-        .waiting-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-
-        .waiting-num {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: #1f2937;
-            min-width: 6rem;
-            letter-spacing: -0.01em;
-        }
-
-        .waiting-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .waiting-client {
-            font-size: 13px;
+        .fiori-card__title {
+            font-size: 1.25rem;
             font-weight: 700;
-            color: #111827;
-            truncate: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .waiting-subject {
-            font-size: 11px;
-            color: #6b7280;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 2px;
-        }
-
-        .w-priority-tag {
-            flex-shrink: 0;
-            padding: 2px 10px;
-            border-radius: 100px;
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: 0.12em;
+            color: var(--fiori-text-base);
+            display: flex;
+            align-items: center;
+            gap: 10px;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .w-priority-tag.urgent { background: #fee2e2; color: #b91c1c; }
-        .w-priority-tag.high   { background: #ffedd5; color: #c2410c; }
-        .w-priority-tag.medium { background: #fef3c7; color: #d97706; }
-        .w-priority-tag.low    { background: #dcfce7; color: #16a34a; }
-
-        /* ── Empty States ───────────────────────────── */
-        .empty-state {
+        .fiori-card__content {
+            padding: 0;
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.4;
-            gap: 12px;
+            overflow-y: auto;
+            background: #ffffff;
         }
 
-        .empty-state span { font-size: 52px; }
-        .empty-state p { font-size: 1rem; font-weight: 600; }
+        /* ── Standard Fiori Table Overrides for TV ── */
+        .fiori-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .fiori-table th {
+            background: #f8f9fa;
+            padding: 1.25rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--fiori-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: left;
+            border-bottom: 2px solid var(--fiori-border);
+        }
+        .fiori-table td {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 1.125rem;
+        }
+        .fiori-table tr:hover { background: var(--fiori-blue-light); }
 
-        /* ── Footer ─────────────────────────────────── */
-        .site-footer {
-            height: 36px;
-            background: rgba(0,0,0,0.25);
+        .ticket-number-cell {
+            font-weight: 800;
+            color: var(--fiori-blue);
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+        }
+
+        .is-new {
+            background: var(--fiori-blue-light) !important;
+            animation: fioriPulse 2s infinite;
+        }
+
+        @keyframes fioriPulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .status--positive { color: var(--fiori-positive); background: var(--fiori-positive-light); border-color: var(--fiori-positive-border); }
+        .status--negative { color: var(--fiori-negative); background: var(--fiori-negative-light); border-color: var(--fiori-negative-border); }
+        .status--warning  { color: var(--fiori-warning); background: var(--fiori-warning-light); border-color: var(--fiori-warning-border); }
+        .status--info     { color: var(--fiori-blue); background: var(--fiori-blue-light); border-color: #b3d4fb; }
+
+        .fiori-empty {
+            padding: 4rem;
+            text-align: center;
+            color: var(--fiori-text-muted);
+        }
+
+        .fiori-empty i { font-size: 2rem; opacity: 0.3; }
+
+        /* ── Footer ── */
+        .fiori-page-footer {
+            height: 32px;
+            background: var(--fiori-surface);
+            border-top: 1px solid var(--fiori-border);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            flex-shrink: 0;
-            color: rgba(255,255,255,0.5);
             font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            color: var(--fiori-text-muted);
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .fiori-page-content { grid-template-columns: 1fr; overflow-y: auto; }
+            .fiori-card { height: auto; min-height: 400px; }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- ── Header ─────────────────────────────────────────── -->
-    <header class="site-header">
-        <div style="display:flex; align-items:center; gap:20px;">
-            <img src="<?= base_url('assets/img/logo.png') ?>" alt="HRWeb Logo">
-            <div style="width:1px; height:40px; background:#e5e7eb;"></div>
-            <div class="live-badge">
-                <div class="live-dot"></div>
-                Live Queue
-            </div>
+    <!-- Fiori Shell Header -->
+    <header class="fiori-shell-header">
+        <div class="shell-logo">
+            <img src="<?= base_url('assets/img/logo.png') ?>" alt="HRWeb">
+            <span class="shell-app-name">Live Support Queue</span>
         </div>
-        <div class="clock-area">
-            <div id="date" class="date">Loading...</div>
-            <div id="clock" class="time">00:00:00</div>
+        <div class="shell-clock">
+            <span id="date"></span>
+            <div style="width:1px; height:14px; background:rgba(255,255,255,0.2);"></div>
+            <span id="clock">00:00:00</span>
         </div>
     </header>
 
-    <!-- ── Main ──────────────────────────────────────────── -->
-    <div class="main-grid">
-
-        <!-- Left: Now Serving -->
-        <div class="panel-serving">
-            <div class="panel-title">
-                <span class="material-symbols-outlined" style="font-size:22px; color:#4ade80;">support_agent</span>
-                <h2>In Progress</h2>
-            </div>
-            <div class="serving-grid" id="serving-container">
-                <div class="empty-state" style="grid-column:1/-1;">
-                    <span class="material-symbols-outlined">hourglass_top</span>
-                    <p>Loading sessions...</p>
+    <!-- Fiori Page Content -->
+    <main class="fiori-page-content">
+        
+        <!-- Now Serving (Left Panel) -->
+        <section class="fiori-card">
+            <div class="fiori-card__header">
+                <div class="fiori-card__title">
+                    <i class="fas fa-headset"></i>
+                    In Progress
                 </div>
+                <div class="fiori-status status--positive" id="serving-count">0 ACTIVE</div>
             </div>
-        </div>
-
-        <!-- Right: Waiting -->
-        <div class="panel-waiting">
-            <div class="panel-title">
-                <span class="material-symbols-outlined" style="font-size:22px; color:#1561a0;">queue</span>
-                <h2>Waiting</h2>
-                <div class="queue-badge"><span id="queue-count">0</span> IN QUEUE</div>
+            <div class="fiori-card__content">
+                <table class="fiori-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Client / Employee</th>
+                            <th>Staff</th>
+                        </tr>
+                    </thead>
+                    <tbody id="serving-container">
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
             </div>
-            <div class="waiting-list" id="waiting-container">
-                <!-- Injection target -->
+        </section>
+
+        <!-- Waiting Queue (Right Panel) -->
+        <section class="fiori-card">
+            <div class="fiori-card__header">
+                <div class="fiori-card__title">
+                    <i class="fas fa-users"></i>
+                    Pending Tickets
+                </div>
+                <div class="fiori-status status--info" id="queue-count-label">0 WAITING</div>
             </div>
-        </div>
+            <div class="fiori-card__content">
+                <table class="fiori-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Client Name</th>
+                            <th>Details</th>
+                            <th class="text-center">Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody id="waiting-container">
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-    </div>
+    </main>
 
-    <!-- ── Footer ─────────────────────────────────────────── -->
-    <footer class="site-footer">
-        <span class="material-symbols-outlined" style="font-size:14px;">info</span>
-        Please wait for your ticket number to appear in the "Now Serving" column.
+    <footer class="fiori-page-footer">
+        HRWeb Inc. &copy; <?= date('Y') ?> &bull; System Live Queue Display
     </footer>
 
+    <!-- Scripts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
-        // ── Clock ──────────────────────────────────────────
         function updateClock() {
             const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' });
-            document.getElementById('date').innerText  = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit' });
+            document.getElementById('date').innerText  = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // ── Queue State ─────────────────────────────────────
         const servingContainer = document.getElementById('serving-container');
         const waitingContainer = document.getElementById('waiting-container');
-        const queueCount       = document.getElementById('queue-count');
+        const servingCount     = document.getElementById('serving-count');
+        const queueCountLabel  = document.getElementById('queue-count-label');
         const bellSound        = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
-        let previousServingIds  = [];
-        let previousWaitingIds  = [];
-        let isInitialLoad       = true;
-        let newlyServedThisTick = [];
+        let previousServingIds = [];
+        let isInitialLoad = true;
 
-        // ── Fetch ───────────────────────────────────────────
         function fetchQueueData() {
             fetch("<?= site_url('queue-display/data') ?>")
-                .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+                .then(res => res.json())
                 .then(data => {
-                    if (!data || !Array.isArray(data.now_serving) || !Array.isArray(data.waiting)) return;
-
-                    newlyServedThisTick = [];
-
-                    if (!isInitialLoad) {
-                        const newServing = data.now_serving.filter(t => !previousServingIds.includes(t.ticket_number));
-                        if (newServing.length > 0) {
-                            bellSound.play().catch(() => {});
-                            newServing.forEach(t => newlyServedThisTick.push(t.ticket_number));
-                        }
+                    const newlyServed = isInitialLoad ? [] : data.now_serving.filter(t => !previousServingIds.includes(t.ticket_number));
+                    
+                    if (newlyServed.length > 0) {
+                        bellSound.play().catch(() => {});
                     }
 
-                    renderServing(data.now_serving);
+                    renderServing(data.now_serving, newlyServed.map(t => t.ticket_number));
                     renderWaiting(data.waiting);
 
                     previousServingIds = data.now_serving.map(t => t.ticket_number);
-                    previousWaitingIds = data.waiting.map(t => t.ticket_number);
                     isInitialLoad = false;
                 })
-                .catch(err => console.error('Live Queue Error:', err));
+                .catch(err => console.error('Queue Error:', err));
         }
 
-        // ── Helpers ─────────────────────────────────────────
-        function priorityClass(priority) {
-            const p = priority.toLowerCase();
-            if (p === 'urgent') return 'urgent';
-            if (p === 'high') return 'high';
-            if (p === 'medium') return 'medium';
-            return 'low';
+        function getPriorityClass(p) {
+            p = p.toLowerCase();
+            if (p === 'urgent') return 'status--negative';
+            if (p === 'high') return 'status--warning';
+            if (p === 'medium') return 'status--info';
+            return 'status--positive';
         }
 
-        function getPriorityWeight(priority) {
-            const p = priority.toLowerCase();
-            if (p === 'urgent') return 4;
-            if (p === 'high') return 3;
-            if (p === 'medium') return 2;
-            return 1;
-        }
-
-        // ── Render Serving ──────────────────────────────────
-        function renderServing(tickets) {
+        function renderServing(tickets, newlyServedIds) {
+            servingCount.innerText = `${tickets.length} ACTIVE`;
             if (tickets.length === 0) {
-                servingContainer.innerHTML = `
-                    <div class="empty-state" style="grid-column:1/-1;">
-                        <span class="material-symbols-outlined">celebration</span>
-                        <p>No active sessions</p>
-                    </div>`;
+                servingContainer.innerHTML = `<tr><td colspan="4" class="fiori-empty">No active sessions at the moment.</td></tr>`;
                 return;
             }
 
-            // Sort by priority (highest first)
-            tickets.sort((a, b) => getPriorityWeight(b.priority) - getPriorityWeight(a.priority));
-
-            let html = '';
-            tickets.forEach(t => {
-                const isNew = newlyServedThisTick.includes(t.ticket_number);
-                html += `
-                <div class="serving-card ${isNew ? 'is-new' : ''}">
-                    <span class="priority-tag ${priorityClass(t.priority)}">${t.priority}</span>
-                    <div class="serving-num">${t.ticket_number}</div>
-                    <div class="serving-agent">
-                        Assigned TSR
-                        <span>${t.counter}</span>
-                    </div>
-                </div>`;
-            });
-            servingContainer.innerHTML = html;
+            servingContainer.innerHTML = tickets.map(t => `
+                <tr class="${newlyServedIds.includes(t.ticket_number) ? 'is-new' : ''}">
+                    <td class="ticket-number-cell">${t.ticket_number}</td>
+                    <td>
+                        <span class="font-semibold block">${t.client}</span>
+                        <span class="text-xs text-slate-400">Requestor: ${t.creator || 'Self'}</span>
+                    </td>
+                    <td>
+                        <span class="font-medium">${t.counter}</span>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        // ── Render Waiting ──────────────────────────────────
         function renderWaiting(tickets) {
-            queueCount.innerText = tickets.length;
-
+            queueCountLabel.innerText = `${tickets.length} WAITING`;
             if (tickets.length === 0) {
-                waitingContainer.innerHTML = `
-                    <div class="empty-state" style="color:#94a3b8;">
-                        <span class="material-symbols-outlined" style="font-size:42px;">inbox</span>
-                        <p style="font-size:13px;">No tickets waiting</p>
-                    </div>`;
+                waitingContainer.innerHTML = `<tr><td colspan="4" class="fiori-empty">Queue is empty.</td></tr>`;
                 return;
             }
 
-            // Sort by priority (highest first)
-            tickets.sort((a, b) => getPriorityWeight(b.priority) - getPriorityWeight(a.priority));
-
-            let html = '';
-            tickets.forEach(t => {
-                html += `
-                <div class="waiting-card">
-                    <div class="waiting-num">${t.ticket_number}</div>
-                    <div class="waiting-info">
-                        <div class="waiting-client">${t.client}</div>
-                        <div class="waiting-subject">${t.subject}</div>
-                    </div>
-                    <span class="w-priority-tag ${priorityClass(t.priority)}">${t.priority}</span>
-                </div>`;
-            });
-            waitingContainer.innerHTML = html;
+            waitingContainer.innerHTML = tickets.map(t => `
+                <tr>
+                    <td class="font-mono font-bold text-slate-500">${t.ticket_number}</td>
+                    <td class="font-bold">${t.client}</td>
+                    <td>
+                        <span class="block font-medium">${t.subject}</span>
+                        <span class="text-xs text-slate-400 capitalize">${t.category}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="status-badge ${getPriorityClass(t.priority)}">${t.priority}</span>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         setInterval(fetchQueueData, 3000);

@@ -1,208 +1,802 @@
-/* Pulse HR - Fully Colorful Professional Palette */
+/* ================================================================
+   PulseHR — SAP Fiori Design System
+   SAP 72 font family, Fiori Blue, Shell Layout
+   ================================================================ */
+
+/* ── SAP 72 Font ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── SAP Fiori Design Tokens ── */
 :root {
-    /* Base Neutrals */
-    --primary-text: #111827;
-    --muted-text: #6b7280;
-    --bg-main: #f9fafb;
-    --sidebar-border: #f3f4f6;
+    /* ── Shell Colors ── */
+    --fiori-shell-bg: #0f1e2e;
+    --fiori-shell-text: #ffffff;
+    --fiori-sidenav-bg: #354a5e;
+    --fiori-sidenav-text: #d1dbe6;
+    --fiori-sidenav-active: #0070f2;
+    --fiori-sidenav-hover: rgba(255, 255, 255, 0.07);
 
-    /* The Vibrant Palette */
-    --clr-charcoal: #696C6F;
-    --clr-green: #20ae5c;
-    --clr-cyan: #3297ca;
-    --clr-blue: #1e72af;
-    --clr-yellow: #ffc338;
-    --clr-red: #eb6063;
+    /* ── Page Colors ── */
+    --fiori-page-bg: #f7f7f7;
+    --fiori-surface: #ffffff;
+    --fiori-border: #d9d9d9;
+    --fiori-border-focus: #0070f2;
 
-    /* Semantic Button Mappings */
-    --btn-primary-bg: var(--clr-charcoal);
-    --btn-success-bg: var(--clr-green);
-    --btn-info-bg: var(--clr-cyan);
-    --btn-accent-bg: var(--clr-blue);
-    --btn-warning-bg: var(--clr-yellow);
-    --btn-danger-bg: var(--clr-red);
+    /* ── Text Colors ── */
+    --fiori-text-base: #32363a;
+    --fiori-text-secondary: #6a6d70;
+    --fiori-text-muted: #89919a;
+    --fiori-text-inverse: #ffffff;
+
+    /* ── Semantic Colors ── */
+    --fiori-blue: #0070f2;
+    --fiori-blue-light: #e8f3ff;
+    --fiori-positive: #107e3e;
+    --fiori-positive-light: #f1fdf6;
+    --fiori-positive-border: #bbe5d0;
+    --fiori-negative: #bb0000;
+    --fiori-negative-light: #fff0f0;
+    --fiori-negative-border: #f5c0c0;
+    --fiori-warning: #e9730c;
+    --fiori-warning-light: #fff3e0;
+    --fiori-warning-border: #f9d4a7;
+    --fiori-neutral: #5b738b;
+    --fiori-neutral-light: #eaf0f6;
+    --fiori-neutral-border: #c5d5e4;
+
+    /* ── Tile & Card ── */
+    --fiori-tile-bg: #ffffff;
+    --fiori-tile-border: #d9d9d9;
+
+    /* ── Backward compat ── */
+    --color-accent: var(--fiori-blue);
+    --color-bg: var(--fiori-page-bg);
+    --color-surface: var(--fiori-surface);
+    --color-border: var(--fiori-border);
+    --color-text-primary: var(--fiori-text-base);
+    --color-text-secondary: var(--fiori-text-secondary);
+    --color-text-muted: var(--fiori-text-muted);
+    --color-success: var(--fiori-positive);
+    --color-danger: var(--fiori-negative);
+    --color-warning: var(--fiori-warning);
+    --color-accent-ring: rgba(0, 112, 242, 0.15);
+    --color-accent-light: var(--fiori-blue-light);
+    --sidebar-bg: var(--fiori-sidenav-bg);
+    --sidebar-text: var(--fiori-sidenav-text);
+    --sidebar-text-active: #ffffff;
+    --sidebar-item-hover: var(--fiori-sidenav-hover);
+    --sidebar-item-active: rgba(0, 112, 242, 0.15);
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --clr-cyan: var(--fiori-blue);
+    --clr-blue: var(--fiori-blue);
+    --clr-green: var(--fiori-positive);
+    --clr-red: var(--fiori-negative);
+    --clr-yellow: var(--fiori-warning);
+    --clr-charcoal: #5b738b;
+    --clr-purple: #6e4b9e;
+    --bg-main: var(--fiori-page-bg);
 }
 
-body {
-    background-color: var(--bg-main);
-    color: var(--primary-text);
-    font-family: 'Roboto', sans-serif;
-    letter-spacing: -0.01em;
-}
-
-/* --- Colorful Button System --- */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    border-radius: 12px;
-    padding: 10px 24px;
-    font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
-    cursor: pointer;
-    color: #ffffff;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.1);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-/* Specific Button Colors */
-.btn-primary {
-    background-color: var(--btn-primary-bg);
-    box-shadow: 0 4px 12px rgba(105, 108, 111, 0.15);
-}
-
-.btn-success {
-    background-color: var(--btn-success-bg);
-    box-shadow: 0 4px 12px rgba(32, 174, 92, 0.2);
-}
-
-.btn-info {
-    background-color: var(--btn-info-bg);
-    box-shadow: 0 4px 12px rgba(50, 151, 202, 0.2);
-}
-
-.btn-accent {
-    background-color: var(--btn-accent-bg);
-    box-shadow: 0 4px 12px rgba(30, 114, 175, 0.2);
-}
-
-.btn-warning {
-    background-color: var(--btn-warning-bg);
-    box-shadow: 0 4px 12px rgba(255, 195, 56, 0.2);
-    color: #111827;
-}
-
-.btn-danger {
-    background-color: var(--btn-danger-bg);
-    box-shadow: 0 4px 12px rgba(235, 96, 99, 0.2);
-}
-
-/* --- Badge System (Status Indicators) --- */
-.badge {
-    padding: 4px 12px;
-    border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.badge-active {
-    background-color: rgba(32, 174, 92, 0.1);
-    color: var(--clr-green);
-    border: 1px solid rgba(32, 174, 92, 0.2);
-}
-
-.badge-inactive {
-    background-color: rgba(235, 96, 99, 0.1);
-    color: var(--clr-red);
-    border: 1px solid rgba(235, 96, 99, 0.2);
-}
-
-.badge-pending {
-    background-color: rgba(255, 195, 56, 0.1);
-    color: #b48a1d;
-    border: 1px solid rgba(255, 195, 56, 0.2);
-}
-
-/* --- Sidebar Vibrant Indicators --- */
-.nav-active-blue {
-    background-color: rgba(30, 114, 175, 0.05);
-    color: var(--clr-blue) !important;
-    border-left: 4px solid var(--clr-blue);
-}
-
-.nav-active-cyan {
-    background-color: rgba(50, 151, 202, 0.05);
-    color: var(--clr-cyan) !important;
-    border-left: 4px solid var(--clr-cyan);
-}
-
-.nav-active-green {
-    background-color: rgba(32, 174, 92, 0.05);
-    color: var(--clr-green) !important;
-    border-left: 4px solid var(--clr-green);
-}
-
-/* Checkbox Color */
-input[type="checkbox"] {
-    accent-color: var(--clr-green);
-}
-
-/* --- Global Settings & Reset --- */
+/* ── Base Reset ── */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-/* --- Global Preloader Overlay --- */
+html {
+    font-size: 14px;
+}
+
+body {
+    font-family: '72', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--fiori-text-base);
+    background: var(--fiori-page-bg);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: 0;
+}
+
+a {
+    color: var(--fiori-blue);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ── Page Fade In ── */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.2s ease both;
+}
+
+/* ── SAP Fiori Buttons ── */
+.btn,
+.fiori-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px;
+    height: 36px;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 120ms, border-color 120ms, box-shadow 120ms;
+    user-select: none;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn:focus-visible,
+.fiori-btn:focus-visible {
+    outline: 2px solid var(--fiori-blue);
+    outline-offset: 2px;
+}
+
+/* Emphasized (Primary action) */
+.btn-accent,
+.btn-primary,
+.btn-info,
+.fiori-btn--emphasized {
+    background: var(--fiori-blue);
+    border-color: var(--fiori-blue);
+    color: #ffffff;
+}
+
+.btn-accent:hover,
+.btn-primary:hover,
+.btn-info:hover {
+    background: #055ec3;
+    border-color: #055ec3;
+}
+
+/* Regular (Secondary with border) */
+.btn-outline,
+.fiori-btn--regular {
+    background: var(--fiori-surface);
+    border-color: var(--fiori-border);
+    color: var(--fiori-blue);
+}
+
+.btn-outline:hover {
+    background: var(--fiori-blue-light);
+}
+
+/* Ghost (Tertiary — no border) */
+.fiori-btn--ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--fiori-blue);
+}
+
+.fiori-btn--ghost:hover {
+    background: var(--fiori-blue-light);
+    border-color: transparent;
+}
+
+/* Status buttons */
+.btn-success {
+    background: var(--fiori-positive);
+    border-color: var(--fiori-positive);
+    color: #fff;
+}
+
+.btn-success:hover {
+    background: #0d6b34;
+}
+
+.btn-danger {
+    background: var(--fiori-negative);
+    border-color: var(--fiori-negative);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #8f0000;
+}
+
+.btn-warning {
+    background: var(--fiori-warning);
+    border-color: var(--fiori-warning);
+    color: #fff;
+}
+
+/* ── SAP Fiori Object Status / Badges ── */
+.badge,
+.fiori-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.badge-active,
+.fiori-status--positive {
+    color: var(--fiori-positive);
+    background: var(--fiori-positive-light);
+    border-color: var(--fiori-positive-border);
+}
+
+.badge-inactive,
+.fiori-status--negative {
+    color: var(--fiori-negative);
+    background: var(--fiori-negative-light);
+    border-color: var(--fiori-negative-border);
+}
+
+.badge-pending,
+.fiori-status--warning {
+    color: var(--fiori-warning);
+    background: var(--fiori-warning-light);
+    border-color: var(--fiori-warning-border);
+}
+
+.badge-info,
+.fiori-status--information {
+    color: var(--fiori-blue);
+    background: var(--fiori-blue-light);
+    border-color: #b3d4fb;
+}
+
+.fiori-status--neutral {
+    color: var(--fiori-neutral);
+    background: var(--fiori-neutral-light);
+    border-color: var(--fiori-neutral-border);
+}
+
+/* ── SAP Fiori Form Elements ── */
+.form-input,
+.fiori-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: var(--fiori-text-base);
+    background: var(--fiori-surface);
+    border: 1px solid var(--fiori-border);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 120ms, box-shadow 120ms;
+}
+
+.form-input:hover,
+.fiori-input:hover {
+    border-color: var(--fiori-blue);
+}
+
+.form-input:focus,
+.fiori-input:focus {
+    border-color: var(--fiori-blue);
+    box-shadow: 0 0 0 2px rgba(0, 112, 242, 0.2);
+}
+
+.form-input::placeholder,
+.fiori-input::placeholder {
+    color: var(--fiori-text-muted);
+}
+
+select.form-input,
+select.fiori-input {
+    cursor: pointer;
+}
+
+textarea.form-input,
+textarea.fiori-input {
+    height: auto;
+    padding: 10px 12px;
+    resize: vertical;
+}
+
+/* ── SAP Fiori List Report Table ── */
+.fiori-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.fiori-table thead tr {
+    background: #f0f0f0;
+    border-bottom: 2px solid var(--fiori-border);
+}
+
+.fiori-table thead th {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--fiori-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.fiori-table tbody tr {
+    border-bottom: 1px solid #ebebeb;
+    transition: background 80ms;
+}
+
+.fiori-table tbody tr:hover {
+    background: var(--fiori-blue-light);
+}
+
+.fiori-table tbody td {
+    padding: 10px 16px;
+    color: var(--fiori-text-base);
+    vertical-align: middle;
+}
+
+/* ── SAP Fiori Card / Tile ── */
+.fiori-card {
+    background: var(--fiori-surface);
+    border: 1px solid var(--fiori-border);
+    border-radius: 4px;
+}
+
+.fiori-card__header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--fiori-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fiori-card__title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--fiori-text-base);
+}
+
+.fiori-card__subtitle {
+    font-size: 0.75rem;
+    color: var(--fiori-text-secondary);
+    margin-top: 2px;
+}
+
+.fiori-card__content {
+    padding: 16px;
+}
+
+/* ── SAP Fiori KPI Tile ── */
+.fiori-tile {
+    background: var(--fiori-surface);
+    border: 1px solid var(--fiori-border);
+    border-radius: 4px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 120ms, border-color 120ms;
+}
+
+.fiori-tile:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: #bac0c5;
+}
+
+.fiori-tile__header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--fiori-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fiori-tile__value {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--fiori-text-base);
+    line-height: 1;
+}
+
+.fiori-tile__footer {
+    margin-top: 12px;
+    font-size: 0.75rem;
+    color: var(--fiori-text-muted);
+}
+
+/* ── SAP Fiori Dialog / Modal ── */
+.fiori-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.fiori-overlay.is-open {
+    display: flex;
+}
+
+.fiori-dialog {
+    background: var(--fiori-surface);
+    border: 1px solid var(--fiori-border);
+    border-radius: 4px;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.15s ease both;
+}
+
+.fiori-dialog--lg {
+    max-width: 780px;
+}
+
+.fiori-dialog__header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--fiori-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fiori-dialog__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--fiori-text-base);
+}
+
+.fiori-dialog__body {
+    padding: 20px;
+}
+
+.fiori-dialog__footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--fiori-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* ── SAP Fiori Page Header (Page Title Area) ── */
+.fiori-page-header {
+    background: var(--fiori-surface);
+    border-bottom: 1px solid var(--fiori-border);
+    padding: 16px 24px;
+    margin: -24px -24px 24px -24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fiori-page-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--fiori-text-base);
+}
+
+.fiori-page-subtitle {
+    font-size: 0.8125rem;
+    color: var(--fiori-text-secondary);
+    margin-top: 2px;
+}
+
+/* ── SAP Fiori IconTabBar ── */
+.fiori-tab-bar {
+    display: flex;
+    border-bottom: 2px solid var(--fiori-border);
+    background: var(--fiori-surface);
+    margin-bottom: 20px;
+}
+
+.fiori-tab-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--fiori-text-secondary);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: color 120ms, border-color 120ms;
+    text-decoration: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    background: transparent;
+    font-family: inherit;
+}
+
+.fiori-tab-item:hover {
+    color: var(--fiori-blue);
+    background: var(--fiori-blue-light);
+}
+
+.fiori-tab-item.is-active {
+    color: var(--fiori-blue);
+    border-bottom-color: var(--fiori-blue);
+    font-weight: 600;
+}
+
+/* ── SAP Fiori Filter Bar ── */
+.fiori-filter-bar {
+    background: var(--fiori-surface);
+    border: 1px solid var(--fiori-border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+/* ── Preloader ── */
 #globalPreloader {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: var(--bg-main);
+    inset: 0;
+    background: var(--fiori-page-bg);
     z-index: 9999;
     display: flex;
-    justify-content: center;
     align-items: center;
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    justify-content: center;
 }
 
 #globalPreloader.hidden {
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
 }
 
-/* Colorful Smooth Spinner */
 .preloader-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(50, 151, 202, 0.2);
-    border-top-color: var(--clr-cyan);
+    width: 40px;
+    height: 40px;
+    border: 3px solid #d9d9d9;
+    border-top-color: var(--fiori-blue);
     border-radius: 50%;
-    animation: preloader-spin 1s linear infinite;
+    animation: spin 0.7s linear infinite;
 }
 
-@keyframes preloader-spin {
+@keyframes spin {
     to {
         transform: rotate(360deg);
     }
 }
 
-/* --- Form Submit Loading State --- */
-.btn-loading {
+/* ── SAP Shell Header ── */
+.fiori-shell-header {
+    height: 48px;
+    background: var(--fiori-shell-bg);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    flex-shrink: 0;
+    gap: 12px;
+    z-index: 100;
     position: relative;
-    color: transparent !important;
-    pointer-events: none;
 }
 
-.btn-loading::after {
-    content: '';
-    position: absolute;
-    width: 1.25rem;
-    height: 1.25rem;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    border-top-color: #ffffff;
-    border-radius: 50%;
-    animation: preloader-spin 0.8s linear infinite;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+/* ── SweetAlert2 SAP Theme ── */
+.swal2-popup {
+    border-radius: 4px !important;
+    border: 1px solid var(--fiori-border) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    font-family: 'Inter', sans-serif !important;
+    padding: 28px !important;
+}
+
+.swal2-title {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: var(--fiori-text-base) !important;
+}
+
+.swal2-html-container {
+    font-size: 0.875rem !important;
+    color: var(--fiori-text-secondary) !important;
+    line-height: 1.5 !important;
+}
+
+.swal2-confirm {
+    background: var(--fiori-blue) !important;
+    border-color: var(--fiori-blue) !important;
+    border-radius: 4px !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    padding: 0 16px !important;
+    height: 36px !important;
+    font-family: inherit !important;
+}
+
+.swal2-cancel {
+    background: var(--fiori-surface) !important;
+    border: 1px solid var(--fiori-border) !important;
+    color: var(--fiori-blue) !important;
+    border-radius: 4px !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    padding: 0 16px !important;
+    height: 36px !important;
+    font-family: inherit !important;
+}
+
+.swal2-cancel:hover {
+    background: var(--fiori-blue-light) !important;
+}
+
+.swal2-icon {
+    margin-bottom: 12px !important;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: var(--fiori-warning) !important;
+    color: var(--fiori-warning) !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: var(--fiori-negative) !important;
+    color: var(--fiori-negative) !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: var(--fiori-positive) !important;
+    color: var(--fiori-positive) !important;
+}
+
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background: var(--fiori-positive) !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(16, 126, 62, 0.3) !important;
+}
+
+.swal2-toast {
+    border-radius: 4px !important;
+    border: 1px solid var(--fiori-border) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    font-family: inherit !important;
+}
+
+/* ── Checkbox ── */
+input[type="checkbox"] {
+    accent-color: var(--fiori-blue);
+}
+
+/* ── Scrollbar ── */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ── Nav active indicator (sidebar compat) ── */
+.nav-active-blue,
+.nav-active-cyan,
+.nav-active-green {
+    background: rgba(0, 112, 242, 0.12) !important;
+    color: #ffffff !important;
+    border-left: 3px solid var(--fiori-blue) !important;
+}
+
+/* ─────────────────────────────────────────────
+   SAP Fiori Overlay / Dialog
+   toggleModal() toggles .hidden / .flex on the
+   overlay wrapper, so these must be defined here.
+───────────────────────────────────────────── */
+.fiori-overlay {
+    display: none;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2000 !important;
+    background: rgba(10, 20, 35, 0.45);
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+.fiori-overlay.hidden {
+    display: none !important;
+}
+
+/* When JS adds .flex (via toggleModal), it becomes visible */
+.fiori-overlay.flex {
+    display: flex;
+}
+
+.fiori-dialog {
+    background: #fff;
+    border: 1px solid var(--fiori-border);
+    border-radius: 4px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.fiori-dialog--lg {
+    max-width: 860px;
+}
+
+.fiori-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--fiori-border);
+    flex-shrink: 0;
+    background: #fafafa;
+}
+
+.fiori-dialog__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--fiori-text-base);
+}
+
+.fiori-dialog__body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.fiori-dialog__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--fiori-border);
+    flex-shrink: 0;
+    background: #fafafa;
 }

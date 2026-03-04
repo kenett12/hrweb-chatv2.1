@@ -13,33 +13,35 @@
 
 <?= $this->section('content') ?>
 <div class="p-8 max-w-6xl mx-auto">
-    <div class="mb-6">
-        <a href="<?= base_url('client/tickets') ?>"
-            class="text-sm text-gray-500 hover:text-[#1e72af] flex items-center gap-2 transition-colors font-bold">
-            <span class="material-symbols-outlined text-sm">arrow_back</span> Back to My Tickets
+    <div class="mb-4">
+        <a href="<?= base_url('client/tickets') ?>" class="text-xs font-semibold" style="color:var(--fiori-blue); display:flex; align-items:center; gap:4px;">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span> Back to My Tickets
         </a>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-4">
             
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                <div class="flex justify-between items-start mb-6">
+            <div class="fiori-card p-6">
+                <div class="flex justify-between items-start mb-4">
                     <div>
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 block">
+                        <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block" style="background:var(--fiori-surface); color:var(--fiori-text-muted);">
                             <?= $ticket['ticket_number'] ?>
                         </span>
-                        <h1 class="text-2xl font-bold text-gray-900 leading-tight">
+                        <h1 class="fiori-page-title text-xl mb-0">
                             <?= esc($ticket['subject']) ?>
                         </h1>
                     </div>
-                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#1e72af] border border-blue-100">
-                        <?= esc($ticket['status']) ?>
-                    </span>
+                    <?php
+                        if ($ticket['status'] === 'Resolved') echo '<span class="fiori-status fiori-status--positive">Resolved</span>';
+                        elseif ($ticket['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
+                        elseif ($ticket['status'] === 'Closed') echo '<span class="fiori-status" style="background:#e0e0e0; color:#606060;">Closed</span>';
+                        else echo '<span class="fiori-status fiori-status--warning">' . esc($ticket['status']) . '</span>';
+                    ?>
                 </div>
 
-                <p class="text-gray-600 leading-relaxed mb-8 text-[15px]">
+                <p class="text-sm leading-relaxed mb-6" style="color:var(--fiori-text-primary);">
                     <?= nl2br(esc($ticket['description'])) ?>
                 </p>
 
@@ -58,21 +60,19 @@
                 <?php endif; ?>
             </div>
 
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+            <div class="fiori-card p-0 flex flex-col overflow-hidden">
                 
-                <div class="bg-gray-50/50 p-4 border-b border-gray-100 flex justify-between items-center">
+                <div class="fiori-card__header flex justify-between items-center" style="border-bottom:1px solid var(--fiori-border);">
                     <div class="flex flex-col">
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Conversation History</p>
-                        <span class="flex items-center gap-1 text-[10px] font-bold text-green-600">
-                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Active Preview
+                        <span class="fiori-card__title">Conversation History</span>
+                        <span class="flex items-center gap-1 text-[10px] font-semibold" style="color:var(--fiori-positive);">
+                            <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background:var(--fiori-positive);"></span> Active Preview
                         </span>
                     </div>
 
-                    <a href="<?= base_url('client/chat/' . $ticket['id']) ?>"
-    class="flex items-center gap-2 bg-[#1e72af] text-white px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-tighter hover:bg-[#165a8a] transition-all shadow-md shadow-blue-100">
-    <span class="material-symbols-outlined text-sm">open_in_full</span>
-    Open Full Chat
-</a>
+                    <a href="<?= base_url('client/chat/' . $ticket['id']) ?>" class="btn btn-accent text-[11px] px-3 h-8">
+                        <span class="material-symbols-outlined text-[14px]">open_in_full</span> Open Full Chat
+                    </a>
                 </div>
 
                 <div id="chat-preview-container" class="p-6 space-y-4 max-h-[450px] overflow-y-auto bg-white scrollbar-hide">
@@ -96,9 +96,9 @@
                             ?>
 
                             <div class="flex <?= $isMe ? 'justify-end' : 'justify-start' ?> w-full mb-1">
-                                <div class="max-w-[80%] <?= $isMe
-                                    ? 'bg-[#1e72af] text-white rounded-l-xl rounded-tr-xl ml-auto'
-                                    : 'bg-gray-100 text-gray-800 rounded-r-xl rounded-tl-xl mr-auto' ?> p-4 shadow-sm">
+                                <div class="max-w-[80%] p-3" style="border-radius:4px; <?= $isMe
+                                    ? 'background:var(--fiori-blue); color:white; margin-left:auto;'
+                                    : 'background:white; border:1px solid var(--fiori-border); color:var(--fiori-text-primary); margin-right:auto;' ?>">
 
                                     <div class="flex items-center gap-3 mb-1 <?= $isMe ? 'flex-row-reverse' : '' ?>">
                                         <span class="text-[9px] font-black uppercase opacity-60">
@@ -129,14 +129,12 @@
                 </div>
 
                 <?php if (strtolower($ticket['status']) !== 'closed'): ?>
-                    <div class="p-4 bg-gray-50/30 border-t border-gray-100">
+                    <div class="p-4" style="background:var(--fiori-surface); border-top:1px solid var(--fiori-border);">
                         <form id="quick-reply-form" action="<?= base_url('client/chat/send/' . $ticket['id']) ?>" method="POST" class="flex gap-2">
                             <?= csrf_field() ?>
-                            <input type="text" name="message" id="quick-input" required
-                                class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                                placeholder="Type a quick reply...">
-                            <button type="submit" class="bg-[#1e72af] text-white p-2 rounded-xl hover:bg-[#165a8a] transition-all">
-                                <span class="material-symbols-outlined">send</span>
+                            <input type="text" name="message" id="quick-input" required class="fiori-input w-full" placeholder="Type a quick reply...">
+                            <button type="submit" class="btn btn-accent" style="width:40px; padding:0; flex-shrink:0;">
+                                <span class="material-symbols-outlined text-[18px]">send</span>
                             </button>
                         </form>
                     </div>
@@ -145,28 +143,28 @@
         </div>
 
         <div class="space-y-4">
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm sticky top-8">
-                <h3 class="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">Ticket Metadata</h3>
-                <div class="space-y-4 text-xs">
+            <div class="fiori-card p-6 sticky top-8">
+                <h3 class="fiori-card__title mb-4 uppercase tracking-wider text-[11px]">Ticket Metadata</h3>
+                <div class="space-y-3 text-xs" style="color:var(--fiori-text-secondary);">
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-400 font-medium">Category</span>
-                        <span class="text-[#1e72af] font-black uppercase tracking-wider">
+                        <span class="font-semibold">Category</span>
+                        <span style="color:var(--fiori-blue); font-weight:700; text-transform:uppercase;">
                             <?= !empty($ticket['category']) ? esc($ticket['category']) : 'General' ?>
                         </span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-400 font-medium">Priority</span>
-                        <span class="text-gray-700 font-bold"><?= esc($ticket['priority']) ?></span>
+                        <span class="font-semibold">Priority</span>
+                        <span style="color:var(--fiori-text-primary); font-weight:600;"><?= esc($ticket['priority']) ?></span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-400 font-medium">Staff Assigned</span>
-                        <span class="text-gray-700 font-bold">
+                        <span class="font-semibold">Staff Assigned</span>
+                        <span style="color:var(--fiori-text-primary); font-weight:600;">
                             <?= $ticket['staff_name'] ?? 'Searching for Agent...' ?>
                         </span>
                     </div>
-                    <div class="flex justify-between items-center pt-4 border-t border-gray-50">
-                        <span class="text-gray-400 font-medium">Last Updated</span>
-                        <span class="text-gray-500 italic">
+                    <div class="flex justify-between items-center pt-3 mt-3 border-t" style="border-color:var(--fiori-border);">
+                        <span class="font-semibold">Last Updated</span>
+                        <span>
                             <?= date('M d, Y H:i', strtotime($ticket['updated_at'])) ?>
                         </span>
                     </div>
@@ -222,11 +220,6 @@
         const bubbleHtml = `
             <div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-1">
                 <div class="max-w-[80%] ${isMe ? 'bg-[#1e72af] text-white ml-auto rounded-l-xl rounded-tr-xl' : 'bg-gray-100 text-gray-800 mr-auto rounded-r-xl rounded-tl-xl'} p-4 shadow-sm">
-                    <div class="flex items-center gap-3 mb-1 ${isMe ? 'flex-row-reverse' : ''}">
-                        <span class="text-[9px] font-black uppercase opacity-60">
-                            ${data.is_bot ? 'HRWeb Bot' : (isMe ? 'You' : data.sender_name)}
-                        </span>
-                        <span class="text-[8px] opacity-40">Just now</span>
                     </div>
                     ${data.is_bot ? 
                         `<div class="text-sm leading-relaxed msg-text pb-2">${data.message}</div>` : 

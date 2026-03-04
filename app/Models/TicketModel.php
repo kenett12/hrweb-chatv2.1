@@ -32,17 +32,21 @@ class TicketModel extends Model
      * @param array $statuses List of statuses to filter by.
      * @return array
      */
-    public function getTicketsInQueue(array $statuses = ['Open', 'In Progress']): array
+    public function getTicketsInQueue(array $statuses = ['Open', 'In Progress'], $assignedToId = null): array
     {
         // We use COALESCE to fallback to the email if the company name isn't set.
-        return $this->select('tickets.*, COALESCE(c.company_name, u.email) as client_name, COALESCE(t.full_name, s.email) as staff_name')
+        $builder = $this->select('tickets.*, COALESCE(c.company_name, u.email) as client_name, u.full_name as creator_name, COALESCE(t.full_name, s.email) as staff_name')
                     ->join('users u', 'u.id = tickets.client_id', 'left')
-                    ->join('clients c', 'c.user_id = u.id', 'left')
+                    ->join('clients c', 'c.id = u.client_id', 'left')
                     ->join('users s', 's.id = tickets.assigned_to', 'left')
                     ->join('tsrs t', 't.user_id = s.id', 'left')
-                    ->whereIn('tickets.status', $statuses)
-                    ->orderBy('tickets.created_at', 'DESC')
-                    ->findAll();
+                    ->whereIn('tickets.status', $statuses);
+
+        if ($assignedToId !== null) {
+            $builder->where('tickets.assigned_to', $assignedToId);
+        }
+
+        return $builder->orderBy('tickets.created_at', 'DESC')->findAll();
     }
 
     /**
@@ -79,7 +83,7 @@ class TicketModel extends Model
     {
         return $this->select('tickets.*, COALESCE(c.company_name, u.email) as client_name')
                     ->join('users u', 'u.id = tickets.client_id', 'left')
-                    ->join('clients c', 'c.user_id = u.id', 'left')
+                    ->join('clients c', 'c.id = u.client_id', 'left')
                     ->groupStart()
                         ->where('tickets.status', 'Open')
                         ->orGroupStart()
@@ -98,9 +102,9 @@ class TicketModel extends Model
      */
     public function getTicketWithUsers($id)
     {
-        return $this->select('tickets.*, COALESCE(c.company_name, u.email) as client_name, COALESCE(t.full_name, s.email) as staff_name, sa.email as superadmin_name')
+        return $this->select('tickets.*, COALESCE(c.company_name, u.email) as client_name, u.full_name as creator_name, COALESCE(t.full_name, s.email) as staff_name, sa.email as superadmin_name')
                     ->join('users u', 'u.id = tickets.client_id', 'left')
-                    ->join('clients c', 'c.user_id = u.id', 'left')
+                    ->join('clients c', 'c.id = u.client_id', 'left')
                     ->join('users s', 's.id = tickets.assigned_to', 'left')
                     ->join('tsrs t', 't.user_id = s.id', 'left')
                     ->join('users sa', 'sa.id = tickets.superadmin_id', 'left')

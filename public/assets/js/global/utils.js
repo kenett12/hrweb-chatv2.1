@@ -6,6 +6,14 @@
 document.addEventListener('DOMContentLoaded', function () {
     console.log('HRWeb Global Logic Initialized');
 
+    // 0. Fix SweetAlert UI Glitching (prevents body padding shift and h-screen breakage)
+    if (typeof window.Swal !== 'undefined') {
+        window.Swal = window.Swal.mixin({
+            scrollbarPadding: false,
+            heightAuto: false
+        });
+    }
+
     // 1. Auto-dismiss Flash Messages for a clean UI
     const alerts = document.querySelectorAll('.alert-auto-dismiss');
     alerts.forEach(alert => {
@@ -29,36 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 500);
         }
     });
-
-    // Show the preloader on valid internal anchor clicks
-    document.querySelectorAll('a').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            const el = e.currentTarget;
-            const targetAttr = el.getAttribute('target');
-            const hrefAttr = el.getAttribute('href');
-            const onclickAttr = el.getAttribute('onclick');
-
-            if (
-                hrefAttr &&
-                hrefAttr !== '#' &&
-                hrefAttr.trim() !== '' &&
-                !hrefAttr.startsWith('javascript:') &&
-                targetAttr !== '_blank' &&
-                !e.ctrlKey &&
-                !e.metaKey &&
-                (!onclickAttr || !onclickAttr.includes('confirmAction'))
-            ) {
-                // Return preloader to block screen visually before navigation
-                if (loader) {
-                    loader.style.display = 'flex';
-                    // Tick delay to ensure display:flex registers before unhiding opacity
-                    setTimeout(() => {
-                        loader.classList.remove('hidden');
-                    }, 10);
-                }
-            }
-        });
-    });
+    // Anchor preloader removed for seamless navigation
 
     // 3. Form Submit Button Loading State & Global Confirmation
     document.querySelectorAll('form').forEach(form => {
@@ -197,15 +176,6 @@ function confirmAction(e, url, title, text, confirmBtnText = 'Yes, continue', co
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                // Return preloader before redirecting
-                const loader = document.getElementById('globalPreloader');
-                if (loader) {
-                    loader.style.display = 'flex';
-                    setTimeout(() => {
-                        loader.classList.remove('hidden');
-                    }, 10);
-                }
-
                 // Proceed with the action
                 window.location.href = url;
             }

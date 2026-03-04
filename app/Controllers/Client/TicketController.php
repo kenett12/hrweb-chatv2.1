@@ -32,9 +32,14 @@ class TicketController extends BaseController
         
         $this->viewData['title'] = 'My Support Tickets';
 
-        // Using where() with the Model to filter by client
-        // Note: If you want client_name/staff_name here too, use a custom method in the model
-        $this->viewData['tickets'] = $this->ticketModel->where('client_id', $clientId)->findAll();
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($clientId);
+        $companyId = $user['client_id'];
+        
+        $companyUsers = $companyId ? $userModel->where('client_id', $companyId)->findColumn('id') : [$clientId];
+
+        // Using whereIn() to get all tickets for the company
+        $this->viewData['tickets'] = $this->ticketModel->whereIn('client_id', $companyUsers)->findAll();
 
         return view('client/tickets/index', $this->viewData);
     }
@@ -67,16 +72,61 @@ class TicketController extends BaseController
             $file->move(FCPATH . 'uploads/tickets', $fileName);
         }
 
+        $db = \Config\Database::connect();
+        
+        // Find company lead TSR
+        $userRecord = $db->table('users')->where('id', $clientId)->get()->getRowArray();
+        $companyId = $userRecord['client_id'] ?? null;
+        
+        $assignedTo = null;
+        $status = 'Open';
+
+        if ($companyId) {
+            $clientRecord = $db->table('clients')->where('id', $companyId)->get()->getRowArray();
+            if ($clientRecord && !empty($clientRecord['hr_contact'])) {
+                $hrContact = json_decode($clientRecord['hr_contact'], true);
+                $leadTsrId = $hrContact['lead'] ?? null;
+                
+                if ($leadTsrId) {
+                    $leadUser = $db->table('users')->where('id', $leadTsrId)->get()->getRowArray();
+                    if ($leadUser && $leadUser['availability_status'] === 'active') {
+                        $assignedTo = $leadTsrId;
+                        $status = 'In Progress';
+                        $db->table('users')->where('id', $leadTsrId)->update(['availability_status' => 'busy']);
+                    } else {
+                        // Escalate if Lead is busy/offline
+                        $escalationHierarchy = ['tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
+                        foreach ($escalationHierarchy as $role) {
+                            $availableStaff = $db->table('users')
+                                ->where('role', $role)
+                                ->where('status', 'active')
+                                ->where('availability_status', 'active')
+                                ->orderBy('id', 'ASC') // Assign to the first available for simplicity
+                                ->get()->getRowArray();
+                                
+                            if ($availableStaff) {
+                                $assignedTo = $availableStaff['id'];
+                                $status = 'In Progress';
+                                $db->table('users')->where('id', $availableStaff['id'])->update(['availability_status' => 'busy']);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Save the main ticket record
         $this->ticketModel->save([
             'ticket_number' => $this->ticketModel->generateNumber(),
             'client_id'     => $clientId,
+            'assigned_to'   => $assignedTo,
             'subject'       => $this->request->getPost('subject'),
             'category'      => $this->request->getPost('category'),
             'priority'      => $this->request->getPost('priority'),
             'description'   => $this->request->getPost('description'),
             'attachment'    => $fileName,
-            'status'        => 'Open'
+            'status'        => $status
         ]);
 
         $ticketId = $this->ticketModel->insertID();
@@ -113,8 +163,14 @@ class TicketController extends BaseController
         // Fetch detailed ticket info including the assigned staff name (JOINED data)
         $ticket = $this->ticketModel->getTicketWithUsers($id);
 
-        // Security check: Ensure the ticket exists and belongs to the active client
-        if (!$ticket || $ticket['client_id'] != $clientId) {
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($clientId);
+        $companyId = $user['client_id'];
+        
+        $companyUsers = $companyId ? $userModel->where('client_id', $companyId)->findColumn('id') : [$clientId];
+
+        // Security check: Ensure the ticket exists and belongs to the active company
+        if (!$ticket || !in_array($ticket['client_id'], $companyUsers)) {
             return redirect()->to('client/tickets')->with('error', 'Unauthorized access to ticket.');
         }
 

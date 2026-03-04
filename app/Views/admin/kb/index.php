@@ -1,268 +1,234 @@
 <?= $this->extend('layouts/main_layout') ?>
 
 <?= $this->section('content') ?>
-<style>
-    /* Custom Scrollbar for premium feel */
-    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; transition: all 0.3s ease; }
-    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #1e72af; }
-
-    /* Sharp Box Outlines */
-    .kb-container { background: white; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05); }
-    .kb-section-header { background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-    img { -webkit-user-drag: none; user-select: none; }
-</style>
-
-<div class="p-8 bg-[#f4f6f9] min-h-screen">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-        <div>
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                <i class="fas fa-robot text-clr-blue bg-blue-50 p-3 rounded-2xl"></i> Bot Knowledge Manager
-            </h1>
-            <p class="text-slate-500 font-medium mt-2 ml-1">Train your AI with automated guides and step-by-step visuals.</p>
-        </div>
-        <button onclick="document.getElementById('cat-modal').classList.remove('hidden')" 
-                class="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-3 shadow-lg hover:shadow-xl hover:bg-clr-blue transition-all active:scale-95">
-            <i class="fas fa-plus"></i> New Category
-        </button>
+<!-- SAP Fiori Page Header -->
+<div class="fiori-page-header">
+    <div>
+        <h1 class="fiori-page-title">Bot Knowledge Manager</h1>
+        <p class="fiori-page-subtitle">Train your AI assistant with automated guides and step-by-step instructions</p>
     </div>
+    <button onclick="toggleModal('cat-modal')" class="btn btn-outline">
+        <span class="material-symbols-outlined text-[16px]">create_new_folder</span>
+        New Category
+    </button>
+</div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        <div class="lg:col-span-4 sticky top-8">
-            <div class="kb-container rounded-[2rem] flex flex-col max-h-[calc(100vh-120px)] overflow-hidden">
-                <div class="kb-section-header px-8 py-6 shrink-0 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-clr-blue/10 flex items-center justify-center text-clr-blue">
-                        <i class="fas fa-pen text-xs"></i>
-                    </div>
-                    <h2 class="text-xs font-black text-slate-700 uppercase tracking-[0.15em]">Create New Guide</h2>
-                </div>
-                
-                <div class="p-8 overflow-y-auto custom-scroll flex-1 bg-white">
-                    <form action="<?= base_url('superadmin/kb/store') ?>" method="POST" enctype="multipart/form-data" class="space-y-6">
-                        <?= csrf_field() ?>
-                        
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Category</label>
-                            <div class="relative">
-                                <i class="fas fa-folder absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <select name="category_id" required class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 focus:bg-white focus:border-clr-blue focus:ring-4 focus:ring-clr-blue/10 transition-all outline-none appearance-none cursor-pointer">
-                                    <option value="" disabled selected>Select a folder...</option>
-                                    <?php foreach($categories as $cat): ?>
-                                        <option value="<?= $cat['id'] ?>"><?= esc($cat['name']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                            </div>
-                        </div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Article Question</label>
-                            <div class="relative">
-                                <i class="fas fa-question-circle absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" name="question" required placeholder="e.g., How to download records?" 
-                                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 placeholder-slate-400 focus:bg-white focus:border-clr-blue focus:ring-4 focus:ring-clr-blue/10 transition-all outline-none">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Trigger Keywords</label>
-                            <div class="relative">
-                                <i class="fas fa-tags absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" name="keywords" placeholder="Setup_Cutoff, Payroll_Rules" 
-                                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 placeholder-slate-400 focus:bg-white focus:border-clr-blue focus:ring-4 focus:ring-clr-blue/10 transition-all outline-none">
-                            </div>
-                            <p class="text-[9px] text-slate-400 font-medium mt-2 ml-2">Separate multiple tags with commas.</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Bot Instructions</label>
-                            <textarea name="answer" rows="6" required placeholder="1. Go to Transaction Menu...&#10;[IMAGE:1]&#10;2. Click Save..."
-                                      class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 placeholder-slate-400 focus:bg-white focus:border-clr-blue focus:ring-4 focus:ring-clr-blue/10 transition-all outline-none custom-scroll resize-y"></textarea>
-                            
-                            <div class="mt-3 p-3 bg-blue-50/50 border border-blue-100 rounded-xl flex items-start gap-3">
-                                <i class="fas fa-info-circle text-clr-blue mt-0.5"></i>
-                                <p class="text-[10px] text-slate-500 leading-relaxed font-medium">
-                                    To insert photos seamlessly, type <strong class="text-clr-blue bg-white px-1.5 py-0.5 rounded shadow-sm border border-blue-100">[IMAGE:1]</strong> for the first attached file, <strong class="text-clr-blue bg-white px-1.5 py-0.5 rounded shadow-sm border border-blue-100">[IMAGE:2]</strong> for the second, and so on.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Attach Visuals</label>
-                            <label for="kb_images" class="group flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-300 rounded-[1.5rem] bg-slate-50 hover:bg-blue-50/50 hover:border-clr-blue transition-all cursor-pointer overflow-hidden relative">
-                                <div id="ph" class="text-center group-hover:scale-105 transition-transform duration-300">
-                                    <div class="w-10 h-10 bg-white shadow-sm rounded-full flex items-center justify-center mx-auto mb-2 text-slate-400 group-hover:text-clr-blue transition-colors">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                    </div>
-                                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Click to Upload Files</p>
-                                </div>
-                                
-                                <div id="pv" class="hidden flex flex-col items-center justify-center w-full h-full bg-emerald-50/50">
-                                    <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-md mb-2">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <p id="fn" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest"></p>
-                                </div>
-                                <input id="kb_images" name="kb_images[]" type="file" accept="image/*" class="hidden" multiple onchange="previewFiles(this)">
-                            </label>
-                            <div id="file-list-container" class="mt-3 space-y-1.5 hidden"></div>
-                        </div>
-
-                        <button type="submit" class="w-full bg-[#1e72af] text-white py-4 rounded-2xl font-black uppercase text-xs tracking-[0.15em] shadow-lg hover:shadow-xl hover:bg-[#165a8a] transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-4">
-                            <i class="fas fa-paper-plane"></i> Deploy to Bot
-                        </button>
-                    </form>
+    <!-- Left: Create Guide Form -->
+    <div class="lg:col-span-4 sticky top-5">
+        <div class="fiori-card">
+            <div class="fiori-card__header">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]" style="color:var(--fiori-blue);">edit_note</span>
+                    <span class="fiori-card__title">Create New Guide</span>
                 </div>
             </div>
-        </div>
+            <div class="fiori-card__content">
+                <form action="<?= base_url('superadmin/kb/store') ?>" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <?= csrf_field() ?>
 
-        <div class="lg:col-span-8">
-            <div class="kb-container rounded-[2rem] overflow-hidden">
-                <div class="kb-section-header px-10 py-7 flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
-                            <i class="fas fa-list text-xs"></i>
-                        </div>
-                        <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-[0.15em]">Active Guides</h2>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Category</label>
+                        <select name="category_id" required class="fiori-input">
+                            <option value="" disabled selected>Select a folder…</option>
+                            <?php foreach($categories as $cat): ?>
+                            <option value="<?= $cat['id'] ?>"><?= esc($cat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                    <span class="text-[10px] font-black text-clr-blue uppercase bg-blue-50 px-4 py-2 rounded-full border border-blue-100">Total: <?= count($articles) ?></span>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Article Question</label>
+                        <input type="text" name="question" required placeholder="e.g., How to download records?" class="fiori-input">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Trigger Keywords</label>
+                        <input type="text" name="keywords" placeholder="Setup_Cutoff, Payroll_Rules" class="fiori-input">
+                        <p class="text-xs mt-1" style="color:var(--fiori-text-muted);">Separate multiple tags with commas.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Bot Instructions</label>
+                        <textarea name="answer" rows="6" required placeholder="1. Go to Transaction Menu...&#10;[IMAGE:1]&#10;2. Click Save..."
+                            class="fiori-input" style="height:auto; padding:10px 12px; resize:vertical;"></textarea>
+                        <div class="mt-2 p-3 rounded" style="background:var(--fiori-blue-light); border:1px solid #b3d4fb; border-radius:4px;">
+                            <p class="text-xs" style="color:var(--fiori-blue);">
+                                <span class="font-semibold">Tip:</span> Type <code class="bg-white px-1 rounded border border-blue-200">[IMAGE:1]</code> to embed the first uploaded image inline, <code class="bg-white px-1 rounded border border-blue-200">[IMAGE:2]</code> for the second, etc.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Attach Visuals</label>
+                        <label for="kb_images" class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded cursor-pointer transition-colors hover:bg-blue-50"
+                            style="border-color:var(--fiori-border); border-radius:4px;">
+                            <div id="ph" class="text-center">
+                                <span class="material-symbols-outlined text-[28px] block mb-1" style="color:var(--fiori-text-muted);">cloud_upload</span>
+                                <p class="text-xs font-medium" style="color:var(--fiori-text-muted);">Click to upload files</p>
+                            </div>
+                            <div id="pv" class="hidden flex-col items-center justify-center">
+                                <span class="material-symbols-outlined text-[28px] block mb-1" style="color:var(--fiori-positive);">check_circle</span>
+                                <p id="fn" class="text-xs font-semibold" style="color:var(--fiori-positive);"></p>
+                            </div>
+                            <input id="kb_images" name="kb_images[]" type="file" accept="image/*" class="hidden" multiple onchange="previewFiles(this)">
+                        </label>
+                        <div id="file-list-container" class="mt-2 space-y-1.5 hidden"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent w-full">
+                        <span class="material-symbols-outlined text-[16px]">send</span>
+                        Deploy to Bot
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Articles Table -->
+    <div class="lg:col-span-8">
+        <div class="fiori-card overflow-hidden">
+            <div class="fiori-card__header">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]" style="color:var(--fiori-blue);">auto_stories</span>
+                    <span class="fiori-card__title">Active Guides</span>
                 </div>
-                <div class="overflow-x-auto custom-scroll">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100 bg-slate-50/50">
-                                <th class="px-10 py-5">Category</th>
-                                <th class="px-6 py-5">Question</th>
-                                <th class="px-10 py-5 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 bg-white">
+                <span class="fiori-status fiori-status--information font-semibold">Total: <?= count($articles) ?></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="fiori-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Question</th>
+                            <th class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($articles)): ?>
                             <?php foreach($articles as $art): ?>
-                            <tr class="hover:bg-slate-50/80 transition-colors group">
-                                <td class="px-10 py-5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm">
-                                            <i class="fas fa-folder-open text-[10px]"></i>
-                                        </div>
-                                        <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest"><?= esc($art['category_name']) ?></span>
-                                    </div>
+                            <tr>
+                                <td>
+                                    <span class="fiori-status fiori-status--neutral">
+                                        <span class="material-symbols-outlined text-[13px]">folder_open</span>
+                                        <?= esc($art['category_name']) ?>
+                                    </span>
                                 </td>
-                                <td class="px-6 py-5 font-bold text-sm text-slate-800"><?= esc($art['question']) ?></td>
-                                <td class="px-10 py-5 text-right">
-                                    <button onclick="confirmAction(event, '<?= base_url('superadmin/kb/delete/'.$art['id']) ?>', 'Delete this guide?', 'This will also delete the uploaded images. This action cannot be undone.', 'Delete', '#eb6063')" 
-                                            class="w-9 h-9 rounded-xl bg-red-50 text-red-500 border border-red-100 transition-all hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md">
-                                        <i class="fas fa-trash-alt text-xs"></i>
+                                <td class="font-medium" style="color:var(--fiori-text-base);"><?= esc($art['question']) ?></td>
+                                <td class="text-right">
+                                    <button onclick="confirmAction(event, '<?= base_url('superadmin/kb/delete/'.$art['id']) ?>', 'Delete this guide?', 'This will also delete all uploaded images. This cannot be undone.', 'Delete', 'var(--fiori-negative)')"
+                                        class="w-8 h-8 flex items-center justify-center rounded transition-colors ml-auto" style="color:var(--fiori-text-muted);"
+                                        onmouseover="this.style.background='var(--fiori-negative-light)'; this.style.color='var(--fiori-negative)';" onmouseout="this.style.background=''; this.style.color='var(--fiori-text-muted)';">
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
                                     </button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                        <?php else: ?>
+                        <tr>
+                            <td colspan="3" class="py-14 text-center">
+                                <span class="material-symbols-outlined text-4xl block mb-2" style="color:var(--fiori-border);">auto_stories</span>
+                                <p class="text-sm font-medium" style="color:var(--fiori-text-secondary);">No guides yet</p>
+                                <p class="text-xs mt-1" style="color:var(--fiori-text-muted);">Use the form to add your first knowledge base article.</p>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<div id="cat-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-6 transition-opacity">
-    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
-        <form action="<?= base_url('superadmin/kb/storeCategory') ?>" method="POST" class="p-8 space-y-6">
-            <?= csrf_field() ?>
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><i class="fas fa-folder-plus"></i></div>
-                    <h2 class="text-lg font-black text-slate-900 tracking-tight">New Category</h2>
-                </div>
-                <button type="button" onclick="document.getElementById('cat-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div>
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Folder Name</label>
-                <div class="relative">
-                    <i class="fas fa-edit absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" name="name" required class="w-full pl-11 pr-4 py-4 rounded-2xl border border-slate-200 font-bold text-slate-700 bg-slate-50 focus:bg-white focus:border-clr-blue focus:ring-4 focus:ring-clr-blue/10 transition-all outline-none">
-                </div>
-            </div>
-            
-            <div>
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Choose Icon</label>
-                <div class="grid grid-cols-5 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 max-h-48 overflow-y-auto custom-scroll">
-                    <?php 
-                    $icons = ['fas fa-folder', 'fas fa-money-bill', 'fas fa-clock', 'fas fa-user-circle', 'fas fa-file-invoice', 'fas fa-cog', 'fas fa-briefcase', 'fas fa-id-card', 'fas fa-envelope', 'fas fa-tools', 'fas fa-shield-alt'];
-                    foreach($icons as $icon): 
-                    ?>
-                    <button type="button" onclick="selIcon('<?= $icon ?>', this)" 
-                            class="ico-opt w-12 h-12 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-clr-blue hover:border-clr-blue transition-all active:scale-95 shadow-sm hover:shadow">
-                        <i class="<?= $icon ?>"></i>
-                    </button>
-                    <?php endforeach; ?>
-                </div>
-                <input type="hidden" name="icon" id="icon-input" value="fas fa-folder">
-            </div>
-            
-            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl transition-all hover:bg-clr-blue active:scale-[0.98]">
-                Confirm Category
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
+<!-- New Category Dialog -->
+<div id="cat-modal" class="fiori-overlay hidden">
+    <div class="fiori-dialog">
+        <div class="fiori-dialog__header">
+            <h3 class="fiori-dialog__title">New Category</h3>
+            <button type="button" onclick="toggleModal('cat-modal')"
+                class="w-7 h-7 flex items-center justify-center rounded transition-colors" style="color:var(--fiori-text-muted);" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''">
+                <span class="material-symbols-outlined text-[18px]">close</span>
             </button>
+        </div>
+        <form action="<?= base_url('superadmin/kb/storeCategory') ?>" method="POST">
+            <?= csrf_field() ?>
+            <div class="fiori-dialog__body space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Folder Name</label>
+                    <input type="text" name="name" required class="fiori-input" placeholder="e.g., Payroll Setup">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--fiori-text-secondary);">Choose Icon</label>
+                    <div class="grid grid-cols-6 gap-2 p-3 rounded border" style="border-color:var(--fiori-border); background:#f7f7f7; border-radius:4px; max-height:180px; overflow-y:auto;">
+                        <?php
+                        $icons = ['fas fa-folder','fas fa-money-bill','fas fa-clock','fas fa-user-circle','fas fa-file-invoice','fas fa-cog','fas fa-briefcase','fas fa-id-card','fas fa-envelope','fas fa-tools','fas fa-shield-alt'];
+                        foreach($icons as $icon): ?>
+                        <button type="button" onclick="selIcon('<?= $icon ?>', this)"
+                            class="ico-opt w-10 h-10 bg-white rounded flex items-center justify-center text-sm transition-colors border"
+                            style="border-color:var(--fiori-border); color:var(--fiori-text-muted);"
+                            onmouseover="this.style.borderColor='var(--fiori-blue)'; this.style.color='var(--fiori-blue)';"
+                            onmouseout="if(!this.classList.contains('selected')){this.style.borderColor='var(--fiori-border)'; this.style.color='var(--fiori-text-muted)';}">
+                            <i class="<?= $icon ?>"></i>
+                        </button>
+                        <?php endforeach; ?>
+                    </div>
+                    <input type="hidden" name="icon" id="icon-input" value="fas fa-folder">
+                </div>
+            </div>
+            <div class="fiori-dialog__footer">
+                <button type="button" onclick="toggleModal('cat-modal')" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-accent">Create Category</button>
+            </div>
         </form>
     </div>
 </div>
+<?= $this->endSection() ?>
 
-
-
+<?= $this->section('scripts') ?>
 <script>
-    /**
-     * Enhanced Preview function: Updates the main dropzone text 
-     * AND generates a neat visual list of files below it.
-     */
-    function previewFiles(input) { 
-        const container = document.getElementById('file-list-container');
-        container.innerHTML = ''; // Clear old lists
-        
-        if (input.files && input.files.length > 0) { 
-            // Update dropzone UI
-            document.getElementById('fn').textContent = input.files.length + (input.files.length === 1 ? " File Selected" : " Files Selected"); 
-            document.getElementById('pv').classList.remove('hidden'); 
-            document.getElementById('ph').classList.add('hidden'); 
-            
-            // Build visual file list
-            container.classList.remove('hidden');
-            Array.from(input.files).forEach((file, index) => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center gap-3 bg-white border border-slate-200 p-2.5 rounded-xl shadow-sm';
-                item.innerHTML = `
-                    <div class="w-7 h-7 bg-blue-50 text-clr-blue rounded-lg flex items-center justify-center shrink-0 text-[10px]">
-                        <i class="fas fa-image"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold text-slate-700 truncate">${file.name}</p>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">[IMAGE:${index + 1}]</p>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        } else {
-            // Revert to empty state
-            document.getElementById('pv').classList.add('hidden'); 
-            document.getElementById('ph').classList.remove('hidden');
-            container.classList.add('hidden');
-        }
+function previewFiles(input) {
+    const container = document.getElementById('file-list-container');
+    container.innerHTML = '';
+    if (input.files && input.files.length > 0) {
+        document.getElementById('fn').textContent = input.files.length + (input.files.length === 1 ? ' File Selected' : ' Files Selected');
+        document.getElementById('pv').classList.remove('hidden');
+        document.getElementById('ph').classList.add('hidden');
+        container.classList.remove('hidden');
+        Array.from(input.files).forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center gap-3 p-2 rounded border';
+            item.style = 'border-color:var(--fiori-border); background:#fff; border-radius:4px;';
+            item.innerHTML = `
+                <span class="material-symbols-outlined text-[16px]" style="color:var(--fiori-blue); flex-shrink:0;">image</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-medium truncate" style="color:var(--fiori-text-base);">${file.name}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--fiori-text-muted);">[IMAGE:${index + 1}]</p>
+                </div>`;
+            container.appendChild(item);
+        });
+    } else {
+        document.getElementById('pv').classList.add('hidden');
+        document.getElementById('ph').classList.remove('hidden');
+        container.classList.add('hidden');
     }
-    
-    function selIcon(ico, el) { 
-        document.getElementById('icon-input').value = ico; 
-        document.querySelectorAll('.ico-opt').forEach(b => { 
-            b.classList.remove('border-clr-blue', 'text-clr-blue', 'ring-2', 'ring-clr-blue/20'); 
-            b.classList.add('border-slate-200', 'text-slate-400'); 
-        }); 
-        el.classList.replace('border-slate-200', 'border-clr-blue'); 
-        el.classList.replace('text-slate-400', 'text-clr-blue'); 
-        el.classList.add('ring-2', 'ring-clr-blue/20');
-    }
-    
+}
 
+function selIcon(ico, el) {
+    document.getElementById('icon-input').value = ico;
+    document.querySelectorAll('.ico-opt').forEach(b => {
+        b.classList.remove('selected');
+        b.style.borderColor = 'var(--fiori-border)';
+        b.style.color = 'var(--fiori-text-muted)';
+        b.style.background = '#fff';
+    });
+    el.classList.add('selected');
+    el.style.borderColor = 'var(--fiori-blue)';
+    el.style.color = 'var(--fiori-blue)';
+    el.style.background = 'var(--fiori-blue-light)';
+}
 </script>
 <?= $this->endSection() ?>

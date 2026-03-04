@@ -46,7 +46,9 @@ class AuthFilter implements FilterInterface
             $userRole = $session->get('role');
             if (!in_array($userRole, $arguments)) {
                 // Redirect to their own dashboard if they try to peek at others
-                return redirect()->to(base_url($userRole . '/dashboard'))->with('error', 'Unauthorized access to that area.');
+                $staffRoles = ['admin', 'superadmin', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it', 'tsr'];
+                $prefix = in_array($userRole, $staffRoles) ? (in_array($userRole, ['admin', 'superadmin']) ? 'superadmin' : 'tsr') : $userRole;
+                return redirect()->to(base_url($prefix . '/dashboard'))->with('error', 'Unauthorized access to that area.');
             }
         }
     }

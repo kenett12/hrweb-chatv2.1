@@ -50,11 +50,27 @@ abstract class BaseController extends Controller
         $this->session = \Config\Services::session();
 
         // 2. Pre-populate shared view data for consistency (Header/Sidebar)
+        $role = $this->session->get('role');
+        $staffRoles = ['admin', 'superadmin', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it', 'tsr'];
+        $portalPrefix = in_array($role, $staffRoles) ? (in_array($role, ['admin', 'superadmin']) ? 'superadmin' : 'tsr') : $role;
+
+        $userId = $this->session->get('id');
+        $userAvailability = 'offline';
+        if ($userId) {
+            $db = \Config\Database::connect();
+            $userRecord = $db->table('users')->select('availability_status')->where('id', $userId)->get()->getRowArray();
+            if ($userRecord && isset($userRecord['availability_status'])) {
+                $userAvailability = $userRecord['availability_status'];
+            }
+        }
+
         $this->viewData = [
-            'session'    => $this->session,
-            'userRole'   => $this->session->get('role'),
-            'userEmail'  => $this->session->get('email'),
-            'isLoggedIn' => $this->session->get('isLoggedIn')
+            'session'          => $this->session,
+            'userRole'         => $role,
+            'portalPrefix'     => $portalPrefix,
+            'userEmail'        => $this->session->get('email'),
+            'isLoggedIn'       => $this->session->get('isLoggedIn'),
+            'userAvailability' => $userAvailability
         ];
 
         // 3. Automated Analytics Tracking for Clients

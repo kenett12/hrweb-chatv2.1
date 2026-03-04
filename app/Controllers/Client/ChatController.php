@@ -29,20 +29,25 @@ class ChatController extends BaseController
         $userId = session()->get('id') ?? session()->get('user_id');
         if (!$userId) return redirect()->to('/login');
 
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+        $companyId = $user['client_id'];
+        $companyUsers = $companyId ? $userModel->where('client_id', $companyId)->findColumn('id') : [$userId];
+
         // Fetch all tickets/chats for this client, ordered by latest update
         $chats = $this->ticketModel
             ->select('tickets.*, COALESCE(t.full_name, s.email) as staff_name')
             ->join('users s', 's.id = tickets.assigned_to', 'left')
             ->join('tsrs t', 't.user_id = s.id', 'left')
-            ->where('client_id', $userId)
+            ->whereIn('tickets.client_id', $companyUsers)
             ->orderBy('updated_at', 'DESC')
             ->findAll();
 
-        return view('client/chat_directory', [
+        return view('client/chat_directory', array_merge($this->viewData, [
             'chats'     => $chats,
             'userRole'  => session()->get('role'),
             'userEmail' => session()->get('email')
-        ]);
+        ]));
     }
 
     /**
@@ -55,9 +60,14 @@ class ChatController extends BaseController
 
         if (!$userId) return redirect()->to('/login');
 
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+        $companyId = $user['client_id'];
+        $companyUsers = $companyId ? $userModel->where('client_id', $companyId)->findColumn('id') : [$userId];
+
         // Fetch the active ticket
         $activeTicket = $id ? $this->ticketModel->find($id) : $db->table('tickets')
-            ->where('client_id', $userId)
+            ->whereIn('client_id', $companyUsers)
             ->where('status', 'Open')
             ->orderBy('id', 'DESC')
             ->get()
@@ -72,13 +82,13 @@ class ChatController extends BaseController
             ->get()
             ->getResultArray();
 
-        return view('client/chat_session', [
+        return view('client/chat_session', array_merge($this->viewData, [
             'history'       => $history,
             'quick_tips'    => $quick_tips, 
             'active_ticket' => $activeTicket,
             'userRole'      => session()->get('role'),
             'userEmail'     => session()->get('email')
-        ]);
+        ]));
     }
 
     /**
@@ -124,7 +134,8 @@ class ChatController extends BaseController
                         'message'     => esc($rawMsg),
                         'is_bot'      => 0,
                         'sender_id'   => $userId,
-                        'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User'
+                        'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User',
+                        'time'        => date('h:i A')
                     ]);
                 }
                 return $this->response->setJSON(['status' => 'success', 'bypassed_bot' => true]);
@@ -175,7 +186,9 @@ class ChatController extends BaseController
                     'message'     => esc($rawMsg),
                     'is_bot'      => 0,
                     'sender_id'   => $userId,
-                    'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User'
+                    'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User',
+                    'sender_role' => session()->get('role'),
+                    'time'        => date('h:i A')
                 ]);
 
                 // Emit Bot's message so TSRs/Admins can see it live
@@ -185,13 +198,15 @@ class ChatController extends BaseController
                     'is_bot'      => 1,
                     'sender_id'   => null,
                     'sender_name' => 'HRWeb Bot',
-                    'article_id'  => $bestMatch ? $bestMatch['id'] : null
+                    'article_id'  => $bestMatch ? $bestMatch['id'] : null,
+                    'time'        => date('h:i A')
                 ]);
             }
 
             return $this->response->setJSON([
                 'status' => 'success', 
-                'reply' => $replyToReturn
+                'reply' => $replyToReturn,
+                'time' => date('h:i A')
             ]);
         } catch (\Throwable $e) {
             log_message('critical', $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -305,11 +320,16 @@ class ChatController extends BaseController
                     'message'     => esc($message),
                     'is_bot'      => 0,
                     'sender_id'   => $userId,
-                    'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User'
+                    'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User',
+                    'sender_role' => session()->get('role'),
+                    'time'        => date('h:i A')
                 ]);
             }
 
-            return $this->response->setJSON(['status' => 'success']);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'time' => date('h:i A')
+            ]);
         } catch (\Throwable $e) {
             return $this->response->setStatusCode(500)->setJSON(['error' => $e->getMessage()]);
         }

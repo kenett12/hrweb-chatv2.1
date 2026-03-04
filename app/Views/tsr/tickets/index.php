@@ -5,46 +5,57 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-        <h1 class="text-2xl font-bold text-gray-800">Ticket Management Queue</h1>
-        <p class="text-gray-500 text-sm">Review and manage all incoming support requests.</p>
+<!-- SAP Fiori Page Header -->
+<div class="fiori-page-header">
+    <div>
+        <h1 class="fiori-page-title">Ticket Management Queue</h1>
+        <p class="fiori-page-subtitle">Review and manage all incoming support requests.</p>
     </div>
+</div>
+
+<div class="fiori-card overflow-hidden">
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="fiori-table">
             <thead>
-                <tr class="bg-gray-50 text-gray-400 text-xs uppercase tracking-widest font-semibold">
-                    <th class="px-6 py-4">ID</th>
-                    <th class="px-6 py-4">Client</th>
-                    <th class="px-6 py-4">Subject</th>
-                    <th class="px-6 py-4">Status</th>
-                    <th class="px-6 py-4">Assigned To</th>
-                    <th class="px-6 py-4 text-right">Actions</th>
+                <tr>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Assigned To</th>
+                    <th class="text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody id="ticket-queue-body" class="divide-y divide-gray-100">
+            <tbody id="ticket-queue-body">
                 <?php if (!empty($tickets)): ?>
                     <?php foreach ($tickets as $ticket): ?>
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                        <td class="px-6 py-4 font-bold text-gray-700">#<?= $ticket['id'] ?></td>
-                        <td class="px-6 py-4 text-sm text-gray-600"><?= esc($ticket['client_name'] ?? 'Guest') ?></td>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-800"><?= esc($ticket['subject']) ?></td>
-                        <td class="px-6 py-4">
-                            <span class="badge status-<?= strtolower(str_replace(' ', '_', $ticket['status'])) ?>">
+                    <tr>
+                        <td class="font-semibold text-gray-700">#<?= $ticket['id'] ?></td>
+                        <td><?= esc($ticket['client_name'] ?? 'Guest') ?></td>
+                        <td class="font-medium" style="color:var(--fiori-text-base);"><?= esc($ticket['subject']) ?></td>
+                        <td>
+                            <?php
+                                $statusClass = 'fiori-status--neutral';
+                                if ($ticket['status'] === 'Open') $statusClass = 'fiori-status--information';
+                                if ($ticket['status'] === 'In Progress') $statusClass = 'fiori-status--positive';
+                                if ($ticket['status'] === 'Resolved') $statusClass = 'fiori-status--critical'; 
+                                // Actually, standard is: Open=Info/Warning, In Progress=Info/Base, Resolved=Positive.
+                            ?>
+                            <span class="fiori-status <?= $statusClass ?>">
                                 <?= $ticket['status'] ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
-                             <?= $ticket['status'] === 'In Progress' ? esc($ticket['staff_name'] ?? 'Unassigned') : 'Pending' ?>
+                        <td>
+                             <?= $ticket['status'] === 'In Progress' ? esc($ticket['staff_name'] ?? 'Unassigned') : '<span class="italic text-xs" style="color:var(--fiori-text-muted);">Pending</span>' ?>
                         </td>
-                        <td class="px-6 py-4 text-right space-x-2">
-                            <a href="<?= base_url('tsr/tickets/view/'.$ticket['id']) ?>" class="btn btn-info !px-4 !py-1.5 !text-xs">View Thread</a>
+                        <td class="text-right">
+                            <a href="<?= base_url('tsr/tickets/view/'.$ticket['id']) ?>" class="btn btn-outline" style="height:28px; padding:0 12px; font-size:0.75rem;">View Thread</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="6" class="px-6 py-10 text-center text-gray-400">No tickets found.</td></tr>
+                    <tr><td colspan="6" class="text-center py-10" style="color:var(--fiori-text-muted);">No tickets found.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
@@ -67,25 +78,28 @@
                         queueBody.innerHTML = '';
                         data.forEach(ticket => {
                             const tr = document.createElement('tr');
-                            tr.className = "hover:bg-gray-50/50 transition-colors";
                             
-                            const idTd = `<td class="px-6 py-4 font-bold text-gray-700">#${ticket.id}</td>`;
-                            const clientTd = `<td class="px-6 py-4 text-sm text-gray-600">${ticket.client_name ? ticket.client_name : 'Guest'}</td>`;
-                            const subjectTd = `<td class="px-6 py-4 text-sm font-medium text-gray-800">${ticket.subject}</td>`;
+                            const idTd = `<td class="font-semibold text-gray-700">#${ticket.id}</td>`;
+                            const clientTd = `<td>${ticket.client_name ? ticket.client_name : 'Guest'}</td>`;
+                            const subjectTd = `<td class="font-medium" style="color:var(--fiori-text-base);">${ticket.subject}</td>`;
                             
-                            const statusLower = ticket.status.toLowerCase().replace(' ', '_');
-                            const statusTd = `<td class="px-6 py-4"><span class="badge status-${statusLower}">${ticket.status}</span></td>`;
+                            let statusClass = 'fiori-status--neutral';
+                            if (ticket.status === 'Open') statusClass = 'fiori-status--information';
+                            if (ticket.status === 'In Progress') statusClass = 'fiori-status--positive';
+                            if (ticket.status === 'Resolved') statusClass = 'fiori-status--critical';
                             
-                            const assignedTo = ticket.status === 'In Progress' ? (ticket.staff_name || 'Unassigned') : 'Pending';
-                            const assignedTd = `<td class="px-6 py-4 text-sm text-gray-600">${assignedTo}</td>`;
+                            const statusTd = `<td><span class="fiori-status ${statusClass}">${ticket.status}</span></td>`;
                             
-                            const actionTd = `<td class="px-6 py-4 text-right space-x-2"><a href="${viewBaseUrl}${ticket.id}" class="btn btn-info !px-4 !py-1.5 !text-xs">View Thread</a></td>`;
+                            const assignedTo = ticket.status === 'In Progress' ? (ticket.staff_name || 'Unassigned') : '<span class="italic text-xs" style="color:var(--fiori-text-muted);">Pending</span>';
+                            const assignedTd = `<td>${assignedTo}</td>`;
+                            
+                            const actionTd = `<td class="text-right"><a href="${viewBaseUrl}${ticket.id}" class="btn btn-outline" style="height:28px; padding:0 12px; font-size:0.75rem;">View Thread</a></td>`;
                             
                             tr.innerHTML = idTd + clientTd + subjectTd + statusTd + assignedTd + actionTd;
                             queueBody.appendChild(tr);
                         });
                     } else {
-                        queueBody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-gray-400">No tickets found.</td></tr>`;
+                        queueBody.innerHTML = `<tr><td colspan="6" class="text-center py-10" style="color:var(--fiori-text-muted);">No tickets found.</td></tr>`;
                     }
                 })
                 .catch(error => console.error('Error fetching live queue:', error));

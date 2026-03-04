@@ -71,19 +71,33 @@
 <?= $this->section('content') ?>
 <div class="max-w-6xl mx-auto">
     
-    <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
-        <a href="<?= base_url('tsr/tickets') ?>" class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors">
-            <span class="material-symbols-outlined text-sm">arrow_back</span>
-            <span class="text-sm font-medium">Back to Queue</span>
-        </a>
+    <div class="fiori-page-header mb-4" style="padding: 1rem 1.5rem;">
+        <div class="flex items-center gap-4">
+            <a href="<?= base_url('tsr/tickets') ?>" class="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-black/5 mr-2" style="color:var(--fiori-text-base);">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="fiori-page-title text-xl">Ticket #<?= esc($ticket['id']) ?></h1>
+                <p class="fiori-page-subtitle"><?= esc($ticket['subject']) ?></p>
+            </div>
+        </div>
         
         <div class="flex items-center gap-4">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Current Status:</span>
-            <span class="px-3 py-1.5 rounded-xl text-xs font-bold border 
-                <?= $ticket['status'] === 'Open' ? 'bg-amber-50 text-amber-600 border-amber-200' : 
-                   ($ticket['status'] === 'In Progress' ? 'bg-blue-50 text-blue-600 border-blue-200' : 
-                   ($ticket['status'] === 'Resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 
-                   'bg-slate-50 text-slate-600 border-slate-200')) ?>">
+            <button type="button" onclick="toggleFullChat()" id="toggle-chat-btn" class="btn btn-outline flex items-center gap-2 transition-colors" style="height:28px; padding:0 12px; font-size:0.75rem;">
+                <span class="material-symbols-outlined text-[16px]">fullscreen</span>
+                <span>View Full Chat</span>
+            </button>
+            
+            <div class="h-5 w-px bg-gray-300"></div>
+
+            <span class="text-xs font-semibold" style="color:var(--fiori-text-secondary);">STATUS</span>
+            <?php
+                $statusClass = 'fiori-status--neutral';
+                if ($ticket['status'] === 'Open') $statusClass = 'fiori-status--information';
+                if ($ticket['status'] === 'In Progress') $statusClass = 'fiori-status--positive';
+                if ($ticket['status'] === 'Resolved') $statusClass = 'fiori-status--critical'; 
+            ?>
+            <span class="fiori-status <?= $statusClass ?> font-bold px-3 py-1 text-sm">
                 <?= esc($ticket['status']) ?>
             </span>
         </div>
@@ -91,99 +105,147 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div class="lg:col-span-2 space-y-4">
-            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div class="chat-container overflow-y-auto p-6 flex flex-col gap-4 bg-gray-50/30">
+        <div id="chat-column" class="lg:col-span-2 space-y-4 transition-all duration-300">
+            <div class="fiori-card flex flex-col overflow-hidden" style="padding:0;">
+                <div class="chat-container overflow-y-auto p-6 flex flex-col gap-4" style="background:var(--fiori-page-bg);">
                     
-                    <div class="bubble bubble-client p-4 rounded-2xl shadow-sm self-start">
-                        <p class="text-[10px] font-bold text-gray-400 mb-1 uppercase tracking-tighter">Initial Request</p>
-                        <div class="text-sm"><?= nl2br(esc($ticket['description'])) ?></div>
-                        <p class="text-[9px] mt-2 opacity-50"><?= date('M d, h:i A', strtotime($ticket['created_at'])) ?></p>
+                    <div class="bubble bubble-client p-4 rounded shadow-sm self-start border" style="border-color:var(--fiori-border);">
+                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest" style="color:var(--fiori-text-muted);">Initial Request</p>
+                        <div class="text-sm" style="color:var(--fiori-text-base);"><?= nl2br(esc($ticket['description'])) ?></div>
+                        <?php if(!empty($ticket['attachment'])): ?>
+                            <div class="mt-4 pt-4 border-t" style="border-color:var(--fiori-border);">
+                                <?php 
+                                    $ext = strtolower(pathinfo($ticket['attachment'], PATHINFO_EXTENSION));
+                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                ?>
+                                <?php if ($isImage): ?>
+                                    <div class="mb-3">
+                                        <img src="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>" alt="Attachment" class="max-w-full h-auto rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity" onclick="window.open(this.src, '_blank')">
+                                    </div>
+                                <?php endif; ?>
+                                <a href="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>" target="_blank" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold bg-blue-50 px-4 py-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-[20px]">attachment</span>
+                                    <?= $isImage ? 'View Full Image' : 'View Attachment' ?>
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                        <p class="text-[9px] mt-2" style="color:var(--fiori-text-muted);"><?= date('M d, h:i A', strtotime($ticket['created_at'])) ?></p>
                     </div>
 
                     <?php foreach ($replies as $reply): ?>
                         <?php 
-                            $isSuper = ($reply['role'] === 'superadmin');
-                            $isStaff = ($reply['role'] === 'tsr');
+                            $role = $reply['role'] ?? '';
+                            $isSuper = in_array($role, ['admin', 'superadmin']);
+                            $staffRoles = ['admin', 'superadmin', 'tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
+                            $isStaff = in_array($role, $staffRoles);
                             $isBot = (bool)$reply['is_bot'];
                             
-                            $bubbleClass = 'bubble-client self-start';
+                            $bubbleClass = 'bubble-client self-start border';
                             if ($isBot) {
-                                $bubbleClass = 'bubble-bot';
-                            } elseif ($isSuper) {
-                                $bubbleClass = 'bubble-superadmin self-end text-right';
+                                $bubbleClass = 'bubble-bot self-start border border-dashed border-gray-300';
                             } elseif ($isStaff) {
                                 $bubbleClass = 'bubble-staff self-end text-right';
                             }
                         ?>
-                        <div class="bubble <?= $bubbleClass ?> p-4 rounded-2xl shadow-sm">
+                        <div class="flex flex-col mb-4 <?= strpos($bubbleClass, 'self-end') !== false ? 'items-end' : 'items-start' ?>">
+                            <!-- Sender Name Above Bubble -->
                             <?php if (!$isBot): ?>
-                                <p class="text-[10px] font-bold mb-1 opacity-70 uppercase tracking-widest">
-                                    <?= $isSuper ? '<span class="material-symbols-outlined text-[12px] align-middle mr-1">shield_person</span> Superadmin' : ($isStaff ? 'Staff' : 'Client') ?>: <?= esc($reply['username']) ?>
+                                <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
+                                    <?php 
+                                        $label = 'Staff';
+                                        if ($role === 'superadmin') $label = 'Superadmin';
+                                        elseif ($role === 'admin') $label = 'Admin';
+                                        elseif (!$isStaff) $label = 'Client';
+                                        
+                                        $icon = ($role === 'admin' || $role === 'superadmin') ? '<span class="material-symbols-outlined text-[12px] align-middle mr-1">shield_person</span> ' : '';
+                                        echo $icon . $label;
+                                    ?>: <?= esc($reply['username'] ?? 'User') ?>
+                                </p>
+                            <?php elseif ($isBot): ?>
+                                <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
+                                    <span class="material-symbols-outlined text-[12px] align-middle mr-1">robot_2</span> HRWeb Bot
                                 </p>
                             <?php endif; ?>
-                            <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?>>
-                                <?php if($isBot): ?>
-                                    <?= html_entity_decode($reply['message']) ?>
-                                <?php else: ?>
-                                    <?= nl2br(esc($reply['message'])) ?>
-                                <?php endif; ?>
+                            
+                            <!-- The Chat Bubble -->
+                            <div class="bubble <?= $bubbleClass ?> p-3.5 rounded-2xl shadow-sm" <?= strpos($bubbleClass, 'bubble-client') !== false ? 'style="border-color:var(--fiori-border);"' : '' ?>>
+                                <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="<?= strpos($bubbleClass, 'bubble-staff') === false ? 'color:var(--fiori-text-base);' : '' ?>">
+                                    <?php if($isBot): ?>
+                                        <?= nl2br(html_entity_decode($reply['message'])) ?>
+                                    <?php else: ?>
+                                        <?= nl2br(esc($reply['message'])) ?>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                            <p class="text-[9px] mt-1 opacity-60"><?= date('h:i A', strtotime($reply['created_at'])) ?></p>
+
+                            <!-- Timestamp Below Bubble -->
+                            <p class="text-[9px] mt-1 px-1" style="color:var(--fiori-text-muted);"><?= date('h:i A', strtotime($reply['created_at'])) ?></p>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
-                <div class="p-4 border-t border-gray-100 bg-white">
+                <div class="p-4 border-t" style="border-color:var(--fiori-border); background:#fff;">
                     <form id="reply-form" action="<?= base_url('tsr/tickets/reply/' . $ticket['id']) ?>" method="post">
-                        <textarea name="message" id="reply-message" rows="3" required
-                            class="w-full p-4 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm" 
-                            placeholder="Write your message here..."></textarea>
+                        <textarea name="message" id="reply-message" required
+                            class="fiori-input" 
+                            style="height:80px; resize:none;"
+                            placeholder="Write your message here..."
+                            onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.querySelector('button[type=\'submit\']').click(); }"></textarea>
                         <div class="flex justify-end mt-3">
-                            <button type="submit" class="btn btn-accent !py-2.5 !px-8 !rounded-xl">Send Message</button>
+                            <button type="submit" class="btn btn-accent">
+                                <span class="material-symbols-outlined text-[16px]">send</span>
+                                Send Message
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <div class="space-y-6">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                <h3 class="font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-gray-400">info</span> 
-                    Ticket Details
-                </h3>
-                <div class="space-y-5">
-                    <div class="pb-4 border-b border-gray-50">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client Name</label>
-                        <p class="text-sm font-semibold mt-1 text-gray-700"><?= esc($ticket['client_name']) ?></p>
+        <div id="details-column" class="space-y-6 transition-opacity duration-300">
+            <div class="fiori-card p-0">
+                <div class="fiori-card__header">
+                    <div>
+                        <h2 class="fiori-card__title">Ticket Details</h2>
+                    </div>
+                </div>
+                <div class="fiori-card__content space-y-5" style="padding-top:0;">
+                    <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Client Name</label>
+                        <p class="text-sm font-semibold" style="color:var(--fiori-text-base);"><?= esc($ticket['client_name']) ?></p>
                     </div>
                     <?php if (!empty($ticket['superadmin_id'])): ?>
-                    <div class="pb-4 border-b border-gray-50">
-                        <label class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1">
+                    <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1" style="color:var(--fiori-blue);">
                             <span class="material-symbols-outlined text-[14px]">shield_person</span> Group Superadmin
                         </label>
-                        <p class="text-sm font-semibold mt-1 text-indigo-600"><?= esc($ticket['superadmin_name']) ?></p>
+                        <p class="text-sm font-semibold" style="color:var(--fiori-text-base);"><?= esc($ticket['superadmin_name']) ?></p>
                     </div>
                     <?php endif; ?>
-                    <div class="pb-4 border-b border-gray-50">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Staff Assigned</label>
-                        <p class="text-sm font-semibold mt-1 <?= empty($ticket['staff_name']) ? 'text-orange-500 italic' : 'text-blue-600' ?>">
+                    <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Staff Assigned</label>
+                        <p class="text-sm font-semibold <?= empty($ticket['staff_name']) ? 'italic opacity-60' : 'text-blue-600' ?>">
                             <?= $ticket['staff_name'] ?? 'Not Claimed' ?>
                         </p>
                     </div>
-                    <div class="pb-4 border-b border-gray-50">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category / Priority</label>
-                        <div class="flex gap-2 mt-1">
-                            <span class="badge badge-pending !bg-opacity-20"><?= esc($ticket['category']) ?></span>
-                            <span class="badge badge-active !bg-opacity-20"><?= esc($ticket['priority']) ?></span>
+                    <div class="pb-2">
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--fiori-text-secondary);">Category / Priority</label>
+                        <div class="flex gap-2">
+                            <span class="fiori-status fiori-status--neutral"><?= esc($ticket['category']) ?></span>
+                            <span class="fiori-status fiori-status--critical"><?= esc($ticket['priority']) ?></span>
                         </div>
                     </div>
                 </div>
                 
                 <?php if (empty($ticket['assigned_to'])): ?>
-                    <div class="mt-6">
-                        <a href="<?= base_url('tsr/tickets/claim/' . $ticket['id']) ?>" class="btn btn-success w-full !rounded-xl">Claim Ticket</a>
+                    <div class="border-t p-4" style="border-color:var(--fiori-border); background:#fafafa;">
+                        <a href="<?= base_url('tsr/tickets/claim/' . $ticket['id']) ?>" class="btn btn-accent w-full text-center items-center justify-center flex">Assign to Me</a>
+                    </div>
+                <?php else: ?>
+                    <div class="border-t p-4 flex flex-col gap-2" style="border-color:var(--fiori-border); background:#fafafa;">
+                        <button onclick="toggleModal('forwardTicketModal')" class="btn btn-outline w-full text-center items-center justify-center flex">
+                            <span class="material-symbols-outlined text-[16px] mr-1">forward_to_inbox</span> Forward / Escalate
+                        </button>
                     </div>
                 <?php endif; ?>
             </div>
@@ -222,6 +284,41 @@
     </div>
 </div>
 
+<!-- Forward / Escalate Ticket Modal -->
+<div id="forwardTicketModal" class="fiori-overlay hidden">
+    <div class="fiori-dialog">
+        <div class="fiori-dialog__header">
+            <h3 class="fiori-dialog__title">Forward / Escalate Ticket</h3>
+            <button onclick="toggleModal('forwardTicketModal')" class="w-7 h-7 flex items-center justify-center rounded transition-colors" style="color:var(--fiori-text-muted);" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+        </div>
+        <form action="<?= base_url('tsr/tickets/forward/' . $ticket['id']) ?>" method="POST">
+            <?= csrf_field() ?>
+            <div class="fiori-dialog__body space-y-4">
+                <p class="text-sm" style="color:var(--fiori-text-secondary);">Select the appropriate staff member to forward this ticket to. Note: The matrix is restricted based on your role.</p>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Select Staff</label>
+                    <select name="forward_to_user_id" class="fiori-input w-full bg-white" required>
+                        <option value="">-- Choose Staff --</option>
+                        <?php if (isset($forwardable_staff) && !empty($forwardable_staff)): ?>
+                            <?php foreach ($forwardable_staff as $staff): ?>
+                                <option value="<?= esc($staff['id']) ?>"><?= esc($staff['full_name']) ?> (<?= esc($staff['role']) ?>)</option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="" disabled>No eligible staff available to forward to</option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="fiori-dialog__footer">
+                <button type="button" onclick="toggleModal('forwardTicketModal')" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-accent">Forward Ticket</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -234,6 +331,30 @@
             container.scrollTop = container.scrollHeight;
         }
     });
+
+    // ── LAYOUT TOGGLE LOGIC ──
+    function toggleFullChat() {
+        const chatCol = document.getElementById('chat-column');
+        const detailsCol = document.getElementById('details-column');
+        const btnSpan = document.querySelector('#toggle-chat-btn span:last-child');
+        const btnIcon = document.querySelector('#toggle-chat-btn span:first-child');
+
+        if (detailsCol.classList.contains('hidden')) {
+            // Restore Split View
+            detailsCol.classList.remove('hidden');
+            chatCol.classList.remove('lg:col-span-3');
+            chatCol.classList.add('lg:col-span-2');
+            btnSpan.textContent = 'View Full Chat';
+            btnIcon.textContent = 'fullscreen';
+        } else {
+            // Full Chat View
+            detailsCol.classList.add('hidden');
+            chatCol.classList.remove('lg:col-span-2');
+            chatCol.classList.add('lg:col-span-3');
+            btnSpan.textContent = 'Exit Full Chat';
+            btnIcon.textContent = 'fullscreen_exit';
+        }
+    }
 
     // ── VIEWER LOGIC ──
     let scale = 1, pointX = 0, pointY = 0, startX = 0, startY = 0, isPanning = false;
@@ -278,6 +399,7 @@
         const socket = io('http://localhost:3001');
         const ticketId = "<?= $ticket['id'] ?>";
         const currentUserId = "<?= session()->get('id') ?? session()->get('user_id') ?>";
+        const container = document.querySelector('.chat-container');
         
         socket.emit('join_ticket', ticketId);
 
@@ -301,39 +423,53 @@
                 window.showToast("New Chat Activity", title + " sent a message via Ticket #" + ticketId, null);
             }
 
-            const container = document.querySelector('.chat-container');
+
             if(container) {
                 const div = document.createElement('div');
                 
                 if (data.is_bot) {
-                    div.className = `bubble bubble-bot p-4 rounded-2xl shadow-sm`;
+                    div.className = `flex flex-col mb-4 items-start`;
                     div.innerHTML = `
-                        <div class="msg-text text-sm">
-                            ${data.message}
+                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
+                            <span class="material-symbols-outlined text-[12px] align-middle mr-1">robot_2</span> HRWeb Bot
+                        </p>
+                        <div class="bubble bubble-bot p-3.5 rounded-2xl shadow-sm self-start border border-dashed border-gray-300">
+                            <div class="msg-text text-sm" style="color:var(--fiori-text-base);">
+                                ${data.message}
+                            </div>
                         </div>
-                        <p class="text-[9px] mt-1 opacity-60">Just now</p>
+                        <p class="text-[9px] mt-1 px-1" style="color:var(--fiori-text-muted);">${data.time || 'Just now'}</p>
                     `;
-                } else if (data.sender_name === 'User' || data.sender_name === 'Client') {
-                    div.className = `bubble bubble-client self-start p-4 rounded-2xl shadow-sm`;
+                } else if (data.sender_role === 'client') {
+                    div.className = `flex flex-col mb-4 items-start`;
                     div.innerHTML = `
-                        <p class="text-[10px] font-bold mb-1 opacity-70 uppercase tracking-widest">
+                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
                             Client: ${data.sender_name}
                         </p>
-                        <div class="msg-text text-sm">
-                            ${data.message.replace(/\\n/g, '<br>')}
+                        <div class="bubble bubble-client self-start p-3.5 rounded-2xl shadow-sm border" style="border-color:var(--fiori-border);">
+                            <div class="msg-text text-sm" style="color:var(--fiori-text-base);">
+                                ${data.message.replace(/\n/g, '<br>')}
+                            </div>
                         </div>
-                        <p class="text-[9px] mt-1 opacity-60">Just now</p>
+                        <p class="text-[9px] mt-1 px-1" style="color:var(--fiori-text-muted);">${data.time || 'Just now'}</p>
                     `;
                 } else {
-                    div.className = `bubble bubble-staff self-end text-right p-4 rounded-2xl shadow-sm`;
+                    const isSuper = data.sender_role === 'superadmin';
+                    const isAdmin = data.sender_role === 'admin';
+                    const label = isSuper ? 'Superadmin' : (isAdmin ? 'Admin' : 'Staff');
+                    const icon = (isSuper || isAdmin) ? '<span class="material-symbols-outlined text-[12px] align-middle mr-1">shield_person</span> ' : '';
+                    
+                    div.className = `flex flex-col mb-4 items-end`;
                     div.innerHTML = `
-                        <p class="text-[10px] font-bold mb-1 opacity-70 uppercase tracking-widest">
-                            Staff: ${data.sender_name}
+                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:rgba(255,255,255,0.8);">
+                            ${icon}${label}: ${data.sender_name}
                         </p>
-                        <div class="msg-text text-sm">
-                            ${data.message.replace(/\\n/g, '<br>')}
+                        <div class="bubble bubble-staff self-end text-right p-3.5 rounded-2xl shadow-sm">
+                            <div class="msg-text text-sm">
+                                ${data.message.replace(/\n/g, '<br>')}
+                            </div>
                         </div>
-                        <p class="text-[9px] mt-1 opacity-60">Just now</p>
+                        <p class="text-[9px] mt-1 px-1" style="color:rgba(255,255,255,0.7);">${data.time || 'Just now'}</p>
                     `;
                 }
                 
@@ -353,17 +489,20 @@
                 if (!message) return;
                 
                 // Optimistically append the message to UI
-                const container = document.querySelector('.chat-container');
+                const now = new Date();
+                const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                 const div = document.createElement('div');
-                div.className = `bubble bubble-staff self-end text-right p-4 rounded-2xl shadow-sm`;
+                div.className = `flex flex-col mb-4 items-end`;
                 div.innerHTML = `
-                    <p class="text-[10px] font-bold mb-1 opacity-70 uppercase tracking-widest">
+                    <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:rgba(255,255,255,0.8);">
                         Staff: You
                     </p>
-                    <div class="msg-text text-sm">
-                        ${message.replace(/\\n/g, '<br>')}
+                    <div class="bubble bubble-staff self-end text-right p-3.5 rounded-2xl shadow-sm">
+                        <div class="msg-text text-sm">
+                            ${message.replace(/\n/g, '<br>')}
+                        </div>
                     </div>
-                    <p class="text-[9px] mt-1 opacity-60">Just now</p>
+                    <p class="text-[9px] mt-1 px-1" style="color:rgba(255,255,255,0.7);">${time}</p>
                 `;
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;

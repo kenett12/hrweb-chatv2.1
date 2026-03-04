@@ -14,7 +14,9 @@ class Auth extends BaseController
         // Auto-redirect already logged-in users
         if ($this->session->get('isLoggedIn')) {
             $role = $this->session->get('role') ?? 'superadmin';
-            return redirect()->to(base_url($role . '/dashboard'));
+            $staffRoles = ['tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it', 'tsr'];
+            $prefix = in_array($role, $staffRoles) ? 'tsr' : $role;
+            return redirect()->to(base_url($prefix . '/dashboard'));
         }
 
         // Path: app/Views/auth/login.php
@@ -113,6 +115,12 @@ class Auth extends BaseController
             }
 
             // Dynamic redirect: /superadmin/dashboard, /tsr/dashboard, etc.
+            $staffRoles = ['tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
+            if (in_array($user['role'], $staffRoles)) {
+                $model->update($user['id'], ['availability_status' => 'active']);
+                return redirect()->to(base_url('tsr/dashboard'));
+            }
+
             return redirect()->to(base_url($user['role'] . '/dashboard'));
         }
 
@@ -128,7 +136,10 @@ class Auth extends BaseController
         $userId = $this->session->get('id');
         if ($userId) {
             $model = new UserModel();
-            $model->update($userId, ['remember_token' => null]);
+            $model->update($userId, [
+                'remember_token' => null,
+                'availability_status' => 'offline'
+            ]);
         }
         delete_cookie('remember_token');
 

@@ -25,7 +25,7 @@ class TicketController extends BaseController
     public function index()
     {
         // Ensure only superadmins can access
-        if ($this->session->get('role') !== 'superadmin') {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
             return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
         }
 
@@ -54,7 +54,7 @@ class TicketController extends BaseController
      */
     public function view($id)
     {
-        if ($this->session->get('role') !== 'superadmin') {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
             return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
         }
 
@@ -76,7 +76,7 @@ class TicketController extends BaseController
      */
     public function reply($id)
     {
-        if ($this->session->get('role') !== 'superadmin') {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
             return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
         }
 
@@ -125,7 +125,9 @@ class TicketController extends BaseController
                     'message'     => esc($message),
                     'is_bot'      => 0,
                     'sender_id'   => $adminId,
-                    'sender_name' => session()->get('username') ?? session()->get('email') ?? 'Superadmin'
+                    'sender_name' => session()->get('username') ?? session()->get('email') ?? 'Superadmin',
+                    'sender_role' => session()->get('role'),
+                    'time'        => date('h:i A')
                 ]);
             }
         }

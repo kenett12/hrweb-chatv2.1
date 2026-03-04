@@ -15,8 +15,9 @@ class Dashboard extends BaseController
      */
     public function index()
     {
-        // Safety check to ensure only TSRs can access this folder
-        if ($this->session->get('role') !== 'tsr') {
+        // Safety check to ensure only staff can access this folder
+        $staffRoles = ['tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
+        if (!in_array($this->session->get('role'), $staffRoles)) {
             return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
         }
 

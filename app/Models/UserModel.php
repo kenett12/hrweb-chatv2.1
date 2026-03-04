@@ -10,7 +10,7 @@ class UserModel extends Model
     protected $primaryKey = 'id';
 
     // Core fields required for authentication and role routing
-    protected $allowedFields = ['email', 'password', 'role', 'status', 'remember_token'];
+    protected $allowedFields = ['email', 'full_name', 'password', 'role', 'status', 'remember_token', 'client_id', 'client_role', 'availability_status'];
 
     // Consistency: Dates are handled by the DB but accessible here
     protected $useTimestamps = false;

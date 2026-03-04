@@ -2,83 +2,74 @@
 
 <?= $this->section('content') ?>
 <div class="px-8 py-6 max-w-7xl mx-auto">
-    <div class="mb-10">
-        <h1 class="text-3xl font-black text-gray-900 tracking-tight">Support Chats</h1>
-        <p class="text-gray-500 mt-2 font-medium">Select an active context or past ticket to resume your conversation.</p>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="mb-8 flex justify-end">
-        <a href="<?= base_url('client/tickets/create') ?>" class="bg-[#1e72af] text-white px-6 py-3 rounded-xl shadow-md hover:bg-[#165a8a] transition-colors flex items-center gap-2 font-bold text-sm">
-            <span class="material-symbols-outlined text-[20px]">add_circle</span> New Application / Support Request
-        </a>
+    <div class="fiori-page-header mb-6">
+        <div class="flex items-center justify-between w-full">
+            <div>
+                <h1 class="fiori-page-title text-xl">Support Chats</h1>
+                <p class="fiori-page-subtitle">Select an active context or past ticket to resume your conversation.</p>
+            </div>
+            <a href="<?= base_url('client/tickets/create') ?>" class="btn btn-accent">
+                <span class="material-symbols-outlined text-[18px]">add</span> New Support Request
+            </a>
+        </div>
     </div>
 
     <?php if (empty($chats)): ?>
-        <div class="bg-white rounded-[2rem] border border-gray-100 p-24 text-center shadow-sm">
-            <div class="w-24 h-24 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                <span class="material-symbols-outlined text-gray-300 text-[48px]">chat_bubble_outline</span>
+        <div class="fiori-card text-center py-16">
+            <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4" style="background:var(--fiori-surface);">
+                <span class="material-symbols-outlined text-[32px]" style="color:var(--fiori-border);">chat_bubble_outline</span>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">No Active Conversations</h3>
-            <p class="text-gray-500 mb-6">You don't have any support chat history yet. If you need assistance, start a new request.</p>
-            <a href="<?= base_url('client/tickets/create') ?>" class="text-[#1e72af] font-bold hover:underline">Start a Request</a>
+            <h3 class="fiori-card__title text-lg mb-2">No Active Conversations</h3>
+            <p class="text-sm mb-4" style="color:var(--fiori-text-secondary);">You don't have any support chat history yet. If you need assistance, start a new request.</p>
+            <a href="<?= base_url('client/tickets/create') ?>" class="text-xs font-semibold" style="color:var(--fiori-blue); hover:underline;">Start a Request →</a>
         </div>
     <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <?php foreach ($chats as $chat): ?>
                 <a href="<?= base_url('client/chat/' . $chat['id']) ?>" 
-                   class="group bg-white rounded-3xl border border-gray-100 p-6 flex flex-col justify-between hover:shadow-xl hover:border-indigo-100 transition-all hover:-translate-y-1 relative overflow-hidden">
+                   class="fiori-card flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden p-5" style="cursor:pointer; display:flex; text-decoration:none; min-height: 180px;">
                     
-                    <!-- Decorative background element -->
-                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-50/20 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-
                     <div>
-                        <div class="flex justify-between items-start mb-4 relative">
-                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-lg">
+                        <div class="flex justify-between items-start mb-3 relative">
+                            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded" style="background:var(--fiori-surface); color:var(--fiori-text-muted);">
                                 <?= $chat['ticket_number'] ?>
                             </span>
-                            <?php 
-                                $statusColors = [
-                                    'Open' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                                    'In Progress' => 'bg-amber-50 text-amber-600 border-amber-100',
-                                    'Resolved' => 'bg-blue-50 text-blue-600 border-blue-100',
-                                    'Closed' => 'bg-gray-50 text-gray-500 border-gray-200'
-                                ];
-                                $colorClass = $statusColors[$chat['status']] ?? 'bg-gray-100 text-gray-600';
+                            <?php
+                                if ($chat['status'] === 'Resolved') echo '<span class="fiori-status fiori-status--positive">Resolved</span>';
+                                elseif ($chat['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
+                                elseif ($chat['status'] === 'Closed') echo '<span class="fiori-status" style="background:#e0e0e0; color:#606060;">Closed</span>';
+                                else echo '<span class="fiori-status fiori-status--warning">' . esc($chat['status']) . '</span>';
                             ?>
-                            <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border <?= $colorClass ?>">
-                                <?= esc($chat['status']) ?>
-                            </span>
                         </div>
 
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#1e72af] transition-colors line-clamp-2 leading-tight">
+                        <h3 class="fiori-card__title text-base mb-2 line-clamp-2" style="color:var(--fiori-text-primary);">
                             <?= esc($chat['subject']) ?>
                         </h3>
                         
-                        <p class="text-sm text-gray-500 line-clamp-2 mb-6 leading-relaxed">
+                        <p class="fiori-card__content text-xs line-clamp-2 mb-4" style="color:var(--fiori-text-secondary); padding:0;">
                             <?= esc($chat['description']) ?>
                         </p>
                     </div>
 
-                    <div class="pt-4 border-t border-gray-50 flex items-center justify-between mt-auto">
+                    <div class="pt-3 border-t flex items-center justify-between mt-auto" style="border-color:var(--fiori-border);">
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center shadow-sm">
+                            <div class="w-6 h-6 rounded flex items-center justify-center shrink-0" style="background:var(--fiori-surface); border:1px solid var(--fiori-border);">
                                 <?php if (empty($chat['assigned_to'])): ?>
-                                    <span class="material-symbols-outlined text-[16px] text-gray-400">smart_toy</span>
+                                    <span class="material-symbols-outlined text-[14px]" style="color:var(--fiori-text-muted);">smart_toy</span>
                                 <?php else: ?>
-                                    <span class="material-symbols-outlined text-[16px] text-indigo-500">support_agent</span>
+                                    <span class="material-symbols-outlined text-[14px]" style="color:var(--fiori-blue);">support_agent</span>
                                 <?php endif; ?>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400">Handling Agent</span>
-                                <span class="text-xs font-semibold text-gray-900 truncate max-w-[100px]">
-                                    <?= empty($chat['assigned_to']) ? 'HRWeb UI Bot' : esc($chat['staff_name']) ?>
+                                <span class="text-[9px] font-semibold uppercase tracking-wider" style="color:var(--fiori-text-muted);">Handling Agent</span>
+                                <span class="text-[11px] font-medium truncate max-w-[100px]" style="color:var(--fiori-text-primary);">
+                                    <?= empty($chat['assigned_to']) ? 'HRWeb Bot' : esc($chat['staff_name']) ?>
                                 </span>
                             </div>
                         </div>
                         <div class="text-right flex flex-col items-end">
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400">Last Message</span>
-                            <span class="text-[10px] font-bold text-gray-500 mt-0.5"><?= date('M d, H:i', strtotime($chat['updated_at'])) ?></span>
+                            <span class="text-[9px] font-semibold uppercase tracking-wider" style="color:var(--fiori-text-muted);">Last Message</span>
+                            <span class="text-[10px] font-medium mt-0.5" style="color:var(--fiori-text-secondary);"><?= date('M d, H:i', strtotime($chat['updated_at'])) ?></span>
                         </div>
                     </div>
                 </a>

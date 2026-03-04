@@ -25,8 +25,15 @@ class Dashboard extends BaseController
         $ticketModel = new \App\Models\TicketModel();
         $clientId = $this->session->get('id');
 
-        // Fetch specific company profile data using the session user_id
-        $clientProfile = $clientModel->where('user_id', $this->session->get('id'))->first();
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($clientId);
+        $companyId = $user['client_id'];
+
+        // Fetch specific company profile data using the company ID
+        $clientProfile = $companyId ? $clientModel->find($companyId) : null;
+
+        // Get all user IDs for this company so we can show company-wide stats
+        $companyUsers = $companyId ? $userModel->where('client_id', $companyId)->findColumn('id') : [$clientId];
 
         // Populate viewData with role-specific information
         $this->viewData['title'] = 'Client Portal';
@@ -37,12 +44,12 @@ class Dashboard extends BaseController
 
         // Fetch Statistics using the new Analytics engine
         $analyticsModel = new \App\Models\AnalyticsModel();
-        $analyticsData = $analyticsModel->getAnalyticsStats($clientId);
+        $analyticsData = $analyticsModel->getAnalyticsStats($companyUsers);
         foreach ($analyticsData as $key => $val) { $this->viewData[$key] = $val; }
 
         // Fetch Chat/Ticket Metrics (Today vs Last 7 Days Avg)
-        $chatsToday = $ticketModel->where('client_id', $clientId)->where('created_at >=', date('Y-m-d') . ' 00:00:00')->countAllResults();
-        $chatsLast7Avg = $ticketModel->where('client_id', $clientId)
+        $chatsToday = $ticketModel->whereIn('client_id', $companyUsers)->where('created_at >=', date('Y-m-d') . ' 00:00:00')->countAllResults();
+        $chatsLast7Avg = $ticketModel->whereIn('client_id', $companyUsers)
                                      ->where('created_at >=', date('Y-m-d', strtotime('-8 days')) . ' 00:00:00')
                                      ->where('created_at <=', date('Y-m-d', strtotime('-1 days')) . ' 23:59:59')
                                      ->countAllResults() / 7;
@@ -53,14 +60,14 @@ class Dashboard extends BaseController
 
         // Fetch Reporting (Sentiment) from KB Feedback
         $db = \Config\Database::connect();
-        $feedbackTotal = $db->table('kb_feedback')->where('user_id', $clientId)->countAllResults();
-        $feedbackHelpful = $db->table('kb_feedback')->where('user_id', $clientId)->where('is_helpful', 1)->countAllResults();
+        $feedbackTotal = $db->table('kb_feedback')->whereIn('user_id', $companyUsers)->countAllResults();
+        $feedbackHelpful = $db->table('kb_feedback')->whereIn('user_id', $companyUsers)->where('is_helpful', 1)->countAllResults();
         
         $this->viewData['sentiment'] = $feedbackTotal > 0 ? round(($feedbackHelpful / $feedbackTotal) * 100, 1) : 0;
         $this->viewData['feedback_total'] = $feedbackTotal;
 
         // Fetch recent tickets
-        $this->viewData['recent_tickets'] = $ticketModel->where('client_id', $clientId)
+        $this->viewData['recent_tickets'] = $ticketModel->whereIn('client_id', $companyUsers)
                                                         ->orderBy('updated_at', 'DESC')
                                                         ->limit(5)
                                                         ->findAll();
@@ -75,8 +82,12 @@ class Dashboard extends BaseController
             return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
         }
 
-        $clientModel = new ClientModel();
-        $clientProfile = $clientModel->where('user_id', $this->session->get('id'))->first();
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($this->session->get('id'));
+        $companyId = $user['client_id'];
+        
+        $clientModel = new \App\Models\ClientModel();
+        $clientProfile = $companyId ? $clientModel->find($companyId) : null;
 
         // Get user for email
         $userModel = new \App\Models\UserModel();
@@ -86,6 +97,26 @@ class Dashboard extends BaseController
         $this->viewData['page_title'] = 'Account Settings';
         $this->viewData['clientProfile'] = $clientProfile;
         $this->viewData['user'] = $user;
+
+        // Fetch Lead TSR Name for visual clarity
+        $leadName = 'Unassigned';
+        if ($clientProfile && !empty($clientProfile['hr_contact'])) {
+            $contacts = json_decode($clientProfile['hr_contact'], true);
+            $leadEmail = $contacts['lead'] ?? null;
+            if ($leadEmail) {
+                $db = \Config\Database::connect();
+                $tsrRecord = $db->table('users')
+                    ->select('tsrs.full_name')
+                    ->join('tsrs', 'tsrs.user_id = users.id')
+                    ->where('users.email', $leadEmail)
+                    ->get()
+                    ->getRowArray();
+                if ($tsrRecord) {
+                    $leadName = $tsrRecord['full_name'];
+                }
+            }
+        }
+        $this->viewData['hr_contact_name'] = $leadName;
 
         return view('client/settings', $this->viewData);
     }
@@ -100,10 +131,22 @@ class Dashboard extends BaseController
         $userId = $this->session->get('id');
         $user = $userModel->find($userId);
 
+        // Inputs for profile update
+        $fullName = $this->request->getPost('full_name');
+
         // Inputs for password change
         $currentPassword = $this->request->getPost('current_password');
         $newPassword = $this->request->getPost('new_password');
         $confirmPassword = $this->request->getPost('confirm_password');
+
+        // Update Full Name regardless of password change if provided
+        if ($fullName !== null) {
+            $userModel->update($userId, ['full_name' => $fullName]);
+        }
+
+        if (empty($currentPassword) && empty($newPassword)) {
+            return redirect()->to(base_url('client/settings'))->with('msg', 'Profile updated successfully.');
+        }
 
         if (empty($currentPassword)) {
             return redirect()->to(base_url('client/settings'))->with('error', 'Please enter your current password.');

@@ -21,10 +21,11 @@ $routes->get('queue-display', 'QueueDisplayController::index');
 $routes->get('queue-display/data', 'QueueDisplayController::data');
 
 // --- Superadmin Routes ---
-$routes->group('superadmin', ['filter' => 'auth:superadmin'], function($routes) {
+$routes->group('superadmin', ['filter' => 'auth:superadmin,admin'], function($routes) {
     $routes->get('dashboard', 'Admin\Dashboard::index');
     $routes->get('tsr-management', 'Admin\TsrController::index');
     $routes->post('tsr-management/store', 'Admin\TsrController::store'); 
+    $routes->post('tsr-management/update/(:num)', 'Admin\TsrController::update/$1');
     $routes->get('tsr-management/delete/(:num)', 'Admin\TsrController::delete/$1');
     $routes->get('client-management', 'Admin\ClientController::index');
     $routes->post('client-management/store', 'Admin\ClientController::store');
@@ -54,15 +55,18 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin'], function($routes) 
     // ────────────────────────────────────────────────────────────
 });
 
-    // --- TSR Routes ---
-    $routes->group('tsr', ['filter' => 'auth:tsr'], function($routes) {
+    // --- Staff Routes (Previously TSR only) ---
+    // Anyone in the employee flowchart structure uses these views
+    $routes->group('tsr', ['filter' => 'auth:tsr,tsr_level_1,tl,supervisor,manager,dev,tsr_level_2,it,admin'], function($routes) {
         $routes->get('dashboard', 'Tsr\Dashboard::index');
+        $routes->get('chat', 'Tsr\TicketHandler::chats');
         $routes->get('tickets', 'Tsr\TicketHandler::index');
         $routes->get('tickets/live-queue', 'Tsr\TicketHandler::liveQueue'); // New Live Queue Endpoint
         $routes->get('tickets/view/(:num)', 'Tsr\TicketHandler::view/$1');
         $routes->get('tickets/claim/(:num)', 'Tsr\TicketHandler::claim/$1');
         $routes->post('tickets/reply/(:num)', 'Tsr\TicketHandler::reply/$1');
         $routes->post('tickets/update-status/(:num)', 'Tsr\TicketHandler::updateStatus/$1');
+        $routes->post('tickets/forward/(:num)', 'Tsr\TicketHandler::forwardTicket/$1');
     });
 
 // --- Client Routes ---

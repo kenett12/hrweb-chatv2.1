@@ -28,10 +28,10 @@ class ClientController extends BaseController
         $this->viewData['page_title'] = 'Corporate Accounts';
         $this->viewData['client_list'] = $query->getResultArray();
 
-        // Fetch all TSRs for the dropdown
+        // Fetch all TSR Level 1 for the dropdown (Initial Client Contact)
         $tsrQuery = $db->table('users')
                        ->select('id, email')
-                       ->where('role', 'tsr')
+                       ->where('role', 'tsr_level_1')
                        ->where('status', 'active')
                        ->get();
         $this->viewData['tsr_list'] = $tsrQuery->getResultArray();
@@ -126,7 +126,7 @@ class ClientController extends BaseController
         }
 
         $userModel = new UserModel();
-        $accounts = $userModel->select('id, email, status, client_role')
+        $accounts = $userModel->select('id, email, full_name, status, client_role')
                               ->where('client_id', $clientId)
                               ->where('role', 'client')
                               ->findAll();
@@ -136,15 +136,27 @@ class ClientController extends BaseController
 
     public function storeAccount()
     {
+        $rules = [
+            'email' => 'required|valid_email|is_unique[users.email]',
+            'password' => 'required|min_length[8]',
+            'client_role' => 'required'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('error', $this->validator->getErrors()['email'] ?? 'Validation failed. Ensure the email is unique and valid.');
+        }
+
         $userModel = new UserModel();
 
         $clientId = $this->request->getPost('client_id');
         $email = $this->request->getPost('email');
+        $fullName = $this->request->getPost('full_name');
         $password = $this->request->getPost('password');
         $clientRole = $this->request->getPost('client_role');
 
         $userData = [
             'email' => $email,
+            'full_name' => $fullName,
             'password' => password_hash($password, PASSWORD_DEFAULT),
             'role' => 'client',
             'client_id' => $clientId,
@@ -161,14 +173,25 @@ class ClientController extends BaseController
 
     public function updateAccount($id)
     {
+        $rules = [
+            'email' => "permit_empty|valid_email|is_unique[users.email,id,{$id}]",
+            'password' => 'permit_empty|min_length[8]'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('error', $this->validator->getErrors()['email'] ?? 'Validation failed. Ensure the email is unique.');
+        }
+
         $userModel = new UserModel();
 
         $email = $this->request->getPost('email');
+        $fullName = $this->request->getPost('full_name');
         $password = $this->request->getPost('password');
         $clientRole = $this->request->getPost('client_role');
 
         $updateData = [];
         if (!empty($email)) $updateData['email'] = $email;
+        if (!empty($fullName)) $updateData['full_name'] = $fullName;
         if (!empty($password)) $updateData['password'] = password_hash($password, PASSWORD_DEFAULT);
         if (!empty($clientRole)) $updateData['client_role'] = $clientRole;
 

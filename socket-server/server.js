@@ -9,7 +9,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import mysql from "mysql2/promise"; 
+import mysql from "mysql2/promise";
 
 const app = express();
 app.use(cors());
@@ -19,29 +19,29 @@ app.use(express.json());
 const dbConfig = {
     host: "localhost",
     user: "root",
-    password: "", 
-    database: "chat-app" 
+    password: "",
+    database: "chat-app"
 };
 
 let pool;
 try {
-    pool = mysql.createPool({ 
-        ...dbConfig, 
-        waitForConnections: true, 
+    pool = mysql.createPool({
+        ...dbConfig,
+        waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0 
+        queueLimit: 0
     });
     console.log("🗄️ MySQL Pool Created");
-} catch (err) { 
-    console.error("❌ MySQL Pool Error:", err); 
+} catch (err) {
+    console.error("❌ MySQL Pool Error:", err);
 }
 
 const server = createServer(app);
 const io = new Server(server, {
-    cors: { 
-        origin: "*", 
-        methods: ["GET", "POST"], 
-        credentials: true 
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+        credentials: true
     },
     path: "/socket.io",
     transports: ["websocket", "polling"],
@@ -66,7 +66,7 @@ app.post('/emit-message', (req, res) => {
             const roomName = [String(data.sender_id), String(data.receiver_id)].sort().join('-');
             io.to(roomName).emit("receive_message", data);
             break;
-            
+
         default:
             io.emit(event, data);
             break;
@@ -87,7 +87,7 @@ io.on("connection", (socket) => {
         socket.join(`user_${userIdStr}`);
         socket.userId = userIdStr;
         onlineUsers.set(userIdStr, socket.id);
-        
+
         io.emit("user_status_change", { user_id: userId, status: 'online' });
     });
 
@@ -107,7 +107,7 @@ io.on("connection", (socket) => {
             is_bot: data.is_bot || 0,
             sender_id: data.sender_id,
             sender_name: data.username,
-            created_at: new Date().toISOString()
+            created_at: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
         });
     });
 

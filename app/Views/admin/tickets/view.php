@@ -3,61 +3,147 @@
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/tsr/tickets.css') ?>?v=<?= time() ?>">
 <style>
-    .chat-bubble {
-        max-width: 80%;
-        padding: 1rem 1.25rem;
-        border-radius: 1.25rem;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        position: relative;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    
-    .chat-bot {
-        background: linear-gradient(135deg, #1e72af, #3297ca);
-        color: white;
-        border-bottom-left-radius: 0.25rem;
+    :root {
+        --bubble-radius: 12px;
+        --clr-blue: #1e72af;
+        --bg-chat: #f8fafc;
     }
 
-    .chat-ticket-description {
-        background-color: white;
-        color: #1f2937;
-        border: 1px solid #f3f4f6;
-        border-bottom-left-radius: 0.25rem;
-        border-left: 4px solid #10b981;
+    /* ─── Message Row ────────────────────────────────────── */
+    .msg-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        max-width: 85%;
+        margin-bottom: 2px;
     }
-    
-    .chat-client {
-        background-color: white;
-        color: #1f2937;
-        border: 1px solid #f3f4f6;
-        border-bottom-right-radius: 0.25rem;
+
+    .msg-row--bot {
+        align-self: flex-start;
     }
-    
-    .chat-staff {
-        background-color: #f8fafc;
-        color: #1f2937;
+
+    .msg-row--user {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+        margin-left: auto;
+    }
+
+    /* ─── Avatar ─────────────────────────────────────────── */
+    .msg-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-bottom: 2px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+
+    .msg-avatar--bot {
+        background: white;
+        color: #10b981;
         border: 1px solid #e2e8f0;
-        border-bottom-left-radius: 0.25rem;
-        border-left: 4px solid #f59e0b;
+    }
+
+    .msg-avatar--staff {
+        background: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fde68a;
+    }
+
+    .msg-avatar--super {
+        background: #e0e7ff;
+        color: #4f46e5;
+        border: 1px solid #c7d2fe;
+    }
+
+    .msg-avatar--user {
+        background: white;
+        color: #1e72af;
+        border: 1px solid #e2e8f0;
+    }
+
+    .msg-avatar.invisible {
+        visibility: hidden;
+    }
+
+    /* ─── Bubble Wrapper ─────────────────────────────────── */
+    .msg-bubble-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        width: 100%;
+    }
+
+    .msg-row--user .msg-bubble-wrap {
+        align-items: flex-end;
+    }
+
+    /* ─── Message Bubbles ────────────────────────────────── */
+    .msg-bubble {
+        padding: 12px 18px;
+        border-radius: var(--bubble-radius);
+        font-size: 14.5px;
+        line-height: 1.6;
+        position: relative;
+        word-break: break-word;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .chat-staff {
+        background-color: #fffbeb;
+        border: 1.5px solid #fde68a;
+        color: #92400e;
+        border-bottom-right-radius: 4px;
     }
 
     .chat-superadmin {
-        background-color: #f4f8ff;
-        color: #1f2937;
-        border: 1px solid #e0e7ff;
-        border-bottom-left-radius: 0.25rem;
-        border-left: 4px solid #6366f1;
+        background-color: #f5f3ff;
+        border: 1.5px solid #ddd6fe;
+        color: #4c1d95;
+        border-bottom-right-radius: 4px;
     }
 
-    .meta-text {
-        font-size: 0.75rem;
+    .chat-client {
+        background-color: white;
+        border: 1.5px solid #ecfdf5;
+        border-left: 4px solid #10b981;
+        color: #1a2332;
+        border-bottom-left-radius: 4px;
+    }
+
+    /* Grouping Adjustments */
+    .msg-bubble.first-in-group { border-top-left-radius: var(--bubble-radius) !important; border-top-right-radius: var(--bubble-radius) !important; }
+    
+    .msg-time {
+        font-size: 10px;
         color: #94a3b8;
         font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .msg-sender-name {
+        font-size: 10px;
+        font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin-top: 0.5rem;
+        margin-bottom: 2px;
+        margin-left: 4px;
     }
+
+    .msg-row--user .msg-sender-name {
+        margin-left: 0;
+        margin-right: 4px;
+        text-align: right;
+    }
+
+    #thread-container {
+        background: #f8fafc;
+    }
+
+
 
     /* Block standard browser image dragging to prioritize panning */
     .msg-text img { 
@@ -147,92 +233,119 @@
         </div>
         
         <!-- Conversation Area -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6" id="thread-container" style="scroll-behavior: smooth;">
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-0.5" id="thread-container" style="scroll-behavior: smooth; background: #f8fafc;">
             
-            <!-- INITIAL TICKET DESCRIPTION -->
-            <div class="flex flex-col items-start ticket-reply">
-                <div class="flex items-end gap-3 w-full">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-emerald-100 shadow-sm" style="background-color: #ecfdf5; color: #10b981;">
-                        <span class="material-symbols-outlined text-xl">person</span>
-                    </div>
-                    <div class="chat-bubble chat-ticket-description w-full">
-                        <div class="mb-2 text-xs font-bold text-emerald-600 uppercase tracking-wider border-b border-gray-100 pb-2">Initial Request</div>
-                        <?= nl2br(esc($ticket['description'])) ?>
-                        <?php if(!empty($ticket['attachment'])): ?>
-                            <div class="mt-4 pt-4 border-t border-gray-100">
-                                <a href="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>" target="_blank" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold bg-blue-50 px-4 py-2 rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined text-[20px]">attachment</span>
-                                    View Attachment
-                                </a>
-                            </div>
+            <?php
+            $lastSenderId = null;
+            $currentUserId = session()->get('id') ?? session()->get('user_id');
+
+            // Merge initial description with replies for unified grouping logic
+            // We'll treat the initial description as the first message from the client
+            $initialMsg = [
+                'user_id'    => $ticket['client_id'],
+                'username'   => $ticket['client_name'],
+                'role'       => 'client',
+                'message'    => $ticket['description'],
+                'is_bot'     => 0,
+                'created_at' => $ticket['created_at'],
+                'is_initial' => true
+            ];
+            
+            $allMessages = array_merge([$initialMsg], $replies);
+
+            foreach ($allMessages as $i => $msg):
+                $isBot = (isset($msg['is_bot']) && $msg['is_bot'] == 1);
+                $isSuper = (isset($msg['role']) && in_array($msg['role'], ['admin', 'superadmin']));
+                $staffRoles = ['admin', 'superadmin', 'tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
+                $isStaff = (isset($msg['role']) && in_array($msg['role'], $staffRoles));
+                
+                // POV: Staff/Admins on Right, Client/Bot on Left
+                $isRight = $isStaff; 
+                $isMe = (!$isBot && $msg['user_id'] == $currentUserId);
+
+                $senderKey = $isBot ? 'bot' : ($msg['user_id'] ?? 'unknown');
+                $isNewGroup = ($lastSenderId !== $senderKey);
+                $lastSenderId = $senderKey;
+
+                // For grouping bubble corners
+                $nextMsg = $allMessages[$i + 1] ?? null;
+                $nextSenderKey = $nextMsg ? ($nextMsg['is_bot'] ? 'bot' : ($nextMsg['user_id'] ?? 'unknown')) : null;
+                $isLastInGroup = ($nextSenderKey !== $senderKey);
+                
+                $groupClass = $isNewGroup ? 'first-in-group' : ($isLastInGroup ? 'last-in-group' : 'mid-in-group');
+            ?>
+
+                <div class="msg-row <?= $isRight ? 'msg-row--user' : 'msg-row--bot' ?> <?= $isNewGroup ? 'mt-6' : 'mt-1' ?>">
+                    <!-- Avatar -->
+                    <div class="msg-avatar <?= $isRight ? ($isSuper ? 'msg-avatar--super' : 'msg-avatar--staff') : 'msg-avatar--user' ?> <?= !$isNewGroup ? 'invisible' : '' ?>">
+                        <?php if($isBot): ?>
+                            <span class="material-symbols-outlined text-xl">robot_2</span>
+                        <?php elseif($isSuper): ?>
+                            <span class="material-symbols-outlined text-xl">shield_person</span>
+                        <?php elseif($isStaff): ?>
+                            <span class="material-symbols-outlined text-xl">support_agent</span>
+                        <?php else: ?>
+                            <span class="material-symbols-outlined text-xl">person</span>
                         <?php endif; ?>
                     </div>
-                </div>
-                <div class="meta-text ml-14">
-                    <?= esc($ticket['client_name']) ?> (Client) • <?= date('M d, Y h:i A', strtotime($ticket['created_at'])) ?>
-                </div>
-            </div>
 
-            <!-- REPLIES LOOP -->
-            <?php foreach($replies as $reply): ?>
-                <?php 
-                    $isBot = $reply['is_bot'];
-                    $isStaff = ($reply['role'] === 'superadmin' || $reply['role'] === 'tsr');
-                ?>
-
-                <?php if($isBot): ?>
-                    <!-- BOT REPLY -->
-                    <div class="flex flex-col items-start ticket-reply">
-                        <div class="flex items-end gap-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-50 shrink-0 flex items-center justify-center border border-blue-100 p-1.5 shadow-sm">
-                                <img src="<?= base_url('assets/img/logo-icon.png') ?>" alt="Bot" class="w-full h-full object-contain mix-blend-multiply">
+                    <div class="msg-bubble-wrap">
+                        <?php if ($isNewGroup): ?>
+                            <div class="msg-sender-name <?= $isSuper ? 'text-indigo-600' : ($isStaff ? 'text-amber-600' : 'text-emerald-600') ?>">
+                                <?php 
+                                    if ($isBot) {
+                                        echo 'HRWeb Bot';
+                                    } elseif ($isMe) {
+                                        echo 'You (' . ($isSuper ? 'Administrator' : 'Staff') . ')';
+                                    } else {
+                                        $label = $isSuper ? 'Administrator' : ($isStaff ? 'Support Team' : 'Client');
+                                        echo esc($msg['username'] ?? $label) . " <span class='opacity-40 ml-1'>[{$label}]</span>";
+                                    }
+                                ?>
                             </div>
-                            <div class="chat-bubble chat-bot">
-                                <div class="msg-text" onclick="handleImageClick(event)">
-                                    <?= html_entity_decode($reply['message']) ?>
+                        <?php endif; ?>
+
+                        <?php 
+                            $bubbleClass = $isSuper ? 'chat-superadmin' : ($isStaff ? 'chat-staff' : 'chat-client');
+                        ?>
+                        <div class="msg-bubble <?= $groupClass ?> <?= $bubbleClass ?>">
+                            <?php if (isset($msg['is_initial']) && $msg['is_initial']): ?>
+                                <div class="mb-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest border-b border-emerald-50 pb-1.5 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">description</span> Initial Request
                                 </div>
-                            </div>
-                        </div>
-                        <div class="meta-text ml-14">HRWeb Bot • <?= date('M d, Y h:i A', strtotime($reply['created_at'])) ?></div>
-                    </div>
+                            <?php endif; ?>
 
-                <?php elseif($isStaff): ?>
-                    <!-- STAFF/ADMIN REPLY -->
-                    <?php $isSuper = ($reply['role'] === 'superadmin'); ?>
-                    <div class="flex flex-col items-start ticket-reply">
-                        <div class="flex items-end gap-3 w-full">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm <?= $isSuper ? 'bg-indigo-50 text-indigo-500 border border-indigo-100' : 'bg-amber-50 text-amber-500 border border-amber-100' ?>">
-                                <span class="material-symbols-outlined text-xl"><?= $isSuper ? 'shield_person' : 'support_agent' ?></span>
+                            <div class="msg-text" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?>>
+                                <?php if($isBot): ?>
+                                    <?= nl2br(html_entity_decode($msg['message'])) ?>
+                                <?php else: ?>
+                                    <?= nl2br(esc($msg['message'])) ?>
+                                <?php endif; ?>
                             </div>
-                            <div class="chat-bubble w-full <?= $isSuper ? 'chat-superadmin' : 'chat-staff' ?>">
-                                <div class="mb-2 text-[10px] font-bold uppercase tracking-wider border-b pb-2 <?= $isSuper ? 'text-indigo-600 border-indigo-100' : 'text-amber-600 border-gray-200' ?>">
-                                    <?= $isSuper ? 'Superadmin Response' : 'Support Response' ?>
+
+                            <?php if (!empty($msg['attachment']) && isset($msg['is_initial'])): ?>
+                                <div class="mt-3 pt-3 border-t border-emerald-50/50">
+                                    <?php 
+                                        $ext = strtolower(pathinfo($msg['attachment'], PATHINFO_EXTENSION));
+                                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                    ?>
+                                    <?php if ($isImage): ?>
+                                        <img src="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" class="max-w-full h-auto rounded-lg mb-2 shadow-sm cursor-zoom-in" onclick="window.open(this.src, '_blank')">
+                                    <?php endif; ?>
+                                    <a href="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" target="_blank" class="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[14px]">attachment</span> View Attachment
+                                    </a>
                                 </div>
-                                <?= nl2br(esc($reply['message'])) ?>
+                            <?php endif; ?>
+
+                            <div class="msg-time flex <?= $isRight ? 'justify-end ml-auto' : 'justify-start mr-auto' ?> opacity-40">
+                                <?= date('h:i A', strtotime($msg['created_at'])) ?>
                             </div>
-                        </div>
-                        <div class="meta-text ml-14">
-                            <?= esc($reply['username'] ?? 'Staff') ?> (<?= ucfirst($reply['role']) ?>) • <?= date('M d, Y h:i A', strtotime($reply['created_at'])) ?>
                         </div>
                     </div>
-                
-                <?php else: ?>
-                    <!-- CLIENT REPLY -->
-                    <div class="flex flex-col items-end ticket-reply">
-                        <div class="flex items-end justify-end gap-3 w-full">
-                            <div class="chat-bubble chat-client w-full text-right">
-                                <?= nl2br(esc($reply['message'])) ?>
-                            </div>
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-gray-200 shadow-sm bg-gray-50 text-gray-400">
-                                <span class="material-symbols-outlined text-xl">person</span>
-                            </div>
-                        </div>
-                        <div class="meta-text mr-14 items-end">
-                            <?= date('M d, Y h:i A', strtotime($reply['created_at'])) ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            <?php endforeach; ?>
+                </div>
+<?php endforeach; ?>
+        </div>
         </div>
         
         <!-- Reply Form -->
@@ -406,8 +519,72 @@
         const socket = io('http://localhost:3001');
         const ticketId = "<?= $ticket['id'] ?>";
         const currentUserId = "<?= session()->get('id') ?? session()->get('user_id') ?>";
+        const container = document.getElementById('thread-container');
+        let lastSenderId = "<?= $lastSenderId ?>";
         
         socket.emit('join_ticket', ticketId);
+
+        function appendMessageToUI(data, isOptimistic = false) {
+            if(!container) return;
+            
+            const isBot = data.is_bot;
+            const senderId = isBot ? 'bot' : (data.sender_id || 'unknown');
+            const isNewGroup = (lastSenderId !== senderId);
+            lastSenderId = senderId;
+
+            const staffRoles = ['admin', 'superadmin', 'tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
+            const isStaff = staffRoles.includes(data.sender_role);
+            const isSuper = data.sender_role === 'superadmin' || data.sender_role === 'admin';
+            const isMe = (data.sender_id == currentUserId && !isBot);
+            const isRight = isStaff; // Staff POV: Staff/Admin on Right
+
+            if (isNewGroup) {
+                const row = document.createElement('div');
+                row.className = `msg-row ${isRight ? 'msg-row--user' : 'msg-row--bot'} mt-6`;
+                
+                const avatarClass = isRight ? (isSuper ? 'msg-avatar--super' : 'msg-avatar--staff') : 'msg-avatar--user';
+                const avatarIcon = isBot ? 'robot_2' : (isSuper ? 'shield_person' : (isRight ? 'support_agent' : 'person'));
+                
+                const senderColor = isSuper ? 'text-indigo-600' : (isStaff ? 'text-amber-600' : 'text-emerald-600');
+                const roleLabel = isSuper ? 'Administrator' : (isStaff ? 'Support Team' : 'Client');
+                const displayName = isBot ? 'HRWeb Bot' : (isMe ? 'You ('+roleLabel+')' : (data.sender_name || 'User') + ' <span class="opacity-40 ml-1">['+roleLabel+']</span>');
+
+                const bubbleClass = isSuper ? 'chat-superadmin' : (isStaff ? 'chat-staff' : 'chat-client');
+
+                row.innerHTML = `
+                    <div class="msg-avatar ${avatarClass}">
+                        <span class="material-symbols-outlined text-xl">${avatarIcon}</span>
+                    </div>
+                    <div class="msg-bubble-wrap">
+                        <div class="msg-sender-name ${senderColor}">${displayName}</div>
+                        <div class="msg-bubble first-in-group last-in-group ${bubbleClass}">
+                            <div class="msg-text">${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
+                            <div class="msg-time flex ${isRight ? 'justify-end ml-auto' : 'justify-start mr-auto'} opacity-40">${data.time || 'Just now'}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            } else {
+                const rows = container.querySelectorAll('.msg-row');
+                const lastRow = rows[rows.length - 1];
+                const wrap = lastRow.querySelector('.msg-bubble-wrap');
+                const bubbles = wrap.querySelectorAll('.msg-bubble');
+                const lastBubble = bubbles[bubbles.length - 1];
+
+                lastBubble.classList.remove('last-in-group');
+                
+                const bubbleClass = isSuper ? 'chat-superadmin' : (isStaff ? 'chat-staff' : 'chat-client');
+                const newBubble = document.createElement('div');
+                newBubble.className = `msg-bubble last-in-group ${bubbleClass}`;
+                newBubble.innerHTML = `
+                    <div class="msg-text">${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
+                    <div class="msg-time flex ${isRight ? 'justify-end ml-auto' : 'justify-start mr-auto'} opacity-40">${data.time || 'Just now'}</div>
+                `;
+                wrap.appendChild(newBubble);
+            }
+
+            container.scrollTop = container.scrollHeight;
+        }
 
         socket.on('new_ticket_message', function(data) {
             // If it's my own Form Submission via the Superadmin thread reply, skip it back from socket
@@ -429,60 +606,7 @@
                 window.showToast("New Chat Activity", title + " sent a message via Ticket #" + ticketId, null);
             }
 
-            const container = document.getElementById('thread-container');
-            if(container) {
-                const div = document.createElement('div');
-                const isSuper = data.sender_name && data.sender_name === 'Superadmin';
-                const isClient = data.sender_name === 'User' || data.sender_name === 'Client';
-                
-                // Extremely simple DOM append to show live message without page reload
-                if (data.is_bot) {
-                    div.className = "flex flex-col items-start ticket-reply";
-                    div.innerHTML = `
-                        <div class="flex items-end gap-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-50 shrink-0 flex items-center justify-center border border-blue-100 p-1.5 shadow-sm">
-                                <span class="material-symbols-outlined text-xl text-blue-500">robot_2</span>
-                            </div>
-                            <div class="chat-bubble chat-bot">
-                                <div class="msg-text">${data.message}</div>
-                            </div>
-                        </div>
-                        <div class="meta-text ml-14">HRWeb Bot • Just now</div>
-                    `;
-                } else if (isClient) {
-                     div.className = "flex flex-col items-end ticket-reply";
-                     div.innerHTML = `
-                        <div class="flex items-end justify-end gap-3 w-full">
-                            <div class="chat-bubble chat-client w-full text-right">
-                                ${data.message.replace(/\\n/g, '<br>')}
-                            </div>
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-gray-200 shadow-sm bg-gray-50 text-gray-400">
-                                <span class="material-symbols-outlined text-xl">person</span>
-                            </div>
-                        </div>
-                        <div class="meta-text mr-14 items-end">Just now</div>
-                     `;
-                } else {
-                     div.className = "flex flex-col items-start ticket-reply";
-                     div.innerHTML = `
-                        <div class="flex items-end gap-3 w-full">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm bg-amber-50 text-amber-500 border border-amber-100">
-                                <span class="material-symbols-outlined text-xl">support_agent</span>
-                            </div>
-                            <div class="chat-bubble w-full chat-staff">
-                                <div class="mb-2 text-[10px] font-bold uppercase tracking-wider border-b pb-2 text-amber-600 border-gray-200">
-                                    Support Response
-                                </div>
-                                ${data.message.replace(/\\n/g, '<br>')}
-                            </div>
-                        </div>
-                        <div class="meta-text ml-14">${data.sender_name} • Just now</div>
-                    `;
-                }
-
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-            }
+            appendMessageToUI(data);
         });
         
         // AJAX Form Submission to prevent reload
@@ -493,43 +617,38 @@
                 
                 const msgInput = document.getElementById('reply-message');
                 const message = msgInput.value.trim();
+                const submitBtn = this.querySelector('button[type="submit"]');
                 if (!message) return;
                 
-                // Optimistically append the message to UI
-                const container = document.getElementById('thread-container');
-                const div = document.createElement('div');
-                div.className = "flex flex-col items-start ticket-reply";
-                div.innerHTML = `
-                    <div class="flex items-end gap-3 w-full">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm bg-indigo-50 text-indigo-500 border border-indigo-100">
-                            <span class="material-symbols-outlined text-xl">shield_person</span>
-                        </div>
-                        <div class="chat-bubble w-full chat-superadmin">
-                            <div class="mb-2 text-[10px] font-bold uppercase tracking-wider border-b pb-2 text-indigo-600 border-indigo-100">
-                                Superadmin Response
-                            </div>
-                            ${message.replace(/\\n/g, '<br>')}
-                        </div>
-                    </div>
-                    <div class="meta-text ml-14">You (Superadmin) • Just now</div>
-                `;
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-                
-                // Submit via AJAX (Capture FormData BEFORE clearing input!)
+                // Optimistically append
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                appendMessageToUI({
+                    sender_id: currentUserId,
+                    sender_name: "You",
+                    sender_role: "<?= session()->get('role') ?>",
+                    message: message,
+                    is_bot: 0,
+                    time: timeStr
+                }, true);
+
+                // Capture FormData BEFORE clearing input
                 const fd = new FormData(replyForm);
                 fd.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
                 
-                msgInput.value = ''; // clear textarea
-                
+                msgInput.value = '';
+                if(submitBtn) submitBtn.disabled = true;
+
                 try {
                     await fetch(replyForm.action, {
                         method: 'POST',
                         body: fd,
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
-                } catch(err) {
-                    console.error('Failed to send reply', err);
+                    if(submitBtn) submitBtn.disabled = false;
+                } catch (err) {
+                    console.error("Failed to send:", err);
+                    if(submitBtn) submitBtn.disabled = false;
                 }
             });
         }

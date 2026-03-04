@@ -32,7 +32,7 @@ class KBController extends BaseController
             ->orderBy('kb_articles.created_at', 'DESC')
             ->get()->getResultArray(); //
 
-        return view('admin/kb/index', $data); //
+        return view('admin/kb/index', array_merge($this->viewData, $data)); //
     }
 
     /**
