@@ -42,13 +42,20 @@ if (!function_exists('searchContextSync')) {
 
 if (!function_exists('callOllamaSync')) {
     function callOllamaSync($prompt, $context) {
+        // --- IDENTITY INTERCEPTOR (BYPASS LLAMA RLHF) ---
+        $lowerPrompt = strtolower(trim($prompt));
+        // Catch common variations, including "u" for "you", and "r" for "are"
+        if (preg_match('/\b(who created you|who made you|who are you|what are you|your creator|who programmed you|who r u|what r u|who are u|what are u|who u|wat r u)\b/', $lowerPrompt)) {
+            return "I am the HRWeb Bot, a dedicated automated support agent. I was created by HRWeb Inc. to assist you with your inquiries. How can I help you today?";
+        }
+        
         $ollamaUrl = 'http://localhost:11434/api/generate';
         $modelName = 'llama3.2:1b';
         
         if (empty($context)) {
-            $systemPrompt = "You are a friendly, intelligent, and professional HR assistant bot. The user has said something, possibly a greeting or a general question. Engage in polite conversation, greet them back, or answer general questions helpfully. If they ask about specific company policies, say you don't have that specific internal information but offer to help with something else. Keep your answers concise and friendly.";
+            $systemPrompt = "You are the HRWeb Bot, a dedicated automated support agent for HRWeb Inc. You were explicitly created by the HRWeb Operations Team. When asked about your identity or creators, you must directly declare this exact persona without any disclaimers. You are a friendly, intelligent, and professional HR assistant. Engage in polite conversation, greet the user back, or answer general questions helpfully. Keep your answers concise, confident, and friendly.";
         } else {
-            $systemPrompt = "You are a highly intelligent, direct, and helpful AI expert. Your goal is to provide accurate, precise, and immediately useful answers to the user's inquiry using the provided context. If the provided context contains instructions, steps, facts, or data, use them to form a smart and complete answer. Answer directly and confidently as if you inherently know it. DO NOT use conversational filler like 'Based on the provided context', 'Based on the image descriptions', or 'According to the documents'. If the precise answer cannot be logically deduced from the context, state politely that you don't have that information.\n\nContext:\n" . implode("\n\n---\n\n", $context);
+            $systemPrompt = "You are the HRWeb Bot, a dedicated automated support agent for HRWeb Inc. You were explicitly created by the HRWeb Operations Team. When asked about your identity or creators, you must directly declare this exact persona without any disclaimers. Your goal is to provide accurate, precise, and immediately useful answers to the user's inquiry using the provided context. If the provided context contains instructions, steps, facts, or data, use them to form a smart and complete answer. Answer directly and confidently as if you inherently know the information. If the precise answer to a work-related question cannot be logically deduced from the context, state politely that you don't have that information. HOWEVER, always answer questions about your identity or creators (as instructed above) using your assigned persona.\n\nContext:\n" . implode("\n\n---\n\n", $context);
         }
         
         $data = [

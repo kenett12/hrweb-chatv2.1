@@ -10,138 +10,38 @@
     }
 
     /* ─── Message Row ────────────────────────────────────── */
-    .msg-row {
-        display: flex;
-        align-items: flex-end;
-        gap: 12px;
-        max-width: 85%;
-        margin-bottom: 2px;
-    }
+    .msg-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; width: 100%; animation: fadeIn 0.15s ease both; }
 
-    .msg-row--bot {
-        align-self: flex-start;
-    }
+    /* ─── Avatar ─────────────────────────────────────────── */
+    .msg-avatar { width: 36px; height: 36px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    
+    .msg-avatar.invisible { visibility: hidden; }
 
-    .msg-row--user {
-        align-self: flex-end;
+    /* ─── Content Area ───────────────────────────────────── */
+    .msg-content { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: 4px; font-size: 0.875rem; line-height: 1.5; border: 1px solid var(--fiori-border, #e5e7eb); }
+    
+    .msg-client { background: var(--fiori-surface, #ffffff); border-left: 3px solid var(--fiori-blue, #0a6ed1); }
+    .msg-bot { background: var(--fiori-surface, #ffffff); border-left: 3px solid var(--fiori-neutral, #89919a); color: var(--fiori-text-secondary, #556b82); }
+    .msg-staff { background: var(--fiori-blue-light, #eef5fc); border-left: 3px solid var(--fiori-blue, #0a6ed1); }
+    .msg-superadmin { background: #f5f3ff; border-left: 3px solid #6366f1; border-color: #ddd6fe; }
+
+    .msg-row--right {
         flex-direction: row-reverse;
+        align-self: flex-end;
         margin-left: auto;
     }
 
-    /* ─── Avatar ─────────────────────────────────────────── */
-    .msg-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        margin-bottom: 2px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    .msg-row--right .msg-content {
+        border-left: 1px solid var(--fiori-border, #e5e7eb);
+        border-right: 3px solid var(--fiori-blue, #0a6ed1);
     }
 
-    .msg-avatar--bot {
-        background: white;
-        color: #10b981;
-        border: 1px solid #e2e8f0;
-    }
+    .msg-row--right .msg-bot { border-right-color: var(--fiori-neutral, #89919a); }
+    .msg-row--right .msg-superadmin { border-right-color: #6366f1; border-color: #ddd6fe; }
 
-    .msg-avatar--staff {
-        background: #fef3c7;
-        color: #d97706;
-        border: 1px solid #fde68a;
-    }
+    .msg-time { font-size: 10px; color: #94a3b8; font-weight: 600; margin-top: 4px; }
 
-    .msg-avatar--super {
-        background: #e0e7ff;
-        color: #4f46e5;
-        border: 1px solid #c7d2fe;
-    }
-
-    .msg-avatar--user {
-        background: white;
-        color: #1e72af;
-        border: 1px solid #e2e8f0;
-    }
-
-    .msg-avatar.invisible {
-        visibility: hidden;
-    }
-
-    /* ─── Bubble Wrapper ─────────────────────────────────── */
-    .msg-bubble-wrap {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        width: 100%;
-    }
-
-    .msg-row--user .msg-bubble-wrap {
-        align-items: flex-end;
-    }
-
-    /* ─── Message Bubbles ────────────────────────────────── */
-    .msg-bubble {
-        padding: 12px 18px;
-        border-radius: var(--bubble-radius);
-        font-size: 14.5px;
-        line-height: 1.6;
-        position: relative;
-        word-break: break-word;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-
-    .chat-staff {
-        background-color: #fffbeb;
-        border: 1.5px solid #fde68a;
-        color: #92400e;
-        border-bottom-right-radius: 4px;
-    }
-
-    .chat-superadmin {
-        background-color: #f5f3ff;
-        border: 1.5px solid #ddd6fe;
-        color: #4c1d95;
-        border-bottom-right-radius: 4px;
-    }
-
-    .chat-client {
-        background-color: white;
-        border: 1.5px solid #ecfdf5;
-        border-left: 4px solid #10b981;
-        color: #1a2332;
-        border-bottom-left-radius: 4px;
-    }
-
-    /* Grouping Adjustments */
-    .msg-bubble.first-in-group { border-top-left-radius: var(--bubble-radius) !important; border-top-right-radius: var(--bubble-radius) !important; }
-    
-    .msg-time {
-        font-size: 10px;
-        color: #94a3b8;
-        font-weight: 600;
-        margin-top: 4px;
-    }
-
-    .msg-sender-name {
-        font-size: 10px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 2px;
-        margin-left: 4px;
-    }
-
-    .msg-row--user .msg-sender-name {
-        margin-left: 0;
-        margin-right: 4px;
-        text-align: right;
-    }
-
-    #thread-container {
-        background: #f8fafc;
-    }
+    #thread-container { background: #f8fafc; }
 
 
 
@@ -205,35 +105,46 @@
 
 <?= $this->section('content') ?>
 
-<div class="mb-6 flex items-center justify-between">
+<div class="flex justify-between items-center mb-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+        <h1 class="fiori-title flex items-center gap-3">
             Ticket #<?= $ticket['id'] ?>: <?= esc($ticket['subject']) ?>
-            <span class="badge status-<?= strtolower(str_replace(' ', '_', $ticket['status'])) ?> text-sm px-3 py-1"><?= $ticket['status'] ?></span>
+            <span class="fiori-status fiori-status--neutral"><?= $ticket['status'] ?></span>
         </h1>
-        <p class="text-gray-500 text-sm mt-1">
-            Client: <strong><?= esc($ticket['client_name']) ?></strong> | 
-            Assigned TSR: <strong><?= esc($ticket['staff_name'] ?? 'Unassigned') ?></strong> | 
-            Superadmin: <strong><?= esc($ticket['superadmin_name'] ?? 'None') ?></strong>
-        </p>
+        <div class="text-sm font-semibold tracking-wider mt-1" style="color:var(--fiori-text-secondary);">
+            Client: <span style="color:var(--fiori-text-base);"><?= esc($ticket['client_name']) ?></span> | 
+            Assigned TSR: <span style="color:var(--fiori-text-base);"><?= esc($ticket['staff_name'] ?? 'Unassigned') ?></span> | 
+            Superadmin: <span style="color:var(--fiori-text-base);"><?= esc($ticket['superadmin_name'] ?? 'None') ?></span>
+        </div>
     </div>
     <div class="flex items-center gap-3">
-        <a href="<?= base_url('superadmin/tickets') ?>" class="btn btn-outline">Back to Queue</a>
+        <button type="button" onclick="toggleFullChat()" id="toggle-chat-btn" class="btn btn-outline flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">fullscreen</span>
+            <span>View Full Chat</span>
+        </button>
+        <a href="<?= base_url('superadmin/tickets') ?>" class="btn btn-outline" style="border-color:transparent; background:var(--fiori-border);">Back to Queue</a>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-240px)] transition-all duration-300">
     <!-- Thread Panel -->
-    <div class="lg:col-span-2 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
-
-        <!-- Superadmin Monitoring Details -->
-        <div class="bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-widest py-2 text-center relative z-10 w-full shadow-sm border-b border-indigo-100 flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-[14px]">shield_person</span>
-            3-Way Group Chat Active
-        </div>
-        
-        <!-- Conversation Area -->
-        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-0.5" id="thread-container" style="scroll-behavior: smooth; background: #f8fafc;">
+    <div id="chat-column" class="lg:col-span-2 transition-all duration-300 h-full min-h-0">
+        <div class="fiori-card flex flex-col overflow-hidden h-full relative" style="padding:0;">
+            
+            <!-- Floating Exit Fullscreen Button -->
+            <button type="button" onclick="toggleFullChat()" id="floating-exit-btn" class="hidden absolute top-3 right-3 z-[110] btn btn-outline bg-white flex items-center gap-2 shadow-md" style="border-color:var(--fiori-border);">
+                <span class="material-symbols-outlined text-[16px]">fullscreen_exit</span>
+                <span>Exit Full Chat</span>
+            </button>
+            
+            <!-- Superadmin Monitoring Details -->
+            <div class="bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-widest py-2 text-center relative z-10 w-full flex-shrink-0 shadow-sm border-b border-indigo-100 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[14px]">shield_person</span>
+                3-Way Group Chat Active
+            </div>
+            
+            <!-- Conversation Area -->
+            <div class="chat-container flex-1 overflow-y-auto p-6 flex flex-col gap-4" id="thread-container" style="scroll-behavior: smooth; background:var(--fiori-page-bg);">
             
             <?php
             $lastSenderId = null;
@@ -259,8 +170,8 @@
                 $staffRoles = ['admin', 'superadmin', 'tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
                 $isStaff = (isset($msg['role']) && in_array($msg['role'], $staffRoles));
                 
-                // POV: Staff/Admins on Right, Client/Bot on Left
-                $isRight = $isStaff; 
+                // POV: Admins on Right, TSR/Client/Bot on Left
+                $isRight = $isSuper;
                 $isMe = (!$isBot && $msg['user_id'] == $currentUserId);
 
                 $senderKey = $isBot ? 'bot' : ($msg['user_id'] ?? 'unknown');
@@ -275,9 +186,9 @@
                 $groupClass = $isNewGroup ? 'first-in-group' : ($isLastInGroup ? 'last-in-group' : 'mid-in-group');
             ?>
 
-                <div class="msg-row <?= $isRight ? 'msg-row--user' : 'msg-row--bot' ?> <?= $isNewGroup ? 'mt-6' : 'mt-1' ?>">
+                <div class="msg-row <?= $isRight ? 'msg-row--right' : '' ?> <?= $isNewGroup ? 'mt-6' : 'mt-1' ?>">
                     <!-- Avatar -->
-                    <div class="msg-avatar <?= $isRight ? ($isSuper ? 'msg-avatar--super' : 'msg-avatar--staff') : 'msg-avatar--user' ?> <?= !$isNewGroup ? 'invisible' : '' ?>">
+                    <div class="msg-avatar <?= !$isNewGroup ? 'invisible' : '' ?>" style="background:var(--fiori-surface, #ffffff); color:var(--fiori-blue, #0a6ed1); border:1px solid var(--fiori-border, #e5e7eb);">
                         <?php if($isBot): ?>
                             <span class="material-symbols-outlined text-xl">robot_2</span>
                         <?php elseif($isSuper): ?>
@@ -289,144 +200,136 @@
                         <?php endif; ?>
                     </div>
 
-                    <div class="msg-bubble-wrap">
+                    <?php 
+                        $msgClass = $isSuper ? 'msg-superadmin' : ($isStaff ? 'msg-staff' : 'msg-client');
+                        if($isBot) $msgClass = 'msg-bot';
+                    ?>
+                    
+                    <div class="msg-content <?= $msgClass ?>">
                         <?php if ($isNewGroup): ?>
-                            <div class="msg-sender-name <?= $isSuper ? 'text-indigo-600' : ($isStaff ? 'text-amber-600' : 'text-emerald-600') ?>">
-                                <?php 
-                                    if ($isBot) {
-                                        echo 'HRWeb Bot';
-                                    } elseif ($isMe) {
-                                        echo 'You (' . ($isSuper ? 'Administrator' : 'Staff') . ')';
-                                    } else {
-                                        $label = $isSuper ? 'Administrator' : ($isStaff ? 'Support Team' : 'Client');
-                                        echo esc($msg['username'] ?? $label) . " <span class='opacity-40 ml-1'>[{$label}]</span>";
-                                    }
-                                ?>
+                            <div class="flex items-center justify-between mb-1 <?= $isRight ? 'flex-row-reverse' : '' ?>">
+                                <span class="text-[10px] font-bold uppercase tracking-widest px-1 <?= $isSuper ? 'text-indigo-600' : ($isStaff ? 'text-amber-600' : 'text-emerald-600') ?>">
+                                    <?php 
+                                        if ($isBot) {
+                                            echo 'HRWeb Bot';
+                                        } elseif ($isMe) {
+                                            echo 'You <span class="opacity-50 inline-block ml-1">[' . ($isSuper ? 'Administrator' : 'Staff') . ']</span>';
+                                        } else {
+                                            $label = $isSuper ? 'Administrator' : ($isStaff ? 'Support Team' : 'Client');
+                                            echo esc($msg['username'] ?? $label) . " <span class='opacity-50 inline-block ml-1'>[{$label}]</span>";
+                                        }
+                                    ?>
+                                </span>
+                                <span class="text-[9px]" style="color:var(--fiori-text-muted, #89919a);"><?= date('h:i A', strtotime($msg['created_at'])) ?></span>
                             </div>
                         <?php endif; ?>
 
-                        <?php 
-                            $bubbleClass = $isSuper ? 'chat-superadmin' : ($isStaff ? 'chat-staff' : 'chat-client');
-                        ?>
-                        <div class="msg-bubble <?= $groupClass ?> <?= $bubbleClass ?>">
-                            <?php if (isset($msg['is_initial']) && $msg['is_initial']): ?>
-                                <div class="mb-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest border-b border-emerald-50 pb-1.5 flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[14px]">description</span> Initial Request
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="msg-text" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?>>
-                                <?php if($isBot): ?>
-                                    <?= nl2br(html_entity_decode($msg['message'])) ?>
-                                <?php else: ?>
-                                    <?= nl2br(esc($msg['message'])) ?>
-                                <?php endif; ?>
+                        <?php if (isset($msg['is_initial']) && $msg['is_initial']): ?>
+                            <div class="mb-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest border-b border-emerald-50 pb-1.5 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">description</span> Initial Request
                             </div>
+                        <?php endif; ?>
 
-                            <?php if (!empty($msg['attachment']) && isset($msg['is_initial'])): ?>
-                                <div class="mt-3 pt-3 border-t border-emerald-50/50">
-                                    <?php 
-                                        $ext = strtolower(pathinfo($msg['attachment'], PATHINFO_EXTENSION));
-                                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                    ?>
-                                    <?php if ($isImage): ?>
-                                        <img src="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" class="max-w-full h-auto rounded-lg mb-2 shadow-sm cursor-zoom-in" onclick="window.open(this.src, '_blank')">
-                                    <?php endif; ?>
-                                    <a href="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" target="_blank" class="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[14px]">attachment</span> View Attachment
-                                    </a>
-                                </div>
+                        <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="color:var(--fiori-text-base, #1d2d3e);">
+                            <?php if($isBot): ?>
+                                <?= nl2br(html_entity_decode($msg['message'])) ?>
+                            <?php else: ?>
+                                <?= nl2br(esc($msg['message'])) ?>
                             <?php endif; ?>
-
-                            <div class="msg-time flex <?= $isRight ? 'justify-end ml-auto' : 'justify-start mr-auto' ?> opacity-40">
-                                <?= date('h:i A', strtotime($msg['created_at'])) ?>
-                            </div>
                         </div>
+
+                        <?php if (!empty($msg['attachment']) && isset($msg['is_initial'])): ?>
+                            <div class="mt-3 pt-3 border-t border-emerald-50/50">
+                                <?php 
+                                    $ext = strtolower(pathinfo($msg['attachment'], PATHINFO_EXTENSION));
+                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                ?>
+                                <?php if ($isImage): ?>
+                                    <img src="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" class="max-w-full h-auto rounded-lg mb-2 shadow-sm cursor-zoom-in" onclick="window.open(this.src, '_blank')">
+                                <?php endif; ?>
+                                <a href="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" target="_blank" class="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">attachment</span> View Attachment
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
-<?php endforeach; ?>
-        </div>
+            <?php endforeach; ?>
         </div>
         
-        <!-- Reply Form -->
-        <div class="p-4 border-t border-gray-100 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] relative z-10 w-full">
-            <form id="reply-form" action="<?= base_url('superadmin/tickets/reply/' . $ticket['id']) ?>" method="post">
-                <textarea name="message" id="reply-message" rows="3" required
-                    class="w-full p-4 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm" 
-                    placeholder="Write a message to the group..."></textarea>
-                <div class="flex justify-between items-center mt-3">
-                    <span class="text-xs text-gray-400 font-medium italic"><span class="text-indigo-500 font-bold">Note:</span> Your message will be visible to everyone.</span>
-                    <button type="submit" class="btn btn-primary !py-2.5 !px-8 !rounded-xl flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm">send</span>
-                        Send Message
-                    </button>
-                </div>
-            </form>
+            <!-- Reply Form -->
+            <div class="p-4 border-t" style="border-color:var(--fiori-border); background:#fff;">
+                <form id="reply-form" action="<?= base_url('superadmin/tickets/reply/' . $ticket['id']) ?>" method="post">
+                    <textarea name="message" id="reply-message" required
+                        class="fiori-input w-full" 
+                        style="height:80px; resize:none;"
+                        placeholder="Write a message to the group..."
+                        onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.querySelector('button[type=\'submit\']').click(); }"></textarea>
+                    <div class="flex justify-between items-center mt-3">
+                        <span class="text-xs text-gray-400 font-medium italic"><span class="text-indigo-500 font-bold">Note:</span> Your message will be visible to everyone.</span>
+                        <button type="submit" class="btn btn-accent flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[16px]">send</span>
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Ticket Meta Panel -->
-    <div class="bg-gray-50 rounded-2xl border border-gray-100 p-6 shadow-sm overflow-y-auto hidden lg:block">
-        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-200 pb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-blue-600 text-xl">info</span> Ticket Information
-        </h3>
-        
-        <div class="space-y-6">
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                <div class="inline-block"><span class="badge status-<?= strtolower(str_replace(' ', '_', $ticket['status'])) ?>"><?= $ticket['status'] ?></span></div>
-            </div>
-
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ticket Number</p>
-                <p class="font-bold text-gray-800"><?= esc($ticket['ticket_number']) ?></p>
-            </div>
-
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category</p>
-                <p class="font-medium text-gray-800"><?= esc($ticket['category'] ?? 'General') ?></p>
-            </div>
-            
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Priority</p>
-                <p class="font-medium text-gray-800">
-                    <?php if($ticket['priority'] === 'Urgent'): ?>
-                        <span class="text-red-600 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">warning</span> Urgent</span>
-                    <?php elseif($ticket['priority'] === 'High'): ?>
-                        <span class="text-orange-500 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">priority_high</span> High</span>
-                    <?php elseif($ticket['priority'] === 'Medium'): ?>
-                        <span class="text-amber-500 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">remove</span> Medium</span>
-                    <?php else: ?>
-                        <span class="text-blue-500 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">arrow_downward</span> <?= esc($ticket['priority'] ?? 'Low') ?></span>
-                    <?php endif; ?>
-                </p>
-            </div>
-
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Assigned Support Staff</p>
-                <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-sm">support_agent</span>
-                    </div>
-                    <span class="font-medium text-sm text-gray-800"><?= esc($ticket['staff_name'] ?? 'Unassigned') ?></span>
+    <div id="details-column" class="transition-opacity duration-300 hidden lg:block h-full">
+        <div class="fiori-card p-0 flex flex-col h-full overflow-hidden">
+            <div class="fiori-card__header flex-shrink-0">
+                <div>
+                    <h2 class="fiori-card__title">Ticket Information</h2>
                 </div>
             </div>
             
-            <?php if (!empty($ticket['superadmin_id'])): ?>
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Monitoring Superadmin</p>
-                <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-sm">shield_person</span>
-                    </div>
-                    <span class="font-medium text-sm text-gray-800"><?= esc($ticket['superadmin_name']) ?></span>
+            <div class="fiori-card__content flex-1 overflow-y-auto space-y-5" style="padding-top:0;">
+                <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Registration Status</label>
+                    <span class="fiori-status fiori-status--neutral"><?= $ticket['status'] ?></span>
                 </div>
-            </div>
-            <?php endif; ?>
 
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Date Created</p>
-                <p class="text-sm font-medium text-gray-600"><?= date('F d, Y h:i A', strtotime($ticket['created_at'])) ?></p>
+                <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Ticket Number</label>
+                    <p class="text-sm font-semibold" style="color:var(--fiori-text-base);"><?= esc($ticket['ticket_number']) ?></p>
+                </div>
+
+                <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Client Name</label>
+                    <p class="text-sm font-semibold" style="color:var(--fiori-text-base);"><?= esc($ticket['client_name']) ?></p>
+                </div>
+
+                <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Staff Assigned</label>
+                    <p class="text-sm font-semibold <?= empty($ticket['staff_name']) ? 'italic opacity-60' : 'text-blue-600' ?>">
+                        <?= $ticket['staff_name'] ?? 'Not Claimed' ?>
+                    </p>
+                </div>
+
+                <?php if (!empty($ticket['superadmin_id'])): ?>
+                <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1" style="color:var(--fiori-blue);">
+                        <span class="material-symbols-outlined text-[14px]">shield_person</span> Monitoring Superadmin
+                    </label>
+                    <p class="text-sm font-semibold" style="color:var(--fiori-text-base);"><?= esc($ticket['superadmin_name']) ?></p>
+                </div>
+                <?php endif; ?>
+
+                <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--fiori-text-secondary);">Category / Priority</label>
+                    <div class="flex gap-2">
+                        <span class="fiori-status fiori-status--neutral"><?= esc($ticket['category']) ?></span>
+                        <span class="fiori-status <?= $ticket['priority'] === 'Urgent' || $ticket['priority'] === 'High' ? 'fiori-status--critical' : 'fiori-status--positive' ?>"><?= esc($ticket['priority']) ?></span>
+                    </div>
+                </div>
+
+                <div class="pb-2">
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Date Created</label>
+                    <p class="text-sm font-medium" style="color:var(--fiori-text-base);"><?= date('F d, Y h:i A', strtotime($ticket['created_at'])) ?></p>
+                </div>
             </div>
         </div>
     </div>
@@ -475,6 +378,55 @@
             container.scrollTop = container.scrollHeight;
         }
     });
+
+    // ── LAYOUT TOGGLE LOGIC ──
+    function toggleFullChat() {
+        try {
+            const chatCol = document.getElementById('chat-column');
+            const detailsCol = document.getElementById('details-column');
+            if (!chatCol || !detailsCol) return;
+            
+            const gridContainer = detailsCol.parentElement;
+            const toggleBtn = document.getElementById('toggle-chat-btn');
+            const btnSpan = toggleBtn ? toggleBtn.querySelector('span:last-child') : null;
+            const btnIcon = toggleBtn ? toggleBtn.querySelector('span:first-child') : null;
+            const floatingExitBtn = document.getElementById('floating-exit-btn');
+            const mainWrapper = document.querySelector('.flex-1.flex.flex-col.min-w-0.overflow-hidden');
+
+            if (detailsCol.style.display === 'none' || detailsCol.classList.contains('hidden')) {
+                // Restore Split View
+                detailsCol.style.display = '';
+                detailsCol.classList.remove('hidden');
+                chatCol.classList.remove('fixed', 'inset-0', 'z-[9999]', 'rounded-none');
+                chatCol.classList.add('lg:col-span-2');
+                chatCol.style.backgroundColor = '';
+                chatCol.style.padding = '';
+                if(btnSpan) btnSpan.textContent = 'View Full Chat';
+                if(btnIcon) btnIcon.textContent = 'fullscreen';
+                if(floatingExitBtn) floatingExitBtn.classList.add('hidden');
+                if(mainWrapper) mainWrapper.style.overflow = '';
+                
+                // Move back inside the grid container
+                if(gridContainer) gridContainer.insertBefore(chatCol, detailsCol);
+            } else {
+                // Full Chat View
+                detailsCol.style.display = 'none';
+                chatCol.classList.remove('lg:col-span-2', 'lg:col-span-3');
+                chatCol.classList.add('fixed', 'inset-0', 'z-[9999]', 'rounded-none');
+                chatCol.style.backgroundColor = 'var(--fiori-page-bg)';
+                chatCol.style.padding = '1rem'; 
+                if(btnSpan) btnSpan.textContent = 'Exit Full Chat';
+                if(btnIcon) btnIcon.textContent = 'fullscreen_exit';
+                if(floatingExitBtn) floatingExitBtn.classList.remove('hidden');
+                if(mainWrapper) mainWrapper.style.overflow = 'visible';
+                
+                // Append to body root to completely break out of CSS transform containing blocks
+                document.body.appendChild(chatCol);
+            }
+        } catch(e) {
+            console.error('Fullscreen toggle error:', e);
+        }
+    }
 
     // ── VIEWER LOGIC ──
     let scale = 1, pointX = 0, pointY = 0, startX = 0, startY = 0, isPanning = false;
@@ -536,30 +488,36 @@
             const isStaff = staffRoles.includes(data.sender_role);
             const isSuper = data.sender_role === 'superadmin' || data.sender_role === 'admin';
             const isMe = (data.sender_id == currentUserId && !isBot);
-            const isRight = isStaff; // Staff POV: Staff/Admin on Right
+            const isRight = isSuper; // Admin POV: Admin/Superadmin on Right
 
             if (isNewGroup) {
                 const row = document.createElement('div');
-                row.className = `msg-row ${isRight ? 'msg-row--user' : 'msg-row--bot'} mt-6`;
+                row.className = `msg-row ${isRight ? 'msg-row--right' : ''} mt-6`;
                 
-                const avatarClass = isRight ? (isSuper ? 'msg-avatar--super' : 'msg-avatar--staff') : 'msg-avatar--user';
                 const avatarIcon = isBot ? 'robot_2' : (isSuper ? 'shield_person' : (isRight ? 'support_agent' : 'person'));
                 
                 const senderColor = isSuper ? 'text-indigo-600' : (isStaff ? 'text-amber-600' : 'text-emerald-600');
                 const roleLabel = isSuper ? 'Administrator' : (isStaff ? 'Support Team' : 'Client');
-                const displayName = isBot ? 'HRWeb Bot' : (isMe ? 'You ('+roleLabel+')' : (data.sender_name || 'User') + ' <span class="opacity-40 ml-1">['+roleLabel+']</span>');
+                const displayName = isBot ? 'HRWeb Bot' : (isMe ? 'You <span class="opacity-50 inline-block ml-1">['+roleLabel+']</span>' : (data.sender_name || 'User') + ' <span class="opacity-50 inline-block ml-1">['+roleLabel+']</span>');
 
-                const bubbleClass = isSuper ? 'chat-superadmin' : (isStaff ? 'chat-staff' : 'chat-client');
+                let msgClass = 'msg-client';
+                if(isBot) msgClass = 'msg-bot';
+                else if(isSuper) msgClass = 'msg-superadmin';
+                else if(isStaff) msgClass = 'msg-staff';
 
                 row.innerHTML = `
-                    <div class="msg-avatar ${avatarClass}">
+                    <div class="msg-avatar" style="background:var(--fiori-surface, #ffffff); color:var(--fiori-blue, #0a6ed1); border:1px solid var(--fiori-border, #e5e7eb);">
                         <span class="material-symbols-outlined text-xl">${avatarIcon}</span>
                     </div>
-                    <div class="msg-bubble-wrap">
-                        <div class="msg-sender-name ${senderColor}">${displayName}</div>
-                        <div class="msg-bubble first-in-group last-in-group ${bubbleClass}">
-                            <div class="msg-text">${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
-                            <div class="msg-time flex ${isRight ? 'justify-end ml-auto' : 'justify-start mr-auto'} opacity-40">${data.time || 'Just now'}</div>
+                    <div class="msg-content ${msgClass}">
+                        <div class="flex items-center justify-between mb-1 ${isRight ? 'flex-row-reverse' : ''}">
+                            <span class="text-[10px] font-bold uppercase tracking-widest px-1 ${senderColor}">
+                                ${displayName}
+                            </span>
+                            <span class="text-[9px]" style="color:var(--fiori-text-muted, #89919a);">${data.time || 'Just now'}</span>
+                        </div>
+                        <div class="msg-text text-sm" style="color:var(--fiori-text-base, #1d2d3e);">
+                            ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n/g, "<br>")}
                         </div>
                     </div>
                 `;
@@ -567,20 +525,18 @@
             } else {
                 const rows = container.querySelectorAll('.msg-row');
                 const lastRow = rows[rows.length - 1];
-                const wrap = lastRow.querySelector('.msg-bubble-wrap');
-                const bubbles = wrap.querySelectorAll('.msg-bubble');
-                const lastBubble = bubbles[bubbles.length - 1];
+                const contentArea = lastRow.querySelector('.msg-content');
 
-                lastBubble.classList.remove('last-in-group');
-                
-                const bubbleClass = isSuper ? 'chat-superadmin' : (isStaff ? 'chat-staff' : 'chat-client');
-                const newBubble = document.createElement('div');
-                newBubble.className = `msg-bubble last-in-group ${bubbleClass}`;
-                newBubble.innerHTML = `
-                    <div class="msg-text">${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
-                    <div class="msg-time flex ${isRight ? 'justify-end ml-auto' : 'justify-start mr-auto'} opacity-40">${data.time || 'Just now'}</div>
+                // Append the incoming message segment under the existing content wrapper without the header
+                const newSegment = document.createElement('div');
+                newSegment.className = "mt-2 pt-2 border-t border-gray-100 flex flex-col gap-1";
+                newSegment.innerHTML = `
+                    <div class="msg-text text-sm" style="color:var(--fiori-text-base, #1d2d3e);">
+                        ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n/g, "<br>")}
+                    </div>
+                    <div class="text-[9px] flex justify-end" style="color:var(--fiori-text-muted, #89919a);">${data.time || 'Just now'}</div>
                 `;
-                wrap.appendChild(newBubble);
+                contentArea.appendChild(newSegment);
             }
 
             container.scrollTop = container.scrollHeight;

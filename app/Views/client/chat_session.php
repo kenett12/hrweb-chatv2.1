@@ -101,81 +101,81 @@
                 $isSuper = in_array($msg['role'] ?? '', ['admin', 'superadmin']);
                 $isMe = (!$isBot && $msg['user_id'] == $currentUserId);
 
-                // POV: Support on RIGHT, Client on LEFT
-                $isRight = $isStaff || $isBot; 
+                // Standard Chat POV: My messages on the RIGHT, their messages on the LEFT
+                $isRight = $isMe; 
                 
                 $senderKey = $isBot ? 'bot' : $msg['user_id'];
                 $isNewGroup = ($lastSenderId !== $senderKey);
                 $lastSenderId = $senderKey;
+                
+                // Determine Avatar Colors based strictly on role, not alignment
+                $avatarBgClass = 'bg-white border border-[#ecfdf5] text-[#10b981]'; // Client
+                if ($isSuper) {
+                    $avatarBgClass = 'bg-[#e0e7ff] text-[#4f46e5] border border-[#c7d2fe]';
+                } elseif ($isStaff || $isBot) {
+                    $avatarBgClass = 'bg-[#fef3c7] text-[#d97706] border border-[#fde68a]';
+                }
                 ?>
 
-                <div class="flex items-end gap-3 max-w-[85%] <?= ($isStaff || $isBot) ? 'ml-auto flex-row-reverse' : '' ?> <?= $isNewGroup ? 'mt-6' : 'mt-1' ?>">
-                    <!-- High-Fidelity Avatar -->
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mb-0.5 shadow-md <?= !$isNewGroup ? 'invisible' : '' ?> <?= ($isStaff || $isBot) ? (($msg['role'] === 'superadmin') ? 'bg-[#e0e7ff] text-[#4f46e5] border border-[#c7d2fe]' : 'bg-[#fef3c7] text-[#d97706] border border-[#fde68a]') : 'bg-white border border-[#ecfdf5] text-[#10b981]' ?>">
+                <div class="msg-row <?= $isRight ? 'msg-row--right' : '' ?> <?= $isNewGroup ? 'mt-6' : 'mt-1' ?>" style="max-width:85%;">
+                    <div class="msg-avatar shadow-sm <?= !$isNewGroup ? 'invisible' : '' ?> <?= $avatarBgClass ?>">
                         <?php if($isBot): ?> 
-                            <span class="material-symbols-outlined text-xl">robot_2</span>
-                        <?php elseif(isset($msg['role']) && in_array($msg['role'], ['admin', 'superadmin'])): ?> 
-                            <span class="material-symbols-outlined text-xl">shield_person</span>
+                            <span class="material-symbols-outlined text-[20px]">robot_2</span>
+                        <?php elseif($isSuper): ?> 
+                            <span class="material-symbols-outlined text-[20px]">shield_person</span>
                         <?php elseif($isStaff): ?> 
-                            <span class="material-symbols-outlined text-xl">support_agent</span>
+                            <span class="material-symbols-outlined text-[20px]">support_agent</span>
                         <?php else: ?> 
-                            <span class="material-symbols-outlined text-xl">person</span>
+                            <span class="material-symbols-outlined text-[20px]">person</span>
                         <?php endif; ?>
                     </div>
 
-                    <div class="flex flex-col gap-0.5 <?= ($isStaff || $isBot) ? 'items-end' : 'items-start' ?>">
+                    <?php 
+                        $msgClass = $isSuper ? 'msg-superadmin' : ($isStaff ? 'msg-staff' : 'msg-client');
+                        if($isBot) $msgClass = 'msg-bot';
+                    ?>
+                    <div class="msg-content <?= $msgClass ?> shadow-sm">
                         <?php if ($isNewGroup): ?>
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest px-1 <?= ($isStaff || $isBot) ? (($msg['role'] === 'superadmin') ? 'text-indigo-600' : 'text-amber-600') : 'text-emerald-600' ?>" style="font-family:'Inter',sans-serif">
-                                <?php 
-                                    if ($isBot) {
-                                        echo 'HRWeb Bot';
-                                    } elseif ($isStaff) {
-                                        $roleLabel = ($msg['role'] === 'superadmin') ? 'HRWeb Administrator' : 'Support Team';
-                                        echo esc($msg['username'] ?? $roleLabel) . " <span class='opacity-50 inline-block ml-1'>[{$roleLabel}]</span>";
-                                    } else {
-                                        echo $isMe ? 'You' : esc($msg['username'] ?? 'User');
-                                    }
-                                ?>
-                            </span>
+                            <div class="flex items-center justify-between mb-2 <?= $isRight ? 'flex-row-reverse' : '' ?>">
+                                <span class="text-[10px] font-bold uppercase tracking-widest px-1 <?= $isSuper ? 'text-indigo-600' : ($isStaff ? 'text-amber-600' : 'text-emerald-600') ?>" style="font-family:'Inter',sans-serif">
+                                    <?php 
+                                        if ($isBot) {
+                                            echo 'HRWeb Bot <span class="opacity-50 inline-block ml-1">[Automated]</span>';
+                                        } elseif ($isStaff) {
+                                            $roleLabel = ($msg['role'] === 'superadmin') ? 'Administrator' : 'Support Team';
+                                            echo esc($msg['username'] ?? $roleLabel) . " <span class='opacity-50 inline-block ml-1'>[{$roleLabel}]</span>";
+                                        } else {
+                                            echo ($isMe ? 'You' : esc($msg['username'] ?? 'User'));
+                                        }
+                                    ?>
+                                </span>
+                                <span class="text-[9px]" style="color:var(--fiori-text-muted, #89919a);"><?= date('h:i A', strtotime($msg['created_at'])) ?></span>
+                            </div>
                         <?php endif; ?>
                         
-                        <?php 
-                            $isRight = ($isStaff || $isBot);
-                            $isSuper = ($msg['role'] === 'superadmin');
-                            if (!$isRight) {
-                                $customStyle = 'background-color: white; border: 1.5px solid #ecfdf5; border-left: 4px solid #10b981; color: #1a2332; box-shadow: 0 2px 5px rgba(0,0,0,0.05);';
-                            } else {
-                                if ($isSuper) {
-                                    $customStyle = 'background-color: #f5f3ff; border: 1.5px solid #ddd6fe; color: #4c1d95; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);';
-                                } else {
-                                    $customStyle = 'background-color: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.1);';
-                                }
-                            }
-                        ?>
-                        <div class="msg-bubble" style="<?= $customStyle ?> border-radius: 12px; padding: 12px 18px; font-size: 14px; line-height: 1.6; <?= $isRight ? 'border-bottom-right-radius: 4px;' : 'border-bottom-left-radius: 4px;' ?> <?= $isNewGroup ? ($isRight ? 'border-top-right-radius: 12px;' : 'border-top-left-radius: 12px;') : '' ?>">
-                            <div class="msg-text" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?>>
-                                <?php if($isBot): ?>
-                                    <?= nl2br(html_entity_decode($msg['message'])) ?>
-                                <?php else: ?>
-                                    <?= nl2br(esc($msg['message'])) ?>
-                                <?php endif; ?>
-                            </div>
-                            <!-- Timestamp -->
-                            <div class="text-[9px] mt-2 opacity-40 font-bold flex <?= $isRight ? 'justify-end' : 'justify-start' ?>">
-                                <?= date('h:i A', strtotime($msg['created_at'])) ?>
-                            </div>
+                        <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="color:var(--fiori-text-base, #1d2d3e);">
+                            <?php if($isBot): ?>
+                                <?= nl2br(html_entity_decode($msg['message'])) ?>
+                            <?php else: ?>
+                                <?= nl2br(esc($msg['message'])) ?>
+                            <?php endif; ?>
                         </div>
+                        <?php if(!$isNewGroup): ?>
+                            <div class="text-[9px] mt-1 <?= $isRight ? 'text-left' : 'text-right' ?>" style="color:var(--fiori-text-muted, #89919a);"><?= date('h:i A', strtotime($msg['created_at'])) ?></div>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
 
-            <div id="typing-indicator" class="hidden flex items-end gap-3 mt-6 max-w-[85%] ml-auto flex-row-reverse text-right">
-                <div class="w-10 h-10 rounded-full bg-[#fef3c7] text-[#d97706] border border-[#fde68a] flex items-center justify-center shadow-md">
-                    <span class="material-symbols-outlined text-xl">support_agent</span>
+            <div id="typing-indicator" class="hidden msg-row mt-6" style="max-width:85%;">
+                <div class="msg-avatar shadow-sm bg-[#fef3c7] text-[#d97706] border border-[#fde68a]">
+                    <span id="typing-icon" class="material-symbols-outlined text-[20px]">support_agent</span>
                 </div>
-                <div class="flex flex-col gap-0.5 items-end">
-                    <span id="typing-name" class="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 px-1">Support is typing...</span>
-                    <div class="msg-bubble px-5 py-3 bg-[#fffbeb] border border-[#fde68a]" style="border-radius: 12px; border-bottom-right-radius: 4px;">
+                <div class="msg-content msg-staff shadow-sm" id="typing-bubble">
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="typing-name" class="text-[10px] font-bold uppercase tracking-widest px-1 text-amber-600">Support is typing...</span>
+                    </div>
+                    <div class="msg-text px-2 py-1">
                         <div class="flex gap-1 items-center h-2">
                             <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce"></span>
                             <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
@@ -236,6 +236,16 @@
                 <p class="text-[10px] font-bold text-gray-400 uppercase">No matches found</p>
             </div>
         </div>
+
+        <?php if (empty($active_ticket['assigned_to'])): ?>
+        <div class="shrink-0 p-4 border-t" style="border-color:var(--fiori-border);">
+            <button onclick="requestHumanAgent()" class="fiori-btn btn-outline w-full flex items-center justify-center gap-2" id="btn-request-agent">
+                <span class="material-symbols-outlined text-[16px]">support_agent</span>
+                Talk to Agent
+            </button>
+        </div>
+        <?php endif; ?>
+
     </aside>
 
     <div id="image-modal" class="fixed inset-0 z-[999]">
@@ -417,11 +427,12 @@
                 const isSuper = role === 'superadmin' || role === 'admin';
                 const isStaff = ['admin', 'superadmin', 'tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'].includes(role);
                 
-                // POV: Support/Bot on RIGHT, Client on LEFT
-                const isRight = (sender === 'support' || isBot || (role !== 'client' && !isMe));
+                // Standard Chat POV: My messages on RIGHT, others on LEFT
+                const isRight = isMe;
                 
                 const wrapper = document.createElement('div');
-                wrapper.className = `flex items-end gap-3 ${isRight ? 'ml-auto flex-row-reverse' : ''} mt-6 max-w-[85%]`;
+                wrapper.className = `msg-row ${isRight ? 'msg-row--right' : ''} mt-6`;
+                wrapper.style.maxWidth = '85%';
                 
                 const safeText = isMe 
                     ? document.createTextNode(text || "").textContent.replace(/\n/g, '<br>')
@@ -440,38 +451,39 @@
                     `;
                 }
 
-                let iconName = isBot ? 'robot_2' : (isSuper ? 'shield_person' : (isRight ? 'support_agent' : 'person'));
-                const iconHtml = `<span class="material-symbols-outlined text-xl">${iconName}</span>`;
-                const avatarClass = isRight ? (isSuper ? 'bg-[#e0e7ff] text-[#4f46e5] border border-[#c7d2fe]' : 'bg-[#fef3c7] text-[#d97706] border border-[#fde68a]') : 'bg-white border border-[#ecfdf5] text-[#10b981]';
+                let iconName = isBot ? 'robot_2' : (isSuper ? 'shield_person' : (isStaff ? 'support_agent' : 'person'));
+                const iconHtml = `<span class="material-symbols-outlined text-[20px]">${iconName}</span>`;
+                
+                // Determine Avatar Colors based strictly on role, not alignment
+                let avatarClass = 'bg-white border border-[#ecfdf5] text-[#10b981]'; // Client
+                if (isSuper) {
+                    avatarClass = 'bg-[#e0e7ff] text-[#4f46e5] border border-[#c7d2fe]';
+                } else if (isStaff || isBot) {
+                    avatarClass = 'bg-[#fef3c7] text-[#d97706] border border-[#fde68a]';
+                }
 
                 const displayName = senderName ? senderName : (isBot ? 'HRWeb Bot' : (isMe ? 'You' : 'Support Team'));
                 const senderColor = isSuper ? 'text-indigo-600' : (isStaff ? 'text-amber-600' : 'text-emerald-600');
-                const roleLabel = isSuper ? 'Administrator' : (isStaff ? 'Support Team' : 'User');
+                const roleLabel = isBot ? 'Automated' : (isSuper ? 'Administrator' : (isStaff ? 'Support Team' : 'User'));
 
-                let customStyle = '';
-                if (!isRight) {
-                    customStyle = 'background-color: white; border: 1.5px solid #ecfdf5; border-left: 4px solid #10b981; color: #1a2332; box-shadow: 0 2px 5px rgba(0,0,0,0.05);';
-                } else {
-                    if (isSuper) {
-                        customStyle = 'background-color: #f5f3ff; border: 1.5px solid #ddd6fe; color: #4c1d95; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);';
-                    } else {
-                        customStyle = 'background-color: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.1);';
-                    }
-                }
+                let msgClass = 'msg-client';
+                if(isBot) msgClass = 'msg-bot';
+                else if(isSuper) msgClass = 'msg-superadmin';
+                else if(isStaff) msgClass = 'msg-staff';
 
                 wrapper.innerHTML = `
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mb-0.5 shadow-md ${avatarClass}">
+                    <div class="msg-avatar shadow-sm ${avatarClass}">
                         ${iconHtml}
                     </div>
-                    <div class="flex flex-col gap-0.5 ${isRight ? 'items-end' : 'items-start'}">
-                        <span class="text-[10px] font-extrabold uppercase tracking-widest px-1 ${senderColor}" style="font-family:'Inter',sans-serif">
-                            ${displayName} ${!isMe && !isBot ? '<span class="opacity-50 inline-block ml-1">['+roleLabel+']</span>' : ''}
-                        </span>
-                        <div class="msg-bubble" style="${customStyle} border-radius: 12px; padding: 12px 18px; font-size: 14px; line-height: 1.6; ${isRight ? 'border-bottom-right-radius: 4px;' : 'border-bottom-left-radius: 4px;'}">
-                            <div class="msg-text" ${!isMe ? 'onclick="handleImageClick(event)"' : ''}>${safeText}</div>
-                            ${feedbackHTML}
-                            <div class="text-[9px] mt-2 opacity-40 font-bold flex ${isRight ? 'justify-end' : 'justify-start'}">${displayTime}</div>
+                    <div class="msg-content ${msgClass} shadow-sm">
+                        <div class="flex items-center justify-between mb-2 ${isRight ? 'flex-row-reverse' : ''}">
+                            <span class="text-[10px] font-bold uppercase tracking-widest px-1 ${senderColor}" style="font-family:'Inter',sans-serif">
+                                ${displayName} ${!isMe ? '<span class="opacity-50 inline-block ml-1">['+roleLabel+']</span>' : ''}
+                            </span>
+                            <span class="text-[9px]" style="color:var(--fiori-text-muted, #89919a);">${displayTime}</span>
                         </div>
+                        <div class="msg-text text-sm" ${!isMe ? 'onclick="handleImageClick(event)"' : ''} style="color:var(--fiori-text-base, #1d2d3e);">${safeText}</div>
+                        ${feedbackHTML}
                     </div>`;
 
                 chatBox.insertBefore(wrapper, typingIndicator);
@@ -489,10 +501,22 @@
                 window._appendMessage('user', text);
                 ui.value = '';
                 
+                // Show Bot Typing Indicator specifically when sending to the Bot engine
+                const typingNameLabel = document.getElementById('typing-name');
+                const typingIcon = document.getElementById('typing-icon');
+                const typingBubble = document.getElementById('typing-bubble');
+                typingNameLabel.innerText = "HRWeb Bot is typing...";
+                typingNameLabel.className = "text-[10px] font-bold uppercase tracking-widest px-1 text-emerald-600";
+                typingIcon.innerText = "robot_2";
+                typingBubble.className = "msg-content msg-bot shadow-sm";
+                typingIndicator.classList.remove('hidden');
+                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+                
                 const fd = new FormData();
                 fd.append('message', text);
                 fd.append('is_quick_query', isQuickQuery ? '1' : '0');
                 fd.append(CSRF_NAME, CSRF_TOKEN);
+                
                 try {
                     const res = await fetch(`${BASE_URL}/client/chat/handleBotQuery/${activeTicketId}`, {
                         method: 'POST',
@@ -505,11 +529,45 @@
                         // Pass data.article_id and time to append the feedback buttons
                         window._appendMessage('bot', data.reply, data.article_id, null, data.time);
                     }
-                } catch (err) { console.error("Chat Error:", err); }
+                } catch (err) { 
+                    console.error("Chat Error:", err); 
+                } finally {
+                    typingIndicator.classList.add('hidden');
+                }
             });
 
             chatBox.scrollTo({ top: chatBox.scrollHeight });
         });
+
+        // ── NEW: Request Agent Logic ──
+        window.requestHumanAgent = async () => {
+             const btn = document.getElementById('btn-request-agent');
+             if(btn) btn.disabled = true;
+
+             const fd = new FormData();
+             fd.append(CSRF_NAME, CSRF_TOKEN);
+
+             try {
+                 const res = await fetch(`${BASE_URL}/client/chat/requestAgent/${activeTicketId}`, {
+                     method: 'POST',
+                     body: fd,
+                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                 });
+                 const data = await res.json();
+                 
+                 if (data.status === 'success') {
+                     // Optimistically insert user message locally
+                     window._appendMessage('user', 'I would like to speak to a human agent, please.', null, null, data.time);
+                     if(btn) btn.style.display = 'none'; 
+                 } else {
+                     alert(data.msg || 'There was an issue processing your request.');
+                     if(btn) btn.disabled = false;
+                 }
+             } catch(err) {
+                 console.error(err);
+                 if(btn) btn.disabled = false;
+             }
+        };
 
         // ── VIEWER LOGIC ──
         let scale = 1, pointX = 0, pointY = 0, startX = 0, startY = 0, isPanning = false;

@@ -74,50 +74,15 @@ class TicketController extends BaseController
 
         $db = \Config\Database::connect();
         
-        // Find company lead TSR
+        // Find company lead TSR (Kept for reference, but no longer auto-assigning here)
         $userRecord = $db->table('users')->where('id', $clientId)->get()->getRowArray();
         $companyId = $userRecord['client_id'] ?? null;
         
-        $assignedTo = null;
+        $assignedTo = null; // ALWAYS START UNASSIGNED SO BOT TAKES THE LEAD
         $status = 'Open';
 
-        if ($companyId) {
-            $clientRecord = $db->table('clients')->where('id', $companyId)->get()->getRowArray();
-            if ($clientRecord && !empty($clientRecord['hr_contact'])) {
-                $hrContact = json_decode($clientRecord['hr_contact'], true);
-                $leadTsrId = $hrContact['lead'] ?? null;
-                
-                if ($leadTsrId) {
-                    $leadUser = $db->table('users')->where('id', $leadTsrId)->get()->getRowArray();
-                    if ($leadUser && $leadUser['availability_status'] === 'active') {
-                        $assignedTo = $leadTsrId;
-                        $status = 'In Progress';
-                        $db->table('users')->where('id', $leadTsrId)->update(['availability_status' => 'busy']);
-                    } else {
-                        // Escalate if Lead is busy/offline
-                        $escalationHierarchy = ['tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
-                        foreach ($escalationHierarchy as $role) {
-                            $availableStaff = $db->table('users')
-                                ->where('role', $role)
-                                ->where('status', 'active')
-                                ->where('availability_status', 'active')
-                                ->orderBy('id', 'ASC') // Assign to the first available for simplicity
-                                ->get()->getRowArray();
-                                
-                            if ($availableStaff) {
-                                $assignedTo = $availableStaff['id'];
-                                $status = 'In Progress';
-                                $db->table('users')->where('id', $availableStaff['id'])->update(['availability_status' => 'busy']);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Save the main ticket record
-        $this->ticketModel->save([
+        // Save the main ticket record and get the ID
+        $ticketId = $this->ticketModel->insert([
             'ticket_number' => $this->ticketModel->generateNumber(),
             'client_id'     => $clientId,
             'assigned_to'   => $assignedTo,
@@ -129,7 +94,15 @@ class TicketController extends BaseController
             'status'        => $status
         ]);
 
-        $ticketId = $this->ticketModel->insertID();
+        // ── BOT GREETING ──
+        $greetingMessage = "Hi there! I'm the HRWeb Bot. Thank you for reaching out. We have received your ticket and our support team will attend to it shortly. In the meantime, if you have any additional details or screenshots, feel free to share them here!";
+        $db->table('ticket_replies')->insert([
+            'ticket_id'  => $ticketId,
+            'user_id'    => null,
+            'message'    => $greetingMessage,
+            'is_bot'     => 1,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
 
         // ── NOTIFICATIONS ──
         $notifModel = new \App\Models\NotificationModel();

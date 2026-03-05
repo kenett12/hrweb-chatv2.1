@@ -73,6 +73,11 @@ class ChatController extends BaseController
             ->get()
             ->getRowArray();
 
+        // If trying to access chat without an active ticket, redirect to directory
+        if (!$activeTicket && !$id) {
+            return redirect()->to('/client/chat');
+        }
+
         // Fetch the conversation history (this automatically parses bot messages and joins user roles)
         $history = $activeTicket ? $this->ticketModel->getReplies($activeTicket['id']) : [];
 
@@ -459,5 +464,130 @@ class ChatController extends BaseController
             'is_bot'     => 1, 
             'created_at' => date('Y-m-d H:i:s')
         ]);
+    }
+
+    /**
+     * 9. Request a Human Agent
+     * Clients can click a button to explicitly request human support.
+     */
+    public function requestAgent($ticketId)
+    {
+        try {
+            $db = \Config\Database::connect();
+            $userId = session()->get('id') ?? session()->get('user_id');
+
+            $ticket = $this->ticketModel->find($ticketId);
+            if (!$ticket) {
+                return $this->response->setJSON(['status' => 'error', 'msg' => 'Ticket not found']);
+            }
+
+            // Verify they aren't already assigned
+            if (!empty($ticket['assigned_to'])) {
+                return $this->response->setJSON(['status' => 'success', 'msg' => 'An automated message was sent.']);
+            }
+
+            $message = "I would like to speak to a human agent, please.";
+
+            // Insert as a user message
+            $db->table('ticket_replies')->insert([
+                'ticket_id'  => $ticketId,
+                'user_id'    => $userId,
+                'message'    => esc($message),
+                'is_bot'     => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            
+            // ── HR ROUTING & ESCALATION MATRIX ──
+            $assignedTo = null;
+            $status = 'Open';
+            
+            // 1. Find company lead TSR
+            $userRecord = $db->table('users')->where('id', $userId)->get()->getRowArray();
+            $companyId = $userRecord['client_id'] ?? null;
+            
+            if ($companyId) {
+                $clientRecord = $db->table('clients')->where('id', $companyId)->get()->getRowArray();
+                if ($clientRecord && !empty($clientRecord['hr_contact'])) {
+                    $hrContact = json_decode($clientRecord['hr_contact'], true);
+                    $leadTsrId = $hrContact['lead'] ?? null;
+                    
+                    if ($leadTsrId) {
+                        $leadUser = $db->table('users')->where('id', $leadTsrId)->get()->getRowArray();
+                        if ($leadUser && $leadUser['availability_status'] === 'active') {
+                            $assignedTo = $leadTsrId;
+                            $db->table('users')->where('id', $leadTsrId)->update(['availability_status' => 'busy']);
+                        } else {
+                            // Escalate if Lead is busy/offline
+                            $escalationHierarchy = ['tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
+                            foreach ($escalationHierarchy as $role) {
+                                $availableStaff = $db->table('users')
+                                    ->where('role', $role)
+                                    ->where('status', 'active')
+                                    ->where('availability_status', 'active')
+                                    ->orderBy('id', 'ASC') // Assign to the first available for simplicity
+                                    ->get()->getRowArray();
+                                    
+                                if ($availableStaff) {
+                                    $assignedTo = $availableStaff['id'];
+                                    $db->table('users')->where('id', $availableStaff['id'])->update(['availability_status' => 'busy']);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Apply Assignment
+            if ($assignedTo) {
+                $status = 'In Progress';
+                $db->table('tickets')->where('id', $ticketId)->update([
+                    'assigned_to' => $assignedTo,
+                    'status'      => $status,
+                    'updated_at'  => date('Y-m-d H:i:s')
+                ]);
+            }
+
+            // Notify Assigned TSR or Superadmin if escalation failed
+            $notifModel = new \App\Models\NotificationModel();
+            
+            if ($assignedTo) {
+                $notifModel->sendNotification(
+                    $assignedTo, 
+                    "Agent Requested", 
+                    "You have been assigned to Ticket #{$ticketId} after a client requested an agent.", 
+                    base_url("tsr/tickets/view/{$ticketId}")
+                );
+            } else {
+                // Fallback: Notify superadmin if nobody is available
+                $superadmin = (new \App\Models\UserModel())->where('role', 'superadmin')->first();
+                if ($superadmin) {
+                    $notifModel->sendNotification(
+                        $superadmin['id'], 
+                        "Agent Requested", 
+                        "Client requested an agent on ticket #{$ticketId}, but no staff are available.", 
+                        base_url("superadmin/tickets/view/{$ticketId}")
+                    );
+                }
+            }
+
+            // Real-time Push
+            if (function_exists('emit_socket_event')) {
+                emit_socket_event('new_ticket_message', [
+                    'ticket_id'   => $ticketId,
+                    'message'     => esc($message),
+                    'is_bot'      => 0,
+                    'sender_id'   => $userId,
+                    'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User',
+                    'sender_role' => session()->get('role'),
+                    'time'        => date('h:i A')
+                ]);
+            }
+
+            return $this->response->setJSON(['status' => 'success', 'time' => date('h:i A')]);
+        } catch (\Throwable $e) {
+            log_message('critical', $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON(['error' => $e->getMessage()]);
+        }
     }
 }

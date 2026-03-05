@@ -3,12 +3,26 @@
 <?= $this->section('styles') ?>
 <style>
     /* Using your main.css variables */
-    .chat-container { height: calc(100vh - 350px); min-height: 400px; }
-    .bubble { max-width: 85%; }
-    .bubble-staff { background-color: var(--clr-blue); color: white; border-bottom-right-radius: 2px; }
-    .bubble-superadmin { background-color: #6366f1; color: white; border-bottom-right-radius: 2px; }
-    .bubble-client { background-color: #f3f4f6; color: var(--primary-text); border-bottom-left-radius: 2px; }
-    .bubble-bot { background-color: rgba(105, 108, 111, 0.05); color: var(--clr-charcoal); font-style: italic; }
+    .msg-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; width: 100%; animation: fadeIn 0.15s ease both; }
+    .msg-avatar { width: 36px; height: 36px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .msg-content { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: 4px; font-size: 0.875rem; line-height: 1.5; border: 1px solid var(--fiori-border); }
+    
+    .msg-client { background: var(--fiori-surface); border-left: 3px solid var(--fiori-blue); }
+    .msg-bot { background: var(--fiori-surface); border-left: 3px solid var(--fiori-neutral); color: var(--fiori-text-secondary); }
+    .msg-staff { background: var(--fiori-blue-light); border-left: 3px solid var(--fiori-blue); }
+    .msg-superadmin { background: #f5f3ff; border-left: 3px solid #6366f1; border-color: #ddd6fe; }
+
+    .msg-row--right {
+        flex-direction: row-reverse;
+        align-self: flex-end;
+        margin-left: auto;
+    }
+    .msg-row--right .msg-content {
+        border-left: 1px solid var(--fiori-border);
+        border-right: 3px solid var(--fiori-blue);
+    }
+    .msg-row--right .msg-bot { border-right-color: var(--fiori-neutral); }
+    .msg-row--right .msg-superadmin { border-right-color: #6366f1; border-color: #ddd6fe; }
 
     /* Block standard browser image dragging to prioritize panning */
     .msg-text img { 
@@ -103,33 +117,47 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-240px)]">
         
-        <div id="chat-column" class="lg:col-span-2 space-y-4 transition-all duration-300">
-            <div class="fiori-card flex flex-col overflow-hidden" style="padding:0;">
-                <div class="chat-container overflow-y-auto p-6 flex flex-col gap-4" style="background:var(--fiori-page-bg);">
+        <div id="chat-column" class="lg:col-span-2 transition-all duration-300 h-full min-h-0">
+            <div class="fiori-card flex flex-col overflow-hidden h-full relative" style="padding:0;">
+                
+                <!-- Floating Exit Fullscreen Button -->
+                <button type="button" onclick="toggleFullChat()" id="floating-exit-btn" class="hidden absolute top-3 right-3 z-[110] btn btn-outline bg-white flex items-center gap-2 shadow-md" style="border-color:var(--fiori-border);">
+                    <span class="material-symbols-outlined text-[16px]">fullscreen_exit</span>
+                    <span>Exit Full Chat</span>
+                </button>
+                
+                <div class="chat-container flex-1 overflow-y-auto p-6 flex flex-col gap-4" style="background:var(--fiori-page-bg);">
                     
-                    <div class="bubble bubble-client p-4 rounded shadow-sm self-start border" style="border-color:var(--fiori-border);">
-                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest" style="color:var(--fiori-text-muted);">Initial Request</p>
-                        <div class="text-sm" style="color:var(--fiori-text-base);"><?= nl2br(esc($ticket['description'])) ?></div>
-                        <?php if(!empty($ticket['attachment'])): ?>
-                            <div class="mt-4 pt-4 border-t" style="border-color:var(--fiori-border);">
-                                <?php 
-                                    $ext = strtolower(pathinfo($ticket['attachment'], PATHINFO_EXTENSION));
-                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                ?>
-                                <?php if ($isImage): ?>
-                                    <div class="mb-3">
-                                        <img src="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>" alt="Attachment" class="max-w-full h-auto rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity" onclick="window.open(this.src, '_blank')">
-                                    </div>
-                                <?php endif; ?>
-                                <a href="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>" target="_blank" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold bg-blue-50 px-4 py-2 rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined text-[20px]">attachment</span>
-                                    <?= $isImage ? 'View Full Image' : 'View Attachment' ?>
-                                </a>
+                    <div class="msg-row">
+                        <div class="msg-avatar" style="background:var(--fiori-surface); color:var(--fiori-blue); border:1px solid var(--fiori-border);">
+                            <span class="material-symbols-outlined text-[20px]">person</span>
+                        </div>
+                        <div class="msg-content msg-client">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[10px] font-bold uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">Initial Request: <?= esc($ticket['client_name']) ?></span>
+                                <span class="text-[9px]" style="color:var(--fiori-text-muted);"><?= date('M d, h:i A', strtotime($ticket['created_at'])) ?></span>
                             </div>
-                        <?php endif; ?>
-                        <p class="text-[9px] mt-2" style="color:var(--fiori-text-muted);"><?= date('M d, h:i A', strtotime($ticket['created_at'])) ?></p>
+                            <div class="msg-text text-sm" style="color:var(--fiori-text-base);"><?= nl2br(esc($ticket['description'])) ?></div>
+                            <?php if(!empty($ticket['attachment'])): ?>
+                                <div class="mt-4 pt-4 border-t" style="border-color:var(--fiori-border);">
+                                    <?php 
+                                        $ext = strtolower(pathinfo($ticket['attachment'], PATHINFO_EXTENSION));
+                                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                    ?>
+                                    <?php if ($isImage): ?>
+                                        <div class="mb-3">
+                                            <img src="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>" alt="Attachment" class="max-w-full h-auto rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity" onclick="window.open(this.src, '_blank')">
+                                        </div>
+                                    <?php endif; ?>
+                                    <a href="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>" target="_blank" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold bg-blue-50 px-4 py-2 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">attachment</span>
+                                        <?= $isImage ? 'View Full Image' : 'View Attachment' ?>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <?php foreach ($replies as $reply): ?>
@@ -140,36 +168,41 @@
                             $isStaff = in_array($role, $staffRoles);
                             $isBot = (bool)$reply['is_bot'];
                             
-                            $bubbleClass = 'bubble-client self-start border';
+                            $msgClass = 'msg-client';
+                            $avatarIcon = 'person';
+                            $senderName = esc($reply['username'] ?? 'User');
+                            $roleLabel = 'Client';
+
                             if ($isBot) {
-                                $bubbleClass = 'bubble-bot self-start border border-dashed border-gray-300';
+                                $msgClass = 'msg-bot';
+                                $avatarIcon = 'robot_2';
+                                $senderName = 'HRWeb Bot';
+                                $roleLabel = 'Automated';
+                            } elseif ($isSuper) {
+                                $msgClass = 'msg-superadmin';
+                                $avatarIcon = 'shield_person';
+                                $roleLabel = 'Administrator';
                             } elseif ($isStaff) {
-                                $bubbleClass = 'bubble-staff self-end text-right';
+                                $msgClass = 'msg-staff';
+                                $avatarIcon = 'support_agent';
+                                $roleLabel = 'Support Team';
                             }
-                        ?>
-                        <div class="flex flex-col mb-4 <?= strpos($bubbleClass, 'self-end') !== false ? 'items-end' : 'items-start' ?>">
-                            <!-- Sender Name Above Bubble -->
-                            <?php if (!$isBot): ?>
-                                <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
-                                    <?php 
-                                        $label = 'Staff';
-                                        if ($role === 'superadmin') $label = 'Superadmin';
-                                        elseif ($role === 'admin') $label = 'Admin';
-                                        elseif (!$isStaff) $label = 'Client';
-                                        
-                                        $icon = ($role === 'admin' || $role === 'superadmin') ? '<span class="material-symbols-outlined text-[12px] align-middle mr-1">shield_person</span> ' : '';
-                                        echo $icon . $label;
-                                    ?>: <?= esc($reply['username'] ?? 'User') ?>
-                                </p>
-                            <?php elseif ($isBot): ?>
-                                <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
-                                    <span class="material-symbols-outlined text-[12px] align-middle mr-1">robot_2</span> HRWeb Bot
-                                </p>
-                            <?php endif; ?>
                             
-                            <!-- The Chat Bubble -->
-                            <div class="bubble <?= $bubbleClass ?> p-3.5 rounded-2xl shadow-sm" <?= strpos($bubbleClass, 'bubble-client') !== false ? 'style="border-color:var(--fiori-border);"' : '' ?>>
-                                <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="<?= strpos($bubbleClass, 'bubble-staff') === false ? 'color:var(--fiori-text-base);' : '' ?>">
+                            $isRight = $isStaff && !$isSuper;
+                        ?>
+                        <div class="msg-row <?= $isRight ? 'msg-row--right' : '' ?>">
+                            <div class="msg-avatar" style="background:var(--fiori-surface); color:var(--fiori-blue); border:1px solid var(--fiori-border);">
+                                <span class="material-symbols-outlined text-[20px]"><?= $avatarIcon ?></span>
+                            </div>
+                            <div class="msg-content <?= $msgClass ?>">
+                                <div class="flex items-center justify-between mb-1 <?= $isRight ? 'flex-row-reverse' : '' ?>">
+                                    <span class="text-[10px] font-bold uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
+                                        <?= $senderName ?> <span class="opacity-50 inline-block ml-1">[<?= $roleLabel ?>]</span>
+                                    </span>
+                                    <span class="text-[9px]" style="color:var(--fiori-text-muted);"><?= date('h:i A', strtotime($reply['created_at'])) ?></span>
+                                </div>
+                                
+                                <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="color:var(--fiori-text-base);">
                                     <?php if($isBot): ?>
                                         <?= nl2br(html_entity_decode($reply['message'])) ?>
                                     <?php else: ?>
@@ -177,9 +210,6 @@
                                     <?php endif; ?>
                                 </div>
                             </div>
-
-                            <!-- Timestamp Below Bubble -->
-                            <p class="text-[9px] mt-1 px-1" style="color:var(--fiori-text-muted);"><?= date('h:i A', strtotime($reply['created_at'])) ?></p>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -202,14 +232,14 @@
             </div>
         </div>
 
-        <div id="details-column" class="space-y-6 transition-opacity duration-300">
-            <div class="fiori-card p-0">
-                <div class="fiori-card__header">
+        <div id="details-column" class="transition-opacity duration-300 h-full">
+            <div class="fiori-card p-0 flex flex-col h-full overflow-hidden">
+                <div class="fiori-card__header flex-shrink-0">
                     <div>
                         <h2 class="fiori-card__title">Ticket Details</h2>
                     </div>
                 </div>
-                <div class="fiori-card__content space-y-5" style="padding-top:0;">
+                <div class="fiori-card__content flex-1 overflow-y-auto space-y-5" style="padding-top:0;">
                     <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
                         <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Client Name</label>
                         <p class="text-sm font-semibold" style="color:var(--fiori-text-base);"><?= esc($ticket['client_name']) ?></p>
@@ -334,25 +364,50 @@
 
     // ── LAYOUT TOGGLE LOGIC ──
     function toggleFullChat() {
-        const chatCol = document.getElementById('chat-column');
-        const detailsCol = document.getElementById('details-column');
-        const btnSpan = document.querySelector('#toggle-chat-btn span:last-child');
-        const btnIcon = document.querySelector('#toggle-chat-btn span:first-child');
+        try {
+            const chatCol = document.getElementById('chat-column');
+            const detailsCol = document.getElementById('details-column');
+            if (!chatCol || !detailsCol) return;
+            
+            const gridContainer = detailsCol.parentElement;
+            const toggleBtn = document.getElementById('toggle-chat-btn');
+            const btnSpan = toggleBtn ? toggleBtn.querySelector('span:last-child') : null;
+            const btnIcon = toggleBtn ? toggleBtn.querySelector('span:first-child') : null;
+            const floatingExitBtn = document.getElementById('floating-exit-btn');
+            const mainWrapper = document.querySelector('.flex-1.flex.flex-col.min-w-0.overflow-hidden');
 
-        if (detailsCol.classList.contains('hidden')) {
-            // Restore Split View
-            detailsCol.classList.remove('hidden');
-            chatCol.classList.remove('lg:col-span-3');
-            chatCol.classList.add('lg:col-span-2');
-            btnSpan.textContent = 'View Full Chat';
-            btnIcon.textContent = 'fullscreen';
-        } else {
-            // Full Chat View
-            detailsCol.classList.add('hidden');
-            chatCol.classList.remove('lg:col-span-2');
-            chatCol.classList.add('lg:col-span-3');
-            btnSpan.textContent = 'Exit Full Chat';
-            btnIcon.textContent = 'fullscreen_exit';
+            if (detailsCol.style.display === 'none' || detailsCol.classList.contains('hidden')) {
+                // Restore Split View
+                detailsCol.style.display = '';
+                detailsCol.classList.remove('hidden');
+                chatCol.classList.remove('fixed', 'inset-0', 'z-[9999]', 'rounded-none');
+                chatCol.classList.add('lg:col-span-2', 'rounded-2xl');
+                chatCol.style.backgroundColor = '';
+                chatCol.style.padding = '';
+                if(btnSpan) btnSpan.textContent = 'View Full Chat';
+                if(btnIcon) btnIcon.textContent = 'fullscreen';
+                if(floatingExitBtn) floatingExitBtn.classList.add('hidden');
+                if(mainWrapper) mainWrapper.style.overflow = '';
+                
+                // Move back inside the grid container
+                if(gridContainer) gridContainer.insertBefore(chatCol, detailsCol);
+            } else {
+                // Full Chat View
+                detailsCol.style.display = 'none';
+                chatCol.classList.remove('lg:col-span-2', 'lg:col-span-3', 'rounded-2xl');
+                chatCol.classList.add('fixed', 'inset-0', 'z-[9999]', 'rounded-none');
+                chatCol.style.backgroundColor = 'var(--fiori-page-bg)';
+                chatCol.style.padding = '1rem'; 
+                if(btnSpan) btnSpan.textContent = 'Exit Full Chat';
+                if(btnIcon) btnIcon.textContent = 'fullscreen_exit';
+                if(floatingExitBtn) floatingExitBtn.classList.remove('hidden');
+                if(mainWrapper) mainWrapper.style.overflow = 'visible';
+                
+                // Append to body root to completely break out of CSS transform containing blocks
+                document.body.appendChild(chatCol);
+            }
+        } catch(e) {
+            console.error('Fullscreen toggle error:', e);
         }
     }
 
@@ -424,58 +479,51 @@
             }
 
 
-            if(container) {
-                const div = document.createElement('div');
-                
+                let msgClass = 'msg-client';
+                let avatarIcon = 'person';
+                let senderName = data.sender_name || 'User';
+                let roleLabel = 'Client';
+
+                let isRight = false;
                 if (data.is_bot) {
-                    div.className = `flex flex-col mb-4 items-start`;
-                    div.innerHTML = `
-                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
-                            <span class="material-symbols-outlined text-[12px] align-middle mr-1">robot_2</span> HRWeb Bot
-                        </p>
-                        <div class="bubble bubble-bot p-3.5 rounded-2xl shadow-sm self-start border border-dashed border-gray-300">
-                            <div class="msg-text text-sm" style="color:var(--fiori-text-base);">
-                                ${data.message}
-                            </div>
-                        </div>
-                        <p class="text-[9px] mt-1 px-1" style="color:var(--fiori-text-muted);">${data.time || 'Just now'}</p>
-                    `;
-                } else if (data.sender_role === 'client') {
-                    div.className = `flex flex-col mb-4 items-start`;
-                    div.innerHTML = `
-                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
-                            Client: ${data.sender_name}
-                        </p>
-                        <div class="bubble bubble-client self-start p-3.5 rounded-2xl shadow-sm border" style="border-color:var(--fiori-border);">
-                            <div class="msg-text text-sm" style="color:var(--fiori-text-base);">
-                                ${data.message.replace(/\n/g, '<br>')}
-                            </div>
-                        </div>
-                        <p class="text-[9px] mt-1 px-1" style="color:var(--fiori-text-muted);">${data.time || 'Just now'}</p>
-                    `;
-                } else {
-                    const isSuper = data.sender_role === 'superadmin';
-                    const isAdmin = data.sender_role === 'admin';
-                    const label = isSuper ? 'Superadmin' : (isAdmin ? 'Admin' : 'Staff');
-                    const icon = (isSuper || isAdmin) ? '<span class="material-symbols-outlined text-[12px] align-middle mr-1">shield_person</span> ' : '';
-                    
-                    div.className = `flex flex-col mb-4 items-end`;
-                    div.innerHTML = `
-                        <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:rgba(255,255,255,0.8);">
-                            ${icon}${label}: ${data.sender_name}
-                        </p>
-                        <div class="bubble bubble-staff self-end text-right p-3.5 rounded-2xl shadow-sm">
-                            <div class="msg-text text-sm">
-                                ${data.message.replace(/\n/g, '<br>')}
-                            </div>
-                        </div>
-                        <p class="text-[9px] mt-1 px-1" style="color:rgba(255,255,255,0.7);">${data.time || 'Just now'}</p>
-                    `;
+                    msgClass = 'msg-bot';
+                    avatarIcon = 'robot_2';
+                    senderName = 'HRWeb Bot';
+                    roleLabel = 'Automated';
+                } else if (data.sender_role === 'superadmin' || data.sender_role === 'admin') {
+                    msgClass = 'msg-superadmin';
+                    avatarIcon = 'shield_person';
+                    roleLabel = 'Administrator';
+                    isRight = false;
+                } else if (['tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'].includes(data.sender_role)) {
+                    msgClass = 'msg-staff';
+                    avatarIcon = 'support_agent';
+                    roleLabel = 'Support Team';
+                    isRight = true;
                 }
-                
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-            }
+
+                if(container) {
+                    const div = document.createElement('div');
+                    div.className = `msg-row ${isRight ? 'msg-row--right' : ''}`;
+                    div.innerHTML = `
+                        <div class="msg-avatar" style="background:var(--fiori-surface); color:var(--fiori-blue); border:1px solid var(--fiori-border);">
+                            <span class="material-symbols-outlined text-[20px]">${avatarIcon}</span>
+                        </div>
+                        <div class="msg-content ${msgClass}">
+                            <div class="flex items-center justify-between mb-1 ${isRight ? 'flex-row-reverse' : ''}">
+                                <span class="text-[10px] font-bold uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
+                                    ${senderName} <span class="opacity-50 inline-block ml-1">[${roleLabel}]</span>
+                                </span>
+                                <span class="text-[9px]" style="color:var(--fiori-text-muted);">${data.time || 'Just now'}</span>
+                            </div>
+                            <div class="msg-text text-sm" style="color:var(--fiori-text-base);">
+                                ${data.message.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                }
         });
         
         // AJAX Form Submission to prevent reload
@@ -492,17 +540,22 @@
                 const now = new Date();
                 const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                 const div = document.createElement('div');
-                div.className = `flex flex-col mb-4 items-end`;
+                div.className = `msg-row msg-row--right`;
                 div.innerHTML = `
-                    <p class="text-[10px] font-bold mb-1 uppercase tracking-widest px-1" style="color:rgba(255,255,255,0.8);">
-                        Staff: You
-                    </p>
-                    <div class="bubble bubble-staff self-end text-right p-3.5 rounded-2xl shadow-sm">
-                        <div class="msg-text text-sm">
+                    <div class="msg-avatar" style="background:var(--fiori-surface); color:var(--fiori-blue); border:1px solid var(--fiori-border);">
+                        <span class="material-symbols-outlined text-[20px]">support_agent</span>
+                    </div>
+                    <div class="msg-content msg-staff">
+                        <div class="flex items-center justify-between mb-1 flex-row-reverse">
+                            <span class="text-[10px] font-bold uppercase tracking-widest px-1" style="color:var(--fiori-text-muted);">
+                                You <span class="opacity-50 inline-block ml-1">[Staff]</span>
+                            </span>
+                            <span class="text-[9px]" style="color:var(--fiori-text-muted);">${time}</span>
+                        </div>
+                        <div class="msg-text text-sm" style="color:var(--fiori-text-base);">
                             ${message.replace(/\n/g, '<br>')}
                         </div>
                     </div>
-                    <p class="text-[9px] mt-1 px-1" style="color:rgba(255,255,255,0.7);">${time}</p>
                 `;
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;

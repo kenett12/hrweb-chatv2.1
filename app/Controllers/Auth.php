@@ -114,10 +114,12 @@ class Auth extends BaseController
                 set_cookie('remember_token', $token, 30 * 24 * 60 * 60); // 30 days
             }
 
+            // Set user online
+            $model->update($user['id'], ['availability_status' => 'active']);
+
             // Dynamic redirect: /superadmin/dashboard, /tsr/dashboard, etc.
             $staffRoles = ['tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'];
             if (in_array($user['role'], $staffRoles)) {
-                $model->update($user['id'], ['availability_status' => 'active']);
                 return redirect()->to(base_url('tsr/dashboard'));
             }
 

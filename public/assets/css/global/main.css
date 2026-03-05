@@ -99,7 +99,30 @@
 
 html {
     font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── Custom Elegant Scrollbars ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--fiori-border);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--fiori-text-muted);
+}
+
+
 
 body {
     font-family: '72', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

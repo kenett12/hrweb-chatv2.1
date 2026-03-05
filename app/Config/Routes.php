@@ -87,6 +87,9 @@ $routes->group('client', ['filter' => 'auth:client'], function($routes) {
 
     // 4. NEW: Handle the Thumbs Up / Thumbs Down feedback submission
     $routes->post('chat/submitFeedback', 'Client\ChatController::submitFeedback');
+
+    // 5. NEW: Handle the Talk to Agent request
+    $routes->post('chat/requestAgent/(:num)', 'Client\ChatController::requestAgent/$1');
     // ────────────────────────────────────────────────────────────
 
     $routes->get('chat/searchKB', 'Client\ChatController::searchKB');
