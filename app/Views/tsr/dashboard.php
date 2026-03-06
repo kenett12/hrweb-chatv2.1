@@ -39,9 +39,9 @@
     <div class="fiori-tile">
         <div class="fiori-tile__header">
             <span class="material-symbols-outlined text-[16px]" style="color:var(--fiori-positive);">task_alt</span>
-            Resolved Today
+            Closed Today
         </div>
-        <div class="fiori-tile__value"><?= $resolved_today ?? 0 ?></div>
+        <div class="fiori-tile__value"><?= $closed_today ?? 0 ?></div>
         <div class="fiori-tile__footer">Closed tickets today</div>
     </div>
 </div>

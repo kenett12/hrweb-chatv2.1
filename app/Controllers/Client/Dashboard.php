@@ -170,4 +170,28 @@ class Dashboard extends BaseController
 
         return redirect()->to(base_url('client/settings'))->with('msg', 'Security settings and password updated successfully.');
     }
+
+    public function submitFeedback($id)
+    {
+        if ($this->session->get('role') !== 'client') {
+            return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
+        }
+
+        $ticketModel = new \App\Models\TicketModel();
+        $ticket = $ticketModel->find($id);
+
+        if (!$ticket || $ticket['client_id'] != $this->session->get('id')) {
+            return redirect()->back()->with('error', 'Ticket not found or unauthorized.');
+        }
+
+        $data = [
+            'feedback_rating'  => $this->request->getPost('rating'),
+            'feedback_comment' => esc($this->request->getPost('comment')),
+            'updated_at'       => date('Y-m-d H:i:s')
+        ];
+
+        $ticketModel->update($id, $data);
+
+        return redirect()->to(base_url('client/dashboard'))->with('msg', 'Thank you for your feedback!');
+    }
 }

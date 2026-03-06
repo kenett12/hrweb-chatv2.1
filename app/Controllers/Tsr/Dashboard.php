@@ -31,7 +31,7 @@ class Dashboard extends BaseController
         $this->viewData['page_title']     = 'Service Desk Overview';
         $this->viewData['active_chats']   = $stats['active_chats'];
         $this->viewData['open_tickets']   = $stats['open_tickets'];
-        $this->viewData['resolved_today'] = $stats['resolved_today'];
+        $this->viewData['closed_today']   = $stats['closed_today'];
         $this->viewData['current_sessions'] = $ticketModel->getCurrentSessions($tsrId);
 
         // Path: app/Views/tsr/dashboard.php

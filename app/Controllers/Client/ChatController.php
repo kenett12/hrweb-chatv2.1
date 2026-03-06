@@ -34,14 +34,42 @@ class ChatController extends BaseController
         $companyId = $user['client_id'];
         $companyUsers = $companyId ? $userModel->where('client_id', $companyId)->findColumn('id') : [$userId];
 
-        // Fetch all tickets/chats for this client, ordered by latest update
-        $chats = $this->ticketModel
+        $filters = [
+            'search'    => $this->request->getGet('search'),
+            'status'    => $this->request->getGet('status'),
+            'date_from' => $this->request->getGet('date_from'),
+            'date_to'   => $this->request->getGet('date_to')
+        ];
+
+        if ($filters['status'] === 'Resolved') {
+            $filters['status'] = 'Closed';
+        }
+
+        $builder = $this->ticketModel
             ->select('tickets.*, COALESCE(t.full_name, s.email) as staff_name')
             ->join('users s', 's.id = tickets.assigned_to', 'left')
             ->join('tsrs t', 't.user_id = s.id', 'left')
-            ->whereIn('tickets.client_id', $companyUsers)
-            ->orderBy('updated_at', 'DESC')
-            ->findAll();
+            ->whereIn('tickets.client_id', $companyUsers);
+
+        if (!empty($filters['search'])) {
+            $s = $filters['search'];
+            $builder->groupStart()
+                    ->like('tickets.ticket_number', $s)
+                    ->orLike('tickets.subject', $s)
+                    ->orLike('tickets.category', $s)
+                    ->groupEnd();
+        }
+        if (!empty($filters['status'])) {
+            $builder->where('tickets.status', $filters['status']);
+        }
+        if (!empty($filters['date_from'])) {
+            $builder->where('tickets.created_at >=', $filters['date_from'] . ' 00:00:00');
+        }
+        if (!empty($filters['date_to'])) {
+            $builder->where('tickets.created_at <=', $filters['date_to'] . ' 23:59:59');
+        }
+
+        $chats = $builder->orderBy('tickets.updated_at', 'DESC')->findAll();
 
         return view('client/chat_directory', array_merge($this->viewData, [
             'chats'     => $chats,
@@ -117,12 +145,36 @@ class ChatController extends BaseController
             $isAssigned = !empty($ticket['assigned_to']);
 
             if ($isAssigned && !$isQuickQuery) {
+                // --- HANDLE MULTIPLE ATTACHMENTS ---
+                $uploadedFiles = [];
+                $files = $this->request->getFiles();
+                if (isset($files['attachments'])) {
+                    foreach ($files['attachments'] as $file) {
+                        if ($file->isValid() && !$file->hasMoved()) {
+                            $newName = $file->getRandomName();
+                            $file->move(WRITABLEPATH . 'uploads/tickets', $newName);
+                            $uploadedFiles[] = $newName;
+                        }
+                    }
+                }
+
+                // --- HANDLE EXTERNAL LINKS ---
+                $links = $this->request->getPost('external_links');
+                $validLinks = [];
+                if (is_array($links)) {
+                    foreach ($links as $link) {
+                        if (!empty(trim($link))) $validLinks[] = trim($link);
+                    }
+                }
+
                 $db->table('ticket_replies')->insert([
-                    'ticket_id'  => $ticketId,
-                    'user_id'    => $userId,
-                    'message'    => esc($rawMsg),
-                    'is_bot'     => 0,
-                    'created_at' => date('Y-m-d H:i:s')
+                    'ticket_id'      => $ticketId,
+                    'user_id'        => $userId,
+                    'message'        => esc($rawMsg),
+                    'attachments'    => !empty($uploadedFiles) ? json_encode($uploadedFiles) : null,
+                    'external_links' => !empty($validLinks) ? json_encode($validLinks) : null,
+                    'is_bot'         => 0,
+                    'created_at'     => date('Y-m-d H:i:s')
                 ]);
                 
                 $notifModel = new \App\Models\NotificationModel();
@@ -135,12 +187,14 @@ class ChatController extends BaseController
                 
                 if (function_exists('emit_socket_event')) {
                     emit_socket_event('new_ticket_message', [
-                        'ticket_id'   => $ticketId,
-                        'message'     => esc($rawMsg),
-                        'is_bot'      => 0,
-                        'sender_id'   => $userId,
-                        'sender_name' => session()->get('username') ?? session()->get('email') ?? 'User',
-                        'time'        => date('h:i A')
+                        'ticket_id'      => $ticketId,
+                        'message'        => esc($rawMsg),
+                        'attachments'    => $uploadedFiles,
+                        'external_links' => $validLinks,
+                        'is_bot'         => 0,
+                        'sender_id'      => $userId,
+                        'sender_name'    => session()->get('username') ?? session()->get('email') ?? 'User',
+                        'time'           => date('h:i A')
                     ]);
                 }
                 return $this->response->setJSON(['status' => 'success', 'bypassed_bot' => true]);
@@ -286,12 +340,36 @@ class ChatController extends BaseController
                 return $this->response->setJSON(['status' => 'error', 'msg' => 'Empty message']);
             }
 
+            // --- HANDLE MULTIPLE ATTACHMENTS ---
+            $uploadedFiles = [];
+            $files = $this->request->getFiles();
+            if (isset($files['attachments'])) {
+                foreach ($files['attachments'] as $file) {
+                    if ($file->isValid() && !$file->hasMoved()) {
+                        $newName = $file->getRandomName();
+                        $file->move(WRITABLEPATH . 'uploads/tickets', $newName);
+                        $uploadedFiles[] = $newName;
+                    }
+                }
+            }
+
+            // --- HANDLE EXTERNAL LINKS ---
+            $links = $this->request->getPost('external_links');
+            $validLinks = [];
+            if (is_array($links)) {
+                foreach ($links as $link) {
+                    if (!empty(trim($link))) $validLinks[] = trim($link);
+                }
+            }
+
             $db->table('ticket_replies')->insert([
-                'ticket_id'  => $ticketId,
-                'user_id'    => $userId,
-                'message'    => esc($message),
-                'is_bot'     => 0,
-                'created_at' => date('Y-m-d H:i:s')
+                'ticket_id'      => $ticketId,
+                'user_id'        => $userId,
+                'message'        => esc($message),
+                'attachments'    => !empty($uploadedFiles) ? json_encode($uploadedFiles) : null,
+                'external_links' => !empty($validLinks) ? json_encode($validLinks) : null,
+                'is_bot'         => 0,
+                'created_at'     => date('Y-m-d H:i:s')
             ]);
             
             // ── NOTIFICATIONS ──

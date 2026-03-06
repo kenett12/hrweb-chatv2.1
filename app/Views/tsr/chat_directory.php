@@ -31,9 +31,8 @@
                                 #<?= $chat['id'] ?>
                             </span>
                             <?php
-                                if ($chat['status'] === 'Resolved') echo '<span class="fiori-status fiori-status--positive">Resolved</span>';
+                                if ($chat['status'] === 'Closed') echo '<span class="fiori-status fiori-status--neutral">Closed</span>';
                                 elseif ($chat['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
-                                elseif ($chat['status'] === 'Closed') echo '<span class="fiori-status" style="background:#e0e0e0; color:#606060;">Closed</span>';
                                 else echo '<span class="fiori-status fiori-status--warning">' . esc($chat['status']) . '</span>';
                             ?>
                         </div>

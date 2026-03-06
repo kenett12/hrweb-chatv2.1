@@ -38,8 +38,38 @@ class TicketController extends BaseController
         
         $companyUsers = $companyId ? $userModel->where('client_id', $companyId)->findColumn('id') : [$clientId];
 
-        // Using whereIn() to get all tickets for the company
-        $this->viewData['tickets'] = $this->ticketModel->whereIn('client_id', $companyUsers)->findAll();
+        $filters = [
+            'search'    => $this->request->getGet('search'),
+            'status'    => $this->request->getGet('status'),
+            'date_from' => $this->request->getGet('date_from'),
+            'date_to'   => $this->request->getGet('date_to')
+        ];
+
+        if ($filters['status'] === 'Resolved') {
+            $filters['status'] = 'Closed';
+        }
+        
+        $builder = $this->ticketModel->whereIn('client_id', $companyUsers);
+
+        if (!empty($filters['search'])) {
+            $s = $filters['search'];
+            $builder->groupStart()
+                    ->like('ticket_number', $s)
+                    ->orLike('subject', $s)
+                    ->orLike('category', $s)
+                    ->groupEnd();
+        }
+        if (!empty($filters['status'])) {
+            $builder->where('status', $filters['status']);
+        }
+        if (!empty($filters['date_from'])) {
+            $builder->where('created_at >=', $filters['date_from'] . ' 00:00:00');
+        }
+        if (!empty($filters['date_to'])) {
+            $builder->where('created_at <=', $filters['date_to'] . ' 23:59:59');
+        }
+
+        $this->viewData['tickets'] = $builder->orderBy('created_at', 'DESC')->findAll();
 
         return view('client/tickets/index', $this->viewData);
     }
@@ -51,7 +81,23 @@ class TicketController extends BaseController
     public function create()
     {
         $this->viewData['title'] = 'Submit New Ticket';
-        $this->viewData['categories'] = $this->ticketModel->getCategories();
+        
+        $db = \Config\Database::connect();
+        $allCategories = $db->table('ticket_categories')->orderBy('name', 'ASC')->get()->getResultArray();
+        
+        $parents = [];
+        $subcategories = [];
+        
+        foreach ($allCategories as $cat) {
+            if (empty($cat['parent_id'])) {
+                $parents[] = $cat;
+            } else {
+                $subcategories[] = $cat;
+            }
+        }
+
+        $this->viewData['categories'] = $parents;
+        $this->viewData['subcategories'] = $subcategories;
 
         return view('client/tickets/create', $this->viewData);
     }
@@ -64,34 +110,56 @@ class TicketController extends BaseController
     {
         $clientId = session()->get('id') ?? session()->get('user_id');
 
-        // Handle file upload security and logic
-        $file = $this->request->getFile('attachment');
-        $fileName = ($file && $file->isValid() && !$file->hasMoved()) ? $file->getRandomName() : null;
+        // Handle MULTIPLE file uploads
+        $files = $this->request->getFileMultiple('attachments');
+        $uploadedFiles = [];
+        $primaryAttachment = null;
 
-        if ($fileName) {
-            $file->move(FCPATH . 'uploads/tickets', $fileName);
+        if ($files) {
+            foreach ($files as $file) {
+                if ($file && $file->isValid() && !$file->hasMoved()) {
+                    $fileName = $file->getRandomName();
+                    $file->move(WRITEPATH . 'uploads/tickets', $fileName);
+                    $uploadedFiles[] = $fileName;
+                    
+                    // Set the first valid file as the primary attachment for backward compatibility
+                    if ($primaryAttachment === null) {
+                        $primaryAttachment = $fileName;
+                    }
+                }
+            }
+        }
+
+        // Handle external links
+        $links = $this->request->getPost('external_links');
+        $validLinks = [];
+        if (is_array($links)) {
+            foreach ($links as $link) {
+                if (!empty(trim($link))) {
+                    $validLinks[] = trim($link);
+                }
+            }
         }
 
         $db = \Config\Database::connect();
-        
-        // Find company lead TSR (Kept for reference, but no longer auto-assigning here)
-        $userRecord = $db->table('users')->where('id', $clientId)->get()->getRowArray();
-        $companyId = $userRecord['client_id'] ?? null;
         
         $assignedTo = null; // ALWAYS START UNASSIGNED SO BOT TAKES THE LEAD
         $status = 'Open';
 
         // Save the main ticket record and get the ID
         $ticketId = $this->ticketModel->insert([
-            'ticket_number' => $this->ticketModel->generateNumber(),
-            'client_id'     => $clientId,
-            'assigned_to'   => $assignedTo,
-            'subject'       => $this->request->getPost('subject'),
-            'category'      => $this->request->getPost('category'),
-            'priority'      => $this->request->getPost('priority'),
-            'description'   => $this->request->getPost('description'),
-            'attachment'    => $fileName,
-            'status'        => $status
+            'ticket_number'  => $this->ticketModel->generateNumber(),
+            'client_id'      => $clientId,
+            'assigned_to'    => $assignedTo,
+            'subject'        => $this->request->getPost('subject'),
+            'category'       => $this->request->getPost('category'),
+            'subcategory'    => $this->request->getPost('subcategory'),
+            'priority'       => $this->request->getPost('priority'),
+            'description'    => $this->request->getPost('description'),
+            'attachment'     => $primaryAttachment, // Legacy support
+            'attachments'    => !empty($uploadedFiles) ? json_encode($uploadedFiles) : null,
+            'external_links' => !empty($validLinks) ? json_encode($validLinks) : null,
+            'status'         => $status
         ]);
 
         // ── BOT GREETING ──

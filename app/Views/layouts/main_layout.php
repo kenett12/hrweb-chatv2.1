@@ -108,7 +108,7 @@
         <?php endif; ?>
 
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <main class="flex-1 overflow-y-auto <?= (url_is('login*') || url_is('auth*')) ? 'p-0' : 'p-6' ?>">
+            <main class="flex-1 overflow-y-auto <?= (url_is('login*') || url_is('auth*')) ? 'p-0' : 'p-4 md:p-6' ?>">
                 <div class="fade-in">
                     <?= $this->renderSection('content') ?>
                 </div>

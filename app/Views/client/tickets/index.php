@@ -14,6 +14,51 @@
     </div>
 </div>
 
+<div class="mb-4 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+    <form id="filterForm" method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+        <div class="md:col-span-2">
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Search Tickets</label>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                <input type="text" name="search" value="<?= esc(request()->getGet('search')) ?>" 
+                       placeholder="Ticket #, subject, category..." 
+                       class="fiori-input !pl-10 !h-10 text-xs auto-apply">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
+            <select name="status" class="fiori-input !h-10 text-xs auto-apply">
+                <option value="">All Statuses</option>
+                <?php 
+                $statuses = ['Open', 'In Progress', 'Closed'];
+                foreach($statuses as $s): ?>
+                    <option value="<?= $s ?>" <?= request()->getGet('status') == $s ? 'selected' : '' ?>><?= $s ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Created From</label>
+            <input type="date" name="date_from" value="<?= esc(request()->getGet('date_from')) ?>" class="fiori-input !h-10 text-xs auto-apply">
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Created To</label>
+            <input type="date" name="date_to" value="<?= esc(request()->getGet('date_to')) ?>" class="fiori-input !h-10 text-xs auto-apply">
+        </div>
+
+        <div class="flex gap-2">
+            <button type="submit" class="fiori-button fiori-button--primary !h-10 flex-1">
+                Apply
+            </button>
+            <a href="<?= base_url('client/tickets') ?>" class="fiori-button !bg-slate-50 !text-slate-500 !border-slate-200 !h-10 px-3 flex items-center justify-center" title="Clear Filters">
+                <span class="material-symbols-outlined">refresh</span>
+            </a>
+        </div>
+    </form>
+</div>
+
 <div class="fiori-card p-0 overflow-hidden">
     <table class="fiori-table">
         <thead>
@@ -28,25 +73,32 @@
         <tbody>
             <?php if (!empty($tickets)):
                 foreach ($tickets as $t): ?>
-                    <tr class="cursor-pointer" onclick="window.location.href='<?= base_url('client/tickets/view/' . $t['id']) ?>'">
-                        <td>
-                            <span class="font-medium" style="color:var(--fiori-text-base);"><?= esc($t['ticket_number']) ?></span>
+                    <tr class="group">
+                        <td onclick="window.location.href='<?= base_url('client/tickets/view/' . $t['id']) ?>'" class="cursor-pointer">
+                            <span class="font-medium group-hover:text-blue-600 transition-colors" style="color:var(--fiori-text-base);"><?= esc($t['ticket_number']) ?></span>
                         </td>
-                        <td>
-                            <span class="font-medium" style="color:var(--fiori-text-base);"><?= esc(strlen($t['subject']) > 60 ? substr($t['subject'], 0, 60) . '…' : $t['subject']) ?></span>
+                        <td onclick="window.location.href='<?= base_url('client/tickets/view/' . $t['id']) ?>'" class="cursor-pointer">
+                            <span class="font-medium group-hover:text-blue-600 transition-colors" style="color:var(--fiori-text-base);"><?= esc(strlen($t['subject']) > 60 ? substr($t['subject'], 0, 60) . '…' : $t['subject']) ?></span>
                         </td>
                         <td>
                             <span class="text-sm" style="color:var(--fiori-text-muted);"><?= esc($t['category']) ?></span>
                         </td>
                         <td>
                             <?php
-                                if ($t['status'] === 'Resolved') echo '<span class="fiori-status fiori-status--positive">Resolved</span>';
+                                if ($t['status'] === 'Closed') echo '<span class="fiori-status fiori-status--neutral">Closed</span>';
                                 elseif ($t['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
                                 else echo '<span class="fiori-status fiori-status--warning">' . esc($t['status']) . '</span>';
                             ?>
                         </td>
                         <td class="text-right">
-                            <span class="text-xs font-semibold" style="color:var(--fiori-blue);">View →</span>
+                            <div class="flex items-center justify-end gap-3">
+                                <?php if ($t['status'] === 'Closed' && empty($t['feedback_rating'])): ?>
+                                    <button onclick="event.stopPropagation(); openFeedbackModal(<?= $t['id'] ?>, '<?= esc($t['ticket_number']) ?>')" class="fiori-button !bg-emerald-50 !text-emerald-600 border-emerald-100 hover:!bg-emerald-100 !text-[10px] h-7 px-3">
+                                        <span class="material-symbols-outlined text-[14px]">rate_review</span> Rate Service
+                                    </button>
+                                <?php endif; ?>
+                                <a href="<?= base_url('client/tickets/view/' . $t['id']) ?>" class="text-xs font-semibold" style="color:var(--fiori-blue);">View →</a>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; else: ?>
@@ -60,4 +112,96 @@
         </tbody>
     </table>
 </div>
+
+<!-- Feedback Modal -->
+<div id="feedback-modal" class="fiori-overlay hidden">
+    <div class="fiori-dialog">
+        <div class="fiori-dialog__header">
+            <h3 class="fiori-dialog__title">Share Your Feedback</h3>
+            <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="fiori-dialog__body">
+            <p class="text-xs text-slate-500 mb-6">How was your experience with Ticket <span id="feedback-ticket-number" class="font-bold text-slate-700"></span>? Your feedback helps us improve our service.</p>
+            
+            <form id="feedback-form" action="" method="POST">
+                <?= csrf_field() ?>
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Your Rating</label>
+                        <div class="flex justify-center gap-4">
+                            <?php for($i=1; $i<=5; $i++): ?>
+                                <label class="cursor-pointer group">
+                                    <input type="radio" name="rating" value="<?= $i ?>" class="hidden peer" required>
+                                    <div class="w-12 h-12 rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-300 transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-600 group-hover:border-emerald-200">
+                                        <span class="material-symbols-outlined text-[24px]"><?= $i <= 2 ? 'sentiment_dissatisfied' : ($i <= 3 ? 'sentiment_neutral' : 'sentiment_satisfied') ?></span>
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 block text-slate-400 peer-checked:text-emerald-600 opacity-60 peer-checked:opacity-100"><?= $i ?></span>
+                                </label>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Additional Comments</label>
+                        <textarea name="comment" class="fiori-input text-xs h-24" placeholder="Any thoughts on how we can do better?"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3">
+                    <button type="button" onclick="closeFeedbackModal()" class="flex-1 fiori-button !bg-slate-100 !text-slate-600 hover:!bg-slate-200">
+                        Maybe Later
+                    </button>
+                    <button type="submit" class="flex-1 fiori-button fiori-button--primary">
+                        Submit Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- AUTO-APPLY FILTERS ---
+        let debounceTimer;
+        document.querySelectorAll('.auto-apply').forEach(input => {
+            const events = input.tagName === 'SELECT' || input.type === 'date' ? ['change'] : ['keyup'];
+            
+            events.forEach(action => {
+                input.addEventListener(action, () => {
+                    clearTimeout(debounceTimer);
+                    const delay = (input.tagName === 'INPUT' && input.type === 'text') ? 500 : 0;
+                    
+                    debounceTimer = setTimeout(() => {
+                        document.getElementById('filterForm').submit();
+                    }, delay);
+                });
+            });
+        });
+
+        // --- FEEDBACK MODAL HANDLERS ---
+        window.openFeedbackModal = function(ticketId, ticketNumber) {
+            const modal = document.getElementById('feedback-modal');
+            const form = document.getElementById('feedback-form');
+            const ticketNumSpan = document.getElementById('feedback-ticket-number');
+            
+            ticketNumSpan.textContent = ticketNumber;
+            form.action = `<?= base_url('client/submit-feedback') ?>/${ticketId}`;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeFeedbackModal = function() {
+            const modal = document.getElementById('feedback-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+    });
+</script>
 <?= $this->endSection() ?>

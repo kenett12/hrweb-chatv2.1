@@ -33,28 +33,79 @@
                             <?= esc($ticket['subject']) ?>
                         </h1>
                     </div>
-                    <?php
-                        if ($ticket['status'] === 'Resolved') echo '<span class="fiori-status fiori-status--positive">Resolved</span>';
-                        elseif ($ticket['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
-                        elseif ($ticket['status'] === 'Closed') echo '<span class="fiori-status" style="background:#e0e0e0; color:#606060;">Closed</span>';
-                        else echo '<span class="fiori-status fiori-status--warning">' . esc($ticket['status']) . '</span>';
-                    ?>
+                    <div class="flex items-center gap-3">
+                        <?php if ($ticket['status'] === 'Closed' && empty($ticket['feedback_rating'])): ?>
+                            <button onclick="openFeedbackModal(<?= $ticket['id'] ?>, '<?= esc($ticket['ticket_number']) ?>')" class="fiori-button !bg-emerald-50 !text-emerald-600 border-emerald-100 hover:!bg-emerald-100 !text-[10px] h-8 px-4">
+                                <span class="material-symbols-outlined text-[16px]">rate_review</span> Rate our Service
+                            </button>
+                        <?php endif; ?>
+
+                        <?php if ($ticket['status'] !== 'Closed' && !$ticket['close_requested']): ?>
+                            <form action="<?= base_url('client/tickets/request-closure/' . $ticket['id']) ?>" method="POST" onsubmit="return confirm('Request to close this ticket?')">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="fiori-button !bg-slate-50 !text-slate-600 border-slate-200 hover:!bg-slate-100 !text-[10px] h-8 px-4">
+                                    <span class="material-symbols-outlined text-[16px]">close_fullscreen</span> Request Closure
+                                </button>
+                            </form>
+                        <?php elseif ($ticket['close_requested'] && $ticket['status'] !== 'Closed'): ?>
+                            <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100">
+                                <span class="material-symbols-outlined text-[14px] align-middle mr-1">history_toggle_off</span> Closure Requested
+                            </span>
+                        <?php endif; ?>
+
+                        <?php
+                            if ($ticket['status'] === 'Closed') echo '<span class="fiori-status fiori-status--neutral">Closed</span>';
+                            elseif ($ticket['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
+                            else echo '<span class="fiori-status fiori-status--warning">' . esc($ticket['status']) . '</span>';
+                        ?>
+                    </div>
                 </div>
 
                 <p class="text-sm leading-relaxed mb-6" style="color:var(--fiori-text-primary);">
                     <?= nl2br(esc($ticket['description'])) ?>
                 </p>
 
-                <?php if (!empty($ticket['attachment'])): ?>
+                <?php 
+                    $attachments = !empty($ticket['attachments']) ? json_decode($ticket['attachments'], true) : [];
+                    $links = !empty($ticket['external_links']) ? json_decode($ticket['external_links'], true) : [];
+                ?>
+
+                <?php if (!empty($attachments) || !empty($ticket['attachment'])): ?>
                     <div class="pt-6 border-t border-gray-50">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Attached Evidence</p>
-                        <div class="relative w-40 h-40 group cursor-zoom-in"
-                            onclick="openPhotoModal('<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>')">
-                            <img src="<?= base_url('uploads/tickets/' . $ticket['attachment']) ?>"
-                                class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm group-hover:opacity-90 transition-all">
-                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
-                                <span class="material-symbols-outlined text-white">zoom_in</span>
-                            </div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Evidence Gallery</p>
+                        <div class="flex flex-wrap gap-4">
+                            <?php 
+                            // Include legacy attachment if it exists and isn't in the new list
+                            $allAttachments = $attachments;
+                            if (!empty($ticket['attachment']) && !in_array($ticket['attachment'], $allAttachments)) {
+                                array_unshift($allAttachments, $ticket['attachment']);
+                            }
+                            ?>
+                            <?php foreach ($allAttachments as $index => $file): ?>
+                                <div class="relative w-32 h-32 group cursor-zoom-in"
+                                    onclick="openPhotoModal('<?= base_url('uploads/tickets/' . $file) ?>')">
+                                    <img src="<?= base_url('uploads/tickets/' . $file) ?>"
+                                        class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm group-hover:opacity-90 transition-all">
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
+                                        <span class="material-symbols-outlined text-white">zoom_in</span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($links)): ?>
+                    <div class="pt-6 border-t border-gray-50 mt-6">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">External Resources</p>
+                        <div class="space-y-2">
+                            <?php foreach ($links as $link): ?>
+                                <a href="<?= esc($link) ?>" target="_blank" class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100 hover:bg-blue-50 hover:border-blue-100 transition-all group">
+                                    <span class="material-symbols-outlined text-blue-500 group-hover:scale-110 transition-transform">link</span>
+                                    <span class="text-xs font-semibold text-gray-700 truncate"><?= esc($link) ?></span>
+                                    <span class="material-symbols-outlined text-[16px] text-gray-300 ml-auto">open_in_new</span>
+                                </a>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -150,6 +201,10 @@
                         <span class="font-semibold">Category</span>
                         <span style="color:var(--fiori-blue); font-weight:700; text-transform:uppercase;">
                             <?= !empty($ticket['category']) ? esc($ticket['category']) : 'General' ?>
+                            <?php if (!empty($ticket['subcategory'])): ?>
+                                <span class="text-gray-400 mx-1">/</span>
+                                <span class="text-gray-600 text-[10px]"><?= esc($ticket['subcategory']) ?></span>
+                            <?php endif; ?>
                         </span>
                     </div>
                     <div class="flex justify-between items-center">
@@ -168,8 +223,65 @@
                             <?= date('M d, Y H:i', strtotime($ticket['updated_at'])) ?>
                         </span>
                     </div>
+                    <?php if ($ticket['fixed_at']): ?>
+                        <div class="flex justify-between items-center pt-3 mt-3 border-t text-emerald-600" style="border-color:var(--fiori-border);">
+                            <span class="font-semibold">Closed On</span>
+                            <span class="font-bold">
+                                <?= date('M d, Y H:i', strtotime($ticket['fixed_at'])) ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedback-modal" class="fiori-overlay hidden">
+    <div class="fiori-dialog">
+        <div class="fiori-dialog__header">
+            <h3 class="fiori-dialog__title">Share Your Feedback</h3>
+            <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="fiori-dialog__body">
+            <p class="text-xs text-slate-500 mb-6">How was your experience with Ticket <span id="feedback-ticket-number" class="font-bold text-slate-700"></span>? Your feedback helps us improve our service.</p>
+            
+            <form id="feedback-form" action="" method="POST">
+                <?= csrf_field() ?>
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Your Rating</label>
+                        <div class="flex justify-center gap-4">
+                            <?php for($i=1; $i<=5; $i++): ?>
+                                <label class="cursor-pointer group">
+                                    <input type="radio" name="rating" value="<?= $i ?>" class="hidden peer" required>
+                                    <div class="w-12 h-12 rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-300 transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-600 group-hover:border-emerald-200">
+                                        <span class="material-symbols-outlined text-[24px]"><?= $i <= 2 ? 'sentiment_dissatisfied' : ($i <= 3 ? 'sentiment_neutral' : 'sentiment_satisfied') ?></span>
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 block text-slate-400 peer-checked:text-emerald-600 opacity-60 peer-checked:opacity-100"><?= $i ?></span>
+                                </label>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Additional Comments</label>
+                        <textarea name="comment" class="fiori-input text-xs h-24" placeholder="Any thoughts on how we can do better?"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3">
+                    <button type="button" onclick="closeFeedbackModal()" class="flex-1 fiori-button !bg-slate-100 !text-slate-600 hover:!bg-slate-200">
+                        Maybe Later
+                    </button>
+                    <button type="submit" class="flex-1 fiori-button fiori-button--primary">
+                        Submit Feedback
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -246,6 +358,24 @@
         const img = document.getElementById('modalImage');
         img.classList.add('scale-95');
         setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function openFeedbackModal(ticketId, ticketNumber) {
+        const modal = document.getElementById('feedback-modal');
+        const form = document.getElementById('feedback-form');
+        const ticketNumSpan = document.getElementById('feedback-ticket-number');
+        
+        ticketNumSpan.textContent = ticketNumber;
+        form.action = `<?= base_url('client/submit-feedback') ?>/${ticketId}`;
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeFeedbackModal() {
+        const modal = document.getElementById('feedback-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 
     // Event listener for dynamically viewing bot images in the modal

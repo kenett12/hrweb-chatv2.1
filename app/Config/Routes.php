@@ -41,6 +41,10 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin,admin'], function($ro
     $routes->get('tickets', 'Admin\TicketController::index');
     $routes->get('tickets/view/(:num)', 'Admin\TicketController::view/$1');
     $routes->post('tickets/reply/(:num)', 'Admin\TicketController::reply/$1');
+    $routes->post('tickets/storeCategory', 'Admin\TicketController::storeCategory');
+    $routes->get('tickets/deleteCategory/(:num)', 'Admin\TicketController::deleteCategory/$1');
+    $routes->post('tickets/updateTicket', 'Admin\TicketController::updateTicket');
+    $routes->post('tickets/resolveTicket/(:num)', 'Admin\TicketController::resolveTicket/$1');
 
     // ── KNOWLEDGE BASE MANAGEMENT ROUTES ───────────────────────
     $routes->get('kb', 'Admin\KBController::index');               // View Manager & Article List
@@ -52,6 +56,8 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin,admin'], function($ro
     // ── SYSTEM MANAGEMENT ROUTES ────────────────────────────────
     $routes->get('system-management', 'Admin\SystemController::index');
     $routes->post('system-management/update', 'Admin\SystemController::update');
+    // ────────────────────────────────────────────────────────────
+
     // ────────────────────────────────────────────────────────────
 });
 
@@ -67,6 +73,8 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin,admin'], function($ro
         $routes->post('tickets/reply/(:num)', 'Tsr\TicketHandler::reply/$1');
         $routes->post('tickets/update-status/(:num)', 'Tsr\TicketHandler::updateStatus/$1');
         $routes->post('tickets/forward/(:num)', 'Tsr\TicketHandler::forwardTicket/$1');
+        $routes->post('tickets/request-closure/(:num)', 'Tsr\TicketHandler::requestClosure/$1');
+        $routes->post('tickets/update-remarks/(:num)', 'Tsr\TicketHandler::updateRemarks/$1');
     });
 
 // --- Client Routes ---
@@ -90,6 +98,7 @@ $routes->group('client', ['filter' => 'auth:client'], function($routes) {
 
     // 5. NEW: Handle the Talk to Agent request
     $routes->post('chat/requestAgent/(:num)', 'Client\ChatController::requestAgent/$1');
+    $routes->post('submit-feedback/(:num)', 'Client\Dashboard::submitFeedback/$1');
     // ────────────────────────────────────────────────────────────
 
     $routes->get('chat/searchKB', 'Client\ChatController::searchKB');
@@ -100,10 +109,27 @@ $routes->group('client', ['filter' => 'auth:client'], function($routes) {
     $routes->get('tickets/create', 'Client\TicketController::create');
     $routes->post('tickets/store', 'Client\TicketController::store');
     $routes->get('tickets/view/(:num)', 'Client\TicketController::view/$1');
+    $routes->post('tickets/request-closure/(:num)', 'Client\TicketController::requestClosure/$1');
     
     // Duplicate match for safety (from your original code)
     $routes->match(['get', 'post'], 'chat/handleBotQuery/(:num)', 'Client\ChatController::handleBotQuery/$1');
 });
+
+// ── UNIFIED GROUP CHAT ROUTES (Accessible by all logged in users) ──
+$routes->group('group-chat', ['filter' => 'auth:client,tsr_level_1,tl,supervisor,manager,dev,tsr_level_2,it,admin,superadmin'], function($routes) {
+    $routes->get('/', 'Shared\GroupChatController::index');
+    $routes->get('room/(:num)', 'Shared\GroupChatController::room/$1');
+    $routes->get('members/(:num)', 'Shared\GroupChatController::getMembers/$1');
+    $routes->post('create', 'Shared\GroupChatController::create');
+    $routes->post('send', 'Shared\GroupChatController::send');
+    $routes->post('approve', 'Shared\GroupChatController::approve');
+    $routes->post('reject', 'Shared\GroupChatController::reject');
+    $routes->post('delete', 'Shared\GroupChatController::delete');
+});
+
+// ── SECURE FILE SERVING ───────────────────────────────────────
+$routes->get('uploads/tickets/(:any)', 'Shared\FileController::serveTicketAttachment/$1');
+// ──────────────────────────────────────────────────────────────    
 
 // APIs (Globally accessible to logged in users via session)
 $routes->group('api/notifications', function($routes) {

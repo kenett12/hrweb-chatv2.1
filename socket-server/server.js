@@ -137,6 +137,20 @@ io.on("connection", (socket) => {
         io.to(`user_${data.target_id}`).emit("ice_candidate", data.candidate);
     });
 
+    // ── NEW: Group Chat Module ──
+    socket.on("join_group_room", (roomId) => {
+        const room = `group_${roomId}`;
+        socket.join(room);
+        console.log(`🗣️ Socket ${socket.id} joined Group Chat room: ${room}`);
+    });
+
+    socket.on("group_chat_message", (data) => {
+        // Broadcast to everyone in this group except the sender
+        const room = `group_${data.room_id}`;
+        socket.to(room).emit("group_chat_message", data);
+    });
+    // ────────────────────────────
+
     // F. Disconnection Handling
     socket.on("disconnect", () => {
         if (socket.userId) {

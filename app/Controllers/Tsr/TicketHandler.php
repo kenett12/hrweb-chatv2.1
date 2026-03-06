@@ -30,8 +30,21 @@ class TicketHandler extends BaseController
     {
         $this->viewData['title'] = 'Ticket Queue';
         
-        // Calling the method correctly from the model
-        $this->viewData['tickets'] = $this->ticketModel->getTicketsInQueue(['Open', 'In Progress']);
+        // Filtering parameters
+        $filters = [
+            'search'    => $this->request->getGet('search'),
+            'status'    => $this->request->getGet('status'),
+            'category'  => $this->request->getGet('category'),
+            'date_from' => $this->request->getGet('date_from'),
+            'date_to'   => $this->request->getGet('date_to')
+        ];
+
+        if ($filters['status'] === 'Resolved') {
+            $filters['status'] = 'Closed';
+        }
+
+        // Fetch filtered tickets
+        $this->viewData['tickets'] = $this->ticketModel->getFilteredTickets($filters);
 
         return view('tsr/tickets/index', $this->viewData);
     }
@@ -47,7 +60,7 @@ class TicketHandler extends BaseController
         $staffId = session()->get('id') ?? session()->get('user_id');
 
         // Fetch all tickets that can be considered chats and are assigned to this TSR
-        $this->viewData['chats'] = $this->ticketModel->getTicketsInQueue(['Open', 'In Progress', 'Resolved', 'Closed'], $staffId);
+        $this->viewData['chats'] = $this->ticketModel->getTicketsInQueue(['Open', 'In Progress', 'Closed'], $staffId);
 
         return view('tsr/chat_directory', $this->viewData);
     }
@@ -58,7 +71,19 @@ class TicketHandler extends BaseController
      */
     public function liveQueue()
     {
-        $tickets = $this->ticketModel->getTicketsInQueue(['Open', 'In Progress']);
+        $filters = [
+            'search'    => $this->request->getGet('search'),
+            'status'    => $this->request->getGet('status'),
+            'category'  => $this->request->getGet('category'),
+            'date_from' => $this->request->getGet('date_from'),
+            'date_to'   => $this->request->getGet('date_to')
+        ];
+
+        if ($filters['status'] === 'Resolved') {
+            $filters['status'] = 'Closed';
+        }
+
+        $tickets = $this->ticketModel->getFilteredTickets($filters);
         return $this->response->setJSON($tickets);
     }
 
@@ -219,14 +244,38 @@ class TicketHandler extends BaseController
         $message = $this->request->getPost('message');
         $staffId = session()->get('id') ?? session()->get('user_id');
 
-        if (!empty(trim($message))) {
+        // --- HANDLE MULTIPLE ATTACHMENTS ---
+        $uploadedFiles = [];
+        $files = $this->request->getFiles();
+        if (isset($files['attachments'])) {
+            foreach ($files['attachments'] as $file) {
+                if ($file->isValid() && !$file->hasMoved()) {
+                    $newName = $file->getRandomName();
+                    $file->move(WRITABLEPATH . 'uploads/tickets', $newName);
+                    $uploadedFiles[] = $newName;
+                }
+            }
+        }
+
+        // --- HANDLE EXTERNAL LINKS ---
+        $links = $this->request->getPost('external_links');
+        $validLinks = [];
+        if (is_array($links)) {
+            foreach ($links as $link) {
+                if (!empty(trim($link))) $validLinks[] = trim($link);
+            }
+        }
+
+        if (!empty(trim($message)) || !empty($uploadedFiles) || !empty($validLinks)) {
             // Use the model's addReply method for consistency
             $this->ticketModel->addReply([
-                'ticket_id'  => $id,
-                'user_id'    => $staffId,
-                'message'    => esc($message),
-                'is_bot'     => 0,
-                'created_at' => date('Y-m-d H:i:s')
+                'ticket_id'      => $id,
+                'user_id'        => $staffId,
+                'message'        => esc($message),
+                'attachments'    => !empty($uploadedFiles) ? json_encode($uploadedFiles) : null,
+                'external_links' => !empty($validLinks) ? json_encode($validLinks) : null,
+                'is_bot'         => 0,
+                'created_at'     => date('Y-m-d H:i:s')
             ]);
 
             // Refresh ticket timestamp and ensure it is marked "In Progress"
@@ -282,20 +331,24 @@ class TicketHandler extends BaseController
 
     /**
      * updateStatus
-     * Direct endpoint to change ticket status (e.g., Resolved, Closed).
+     * Restricts status updates for TSRs (no Closing).
      */
     public function updateStatus($id)
     {
         $status = $this->request->getPost('status');
         $staffId = session()->get('id') ?? session()->get('user_id');
 
-        if (in_array($status, ['Open', 'In Progress', 'Resolved', 'Closed'])) {
+        // TSRs cannot Resolve or Close tickets directly
+        if ($status === 'Closed') {
+            return redirect()->back()->with('error', 'Only Superadmins can Close tickets.');
+        }
+
+        if (in_array($status, ['Open', 'In Progress'])) {
             $updateData = [
                 'status'     => $status,
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
-            // If a TSR moves it to In Progress, auto-assign it to them
             if ($status === 'In Progress') {
                 $updateData['assigned_to'] = $staffId;
                 $db = \Config\Database::connect();
@@ -304,24 +357,9 @@ class TicketHandler extends BaseController
 
             $this->ticketModel->update($id, $updateData);
 
-            // ── CHECK STATUS FOR TSR AVAILABILITY ──
-            $ticketInfo = $this->ticketModel->find($id);
-            if (in_array($status, ['Resolved', 'Closed', 'Open'])) {
-                $db = \Config\Database::connect();
-                if (!empty($ticketInfo['assigned_to'])) {
-                    $activeCount = $this->ticketModel->where('assigned_to', $ticketInfo['assigned_to'])
-                                       ->where('status', 'In Progress')
-                                       ->countAllResults();
-                    if ($activeCount == 0) {
-                        $db->table('users')->where('id', $ticketInfo['assigned_to'])->update(['availability_status' => 'active']);
-                    }
-                }
-            }
-
-            // ── NOTIFICATIONS ──
-            $notifModel = new \App\Models\NotificationModel();
-            
             // Notify Client
+            $notifModel = new \App\Models\NotificationModel();
+            $ticketInfo = $this->ticketModel->find($id);
             $notifModel->sendNotification(
                 $ticketInfo['client_id'], 
                 "Ticket Status Updated", 
@@ -329,7 +367,7 @@ class TicketHandler extends BaseController
                 base_url("client/chat/{$id}")
             );
 
-            // ── ACTUAL REAL-TIME WEBSOCKET PUSH ──
+            // Socket Emit
             if (function_exists('emit_socket_event')) {
                 emit_socket_event('global_ticket_change', [
                     'type' => 'status_updated',
@@ -342,6 +380,37 @@ class TicketHandler extends BaseController
         }
 
         return redirect()->back()->with('error', 'Invalid status provided.');
+    }
+
+    /**
+     * requestClosure
+     * Sets close_requested flag for Superadmin review.
+     */
+    public function requestClosure($id)
+    {
+        $this->ticketModel->update($id, [
+            'close_requested' => 1,
+            'updated_at'      => date('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->back()->with('success', 'Closure request sent to Superadmin.');
+    }
+
+    /**
+     * updateRemarks
+     * Allows TSR to update their specific remarks.
+     */
+    public function updateRemarks($id)
+    {
+        $data = [
+            'support_remarks'      => esc($this->request->getPost('support_remarks')),
+            'reoccurrence_remarks' => esc($this->request->getPost('reoccurrence_remarks')),
+            'updated_at'           => date('Y-m-d H:i:s')
+        ];
+
+        $this->ticketModel->update($id, $data);
+
+        return redirect()->back()->with('success', 'Remarks updated.');
     }
 
     /**

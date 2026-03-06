@@ -238,42 +238,131 @@
                             <?php endif; ?>
                         </div>
 
-                        <?php if (!empty($msg['attachment']) && isset($msg['is_initial'])): ?>
-                            <div class="mt-3 pt-3 border-t border-emerald-50/50">
-                                <?php 
-                                    $ext = strtolower(pathinfo($msg['attachment'], PATHINFO_EXTENSION));
-                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                ?>
-                                <?php if ($isImage): ?>
-                                    <img src="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" class="max-w-full h-auto rounded-lg mb-2 shadow-sm cursor-zoom-in" onclick="window.open(this.src, '_blank')">
-                                <?php endif; ?>
-                                <a href="<?= base_url('uploads/tickets/' . $msg['attachment']) ?>" target="_blank" class="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[14px]">attachment</span> View Attachment
-                                </a>
-                            </div>
+                        <?php 
+                            $msgAttachments = !empty($msg['attachments']) ? json_decode($msg['attachments'], true) : [];
+                            $msgLinks = !empty($msg['external_links']) ? json_decode($msg['external_links'], true) : [];
+                            $isInitial = isset($msg['is_initial']) && $msg['is_initial'];
+                        ?>
+
+                        <?php if ($isInitial): ?>
+                            <?php 
+                                $ticketAttachments = !empty($ticket['attachments']) ? json_decode($ticket['attachments'], true) : [];
+                                $allInitialAttachments = $ticketAttachments;
+                                if (!empty($ticket['attachment']) && !in_array($ticket['attachment'], $allInitialAttachments)) {
+                                    array_unshift($allInitialAttachments, $ticket['attachment']);
+                                }
+                                $ticketLinks = !empty($ticket['external_links']) ? json_decode($ticket['external_links'], true) : [];
+                            ?>
+                            <?php if (!empty($allInitialAttachments)): ?>
+                                <div class="mt-3 pt-3 border-t border-emerald-50/50">
+                                    <p class="text-[9px] font-bold text-emerald-600/50 uppercase tracking-widest mb-2">Evidence Gallery</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <?php foreach ($allInitialAttachments as $file): ?>
+                                            <?php 
+                                                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                                                $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                            ?>
+                                            <?php if ($isImage): ?>
+                                                <div class="relative group w-20 h-20">
+                                                    <img src="<?= base_url('uploads/tickets/' . $file) ?>" class="w-full h-full object-cover rounded-lg shadow-sm cursor-zoom-in border border-emerald-100/50" onclick="window.open(this.src, '_blank')">
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="flex flex-col gap-1 mt-2">
+                                        <?php foreach ($allInitialAttachments as $file): ?>
+                                            <a href="<?= base_url('uploads/tickets/' . $file) ?>" target="_blank" class="text-[9px] font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[12px]">attachment</span> <?= esc($file) ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($ticketLinks)): ?>
+                                <div class="mt-3 pt-3 border-t border-emerald-50/50">
+                                    <p class="text-[9px] font-bold text-emerald-600/50 uppercase tracking-widest mb-2">External Resources</p>
+                                    <div class="space-y-1">
+                                        <?php foreach ($ticketLinks as $link): ?>
+                                            <a href="<?= esc($link) ?>" target="_blank" class="flex items-center gap-2 p-1.5 rounded bg-emerald-50/30 border border-emerald-100/20 hover:bg-blue-50 transition-colors group">
+                                                <span class="material-symbols-outlined text-[14px] text-blue-500">link</span>
+                                                <span class="text-[10px] font-medium text-gray-600 truncate flex-1"><?= esc($link) ?></span>
+                                                <span class="material-symbols-outlined text-[12px] text-gray-300">open_in_new</span>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <?php if (!empty($msgAttachments)): ?>
+                                <div class="mt-3 pt-3 border-t border-gray-100/50">
+                                    <div class="flex flex-wrap gap-2">
+                                        <?php foreach ($msgAttachments as $file): ?>
+                                            <div class="relative group w-20 h-20">
+                                                <img src="<?= base_url('uploads/tickets/' . $file) ?>" 
+                                                     class="w-full h-full object-cover rounded-lg shadow-sm cursor-zoom-in border border-gray-100/50" 
+                                                     onclick="window.open(this.src, '_blank')">
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($msgLinks)): ?>
+                                <div class="mt-2 space-y-1">
+                                    <?php foreach ($msgLinks as $link): ?>
+                                        <a href="<?= esc($link) ?>" target="_blank" class="flex items-center gap-2 p-1.5 rounded bg-white/50 border border-gray-100/30 hover:bg-white transition-colors group">
+                                            <span class="material-symbols-outlined text-[14px] text-blue-500">link</span>
+                                            <span class="text-[10px] font-medium text-gray-600 truncate flex-1"><?= esc($link) ?></span>
+                                            <span class="material-symbols-outlined text-[12px] text-gray-300">open_in_new</span>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
         
-            <!-- Reply Form -->
-            <div class="p-4 border-t" style="border-color:var(--fiori-border); background:#fff;">
-                <form id="reply-form" action="<?= base_url('superadmin/tickets/reply/' . $ticket['id']) ?>" method="post">
-                    <textarea name="message" id="reply-message" required
-                        class="fiori-input w-full" 
-                        style="height:80px; resize:none;"
-                        placeholder="Write a message to the group..."
-                        onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.querySelector('button[type=\'submit\']').click(); }"></textarea>
-                    <div class="flex justify-between items-center mt-3">
-                        <span class="text-xs text-gray-400 font-medium italic"><span class="text-indigo-500 font-bold">Note:</span> Your message will be visible to everyone.</span>
-                        <button type="submit" class="btn btn-accent flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[16px]">send</span>
-                            Send Message
-                        </button>
+                <div id="reply-extras" class="hidden px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+                    <div class="flex flex-col gap-3">
+                        <div id="reply-attachments-preview" class="flex flex-wrap gap-2"></div>
+                        <div id="reply-links-container" class="space-y-2"></div>
+                        
+                        <div class="flex gap-2">
+                            <button type="button" onclick="document.getElementById('reply-attachments').click()" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px]">add_photo_alternate</span> Add Photos
+                            </button>
+                            <button type="button" onclick="addReplyLinkField()" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px]">link</span> Add Link
+                            </button>
+                        </div>
+                        <input type="file" id="reply-attachments" name="attachments[]" multiple class="hidden" accept="image/*" onchange="previewReplyAttachments(this)">
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="p-4 border-t" style="border-color:var(--fiori-border); background:#fff;">
+                    <div class="flex items-start gap-3">
+                        <button type="button" onclick="toggleReplyExtras()" class="mt-2 text-gray-400 hover:text-blue-600 transition-colors" title="Add attachments or links">
+                            <span class="material-symbols-outlined" id="extras-toggle-icon">add_circle</span>
+                        </button>
+                        <form id="reply-form" class="flex-1" action="<?= base_url('superadmin/tickets/reply/' . $ticket['id']) ?>" method="post">
+                            <textarea name="message" id="reply-message"
+                                class="fiori-input w-full" 
+                                style="height:80px; resize:none;"
+                                placeholder="Write a message to the group..."
+                                onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }"></textarea>
+                            <div class="flex justify-between items-center mt-3">
+                                <span class="text-xs text-gray-400 font-medium italic"><span class="text-indigo-500 font-bold">Note:</span> Your message will be visible to everyone.</span>
+                                <button type="submit" class="btn btn-accent flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[16px]">send</span>
+                                    Send Message
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
         </div>
     </div>
 
@@ -320,8 +409,12 @@
 
                 <div class="pb-4 border-b" style="border-color:var(--fiori-border);">
                     <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--fiori-text-secondary);">Category / Priority</label>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2 items-center">
                         <span class="fiori-status fiori-status--neutral"><?= esc($ticket['category']) ?></span>
+                        <?php if (!empty($ticket['subcategory'])): ?>
+                            <span class="material-symbols-outlined text-[12px] text-gray-400">arrow_forward_ios</span>
+                            <span class="fiori-status fiori-status--neutral" style="background:#f0f7ff; color:#1e72af; border-color:#d0e7ff;"><?= esc($ticket['subcategory']) ?></span>
+                        <?php endif; ?>
                         <span class="fiori-status <?= $ticket['priority'] === 'Urgent' || $ticket['priority'] === 'High' ? 'fiori-status--critical' : 'fiori-status--positive' ?>"><?= esc($ticket['priority']) ?></span>
                     </div>
                 </div>
@@ -330,6 +423,66 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--fiori-text-secondary);">Date Created</label>
                     <p class="text-sm font-medium" style="color:var(--fiori-text-base);"><?= date('F d, Y h:i A', strtotime($ticket['created_at'])) ?></p>
                 </div>
+
+                <!-- Advanced Management Section -->
+                <details class="group pt-4 border-t" style="border-color:var(--fiori-border);">
+                    <summary class="text-[10px] font-bold uppercase text-indigo-600 tracking-[0.2em] flex items-center gap-2 cursor-pointer list-none hover:text-indigo-800 transition-colors focus:outline-none">
+                        <span class="material-symbols-outlined text-[16px]">settings_suggest</span> Advanced Management
+                        <span class="material-symbols-outlined text-[16px] ml-auto group-open:rotate-180 transition-transform">expand_more</span>
+                    </summary>
+                    <div class="space-y-4 pt-4">
+
+                    <form action="<?= base_url('superadmin/tickets/updateTicket') ?>" method="POST" class="space-y-4">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $ticket['id'] ?>">
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Due Date <span class="material-symbols-outlined text-[14px] text-slate-300">event</span></label>
+                            <input type="date" name="due_date" value="<?= $ticket['due_date'] ? date('Y-m-d', strtotime($ticket['due_date'])) : '' ?>" class="fiori-input text-xs">
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Dev Remarks 1 <span class="material-symbols-outlined text-[14px] text-slate-300">terminal</span></label>
+                                <textarea name="dev_remarks_1" class="fiori-input text-xs h-16" placeholder="Initial dev notes..."><?= esc($ticket['dev_remarks_1']) ?></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Support Remarks <span class="material-symbols-outlined text-[14px] text-slate-300">chat_bubble</span></label>
+                                <textarea name="support_remarks" class="fiori-input text-xs h-16" placeholder="TSR notes..."><?= esc($ticket['support_remarks']) ?></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Dev Remarks 2 <span class="material-symbols-outlined text-[14px] text-slate-300">code_blocks</span></label>
+                                <textarea name="dev_remarks_2" class="fiori-input text-xs h-16" placeholder="Final dev notes..."><?= esc($ticket['dev_remarks_2']) ?></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Re-occurrence Remarks <span class="material-symbols-outlined text-[14px] text-slate-300">history</span></label>
+                                <textarea name="reoccurrence_remarks" class="fiori-input text-xs h-16" placeholder="Case history..."><?= esc($ticket['reoccurrence_remarks']) ?></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full fiori-button fiori-button--primary !text-[10px] h-9">Apply Management Changes</button>
+                    </form>
+
+                    <?php if ($ticket['status'] !== 'Closed'): ?>
+                    <form action="<?= base_url('superadmin/tickets/resolveTicket/' . $ticket['id']) ?>" method="POST" class="pt-2 border-t" style="border-color:var(--fiori-border);">
+                        <?= csrf_field() ?>
+                        <div class="flex gap-2">
+                            <button type="submit" name="status" value="Closed" class="flex-1 btn btn-accent !bg-emerald-600 border-emerald-700 hover:!bg-emerald-700 text-center justify-center py-2">
+                                <span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Closed
+                            </button>
+                            <button type="submit" name="status" value="Closed" class="flex-1 btn btn-outline border-slate-300 text-slate-600 hover:bg-slate-100 text-center justify-center py-2">
+                                <span class="material-symbols-outlined text-[18px]">lock</span> Close Ticket
+                            </button>
+                        </div>
+                        <?php if ($ticket['close_requested']): ?>
+                            <p class="text-[9px] text-amber-600 font-bold uppercase tracking-widest mt-2 text-center animate-pulse">
+                                <span class="material-symbols-outlined text-[10px] align-middle">warning</span> TSR has requested closure
+                            </p>
+                        <?php endif; ?>
+                    </form>
+                    <?php endif; ?>
+                    </div>
+                </details>
             </div>
         </div>
     </div>
@@ -517,8 +670,32 @@
                             <span class="text-[9px]" style="color:var(--fiori-text-muted, #89919a);">${data.time || 'Just now'}</span>
                         </div>
                         <div class="msg-text text-sm" style="color:var(--fiori-text-base, #1d2d3e);">
-                            ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n/g, "<br>")}
+                            ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}
                         </div>
+                        ${data.attachments && data.attachments.length > 0 ? `
+                            <div class="mt-3 pt-3 border-t border-gray-100/50">
+                                <div class="flex flex-wrap gap-2">
+                                    ${data.attachments.map(file => `
+                                        <div class="relative group w-20 h-20">
+                                            <img src="${BASE_URL}/uploads/tickets/${file}" 
+                                                 class="w-full h-full object-cover rounded-lg shadow-sm cursor-zoom-in border border-gray-100/50" 
+                                                 onclick="window.open(this.src, '_blank')">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${data.external_links && data.external_links.length > 0 ? `
+                            <div class="mt-2 space-y-1">
+                                ${data.external_links.map(link => `
+                                    <a href="${link}" target="_blank" class="flex items-center gap-2 p-1.5 rounded bg-white/50 border border-gray-100/30 hover:bg-white transition-colors group">
+                                        <span class="material-symbols-outlined text-[14px] text-blue-500">link</span>
+                                        <span class="text-[10px] font-medium text-gray-600 truncate flex-1">${link}</span>
+                                        <span class="material-symbols-outlined text-[12px] text-gray-300">open_in_new</span>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
                 container.appendChild(row);
@@ -532,8 +709,31 @@
                 newSegment.className = "mt-2 pt-2 border-t border-gray-100 flex flex-col gap-1";
                 newSegment.innerHTML = `
                     <div class="msg-text text-sm" style="color:var(--fiori-text-base, #1d2d3e);">
-                        ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n/g, "<br>")}
+                        ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}
                     </div>
+                    ${data.attachments && data.attachments.length > 0 ? `
+                        <div class="mt-2 pt-2 border-t border-gray-100/30">
+                            <div class="flex flex-wrap gap-1">
+                                ${data.attachments.map(file => `
+                                    <div class="relative group w-12 h-12">
+                                        <img src="${BASE_URL}/uploads/tickets/${file}" 
+                                             class="w-full h-full object-cover rounded-md shadow-xs cursor-zoom-in border border-gray-100/30" 
+                                             onclick="window.open(this.src, '_blank')">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${data.external_links && data.external_links.length > 0 ? `
+                        <div class="mt-1 space-y-0.5">
+                            ${data.external_links.map(link => `
+                                <a href="${link}" target="_blank" class="flex items-center gap-1.5 p-1 rounded hover:bg-gray-50 transition-colors group">
+                                    <span class="material-symbols-outlined text-[12px] text-blue-500">link</span>
+                                    <span class="text-[9px] font-medium text-gray-500 truncate flex-1">${link}</span>
+                                </a>
+                            `).join('')}
+                        </div>
+                    ` : ''}
                     <div class="text-[9px] flex justify-end" style="color:var(--fiori-text-muted, #89919a);">${data.time || 'Just now'}</div>
                 `;
                 contentArea.appendChild(newSegment);
@@ -565,6 +765,54 @@
             appendMessageToUI(data);
         });
         
+        // --- NEW: ADMIN REPLY HELPERS ---
+        window.toggleReplyExtras = () => {
+            const extras = document.getElementById('reply-extras');
+            const icon = document.getElementById('extras-toggle-icon');
+            extras.classList.toggle('hidden');
+            icon.innerText = extras.classList.contains('hidden') ? 'add_circle' : 'cancel';
+            icon.style.color = extras.classList.contains('hidden') ? '' : '#ef4444';
+        };
+
+        window.addReplyLinkField = () => {
+            const container = document.getElementById('reply-links-container');
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 group animate-in fade-in slide-in-from-left-2 duration-300';
+            div.innerHTML = `
+                <div class="flex-1 relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-[14px]">link</span>
+                    <input type="url" name="external_links[]" placeholder="https://..." 
+                        class="w-full pl-9 pr-4 py-2 bg-white border border-emerald-100 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+            `;
+            container.appendChild(div);
+        };
+
+        window.previewReplyAttachments = (input) => {
+            const preview = document.getElementById('reply-attachments-preview');
+            preview.innerHTML = '';
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const div = document.createElement('div');
+                        div.className = 'relative group w-12 h-12';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-blue-100 shadow-sm">
+                            <span class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[10px]">check</span>
+                            </span>
+                        `;
+                        preview.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        };
+
         // AJAX Form Submission to prevent reload
         const replyForm = document.getElementById('reply-form');
         if (replyForm) {
@@ -573,8 +821,14 @@
                 
                 const msgInput = document.getElementById('reply-message');
                 const message = msgInput.value.trim();
+                const attachmentInput = document.getElementById('reply-attachments');
+                const linkInputs = document.querySelectorAll('input[name="external_links[]"]');
                 const submitBtn = this.querySelector('button[type="submit"]');
-                if (!message) return;
+
+                const hasFiles = attachmentInput.files && attachmentInput.files.length > 0;
+                const hasLinks = Array.from(linkInputs).some(input => input.value.trim() !== '');
+
+                if (!message && !hasFiles && !hasLinks) return;
                 
                 // Optimistically append
                 const now = new Date();
@@ -601,6 +855,15 @@
                         body: fd,
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
+                    
+                    // Clear extras on success
+                    document.getElementById('reply-attachments-preview').innerHTML = '';
+                    document.getElementById('reply-links-container').innerHTML = '';
+                    attachmentInput.value = '';
+                    if (!document.getElementById('reply-extras').classList.contains('hidden')) {
+                        toggleReplyExtras();
+                    }
+                    
                     if(submitBtn) submitBtn.disabled = false;
                 } catch (err) {
                     console.error("Failed to send:", err);

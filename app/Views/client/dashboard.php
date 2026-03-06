@@ -109,17 +109,29 @@
         <table class="fiori-table">
             <tbody>
                 <?php foreach ($recent_tickets as $ticket): ?>
-                <tr class="cursor-pointer" onclick="window.location.href='<?= base_url('client/tickets/view/' . $ticket['id']) ?>'">
-                    <td>
-                        <p class="font-medium text-sm" style="color:var(--fiori-text-base);"><?= esc(strlen($ticket['subject']) > 60 ? substr($ticket['subject'], 0, 60) . '…' : $ticket['subject']) ?></p>
+                <?php 
+                    $isClosed = ($ticket['status'] === 'Closed');
+                    $hasFeedback = !empty($ticket['feedback_rating']);
+                ?>
+                <tr class="group">
+                    <td onclick="window.location.href='<?= base_url('client/tickets/view/' . $ticket['id']) ?>'" class="cursor-pointer">
+                        <p class="font-medium text-sm group-hover:text-blue-600 transition-colors" style="color:var(--fiori-text-base);"><?= esc(strlen($ticket['subject']) > 60 ? substr($ticket['subject'], 0, 60) . '…' : $ticket['subject']) ?></p>
                         <p class="text-xs mt-0.5 font-medium" style="color:var(--fiori-text-muted);"><?= esc($ticket['ticket_number']) ?> · <?= date('M d, Y', strtotime($ticket['updated_at'])) ?></p>
                     </td>
                     <td class="text-right">
-                        <?php
-                            if ($ticket['status'] === 'Resolved') echo '<span class="fiori-status fiori-status--positive">Resolved</span>';
-                            elseif ($ticket['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
-                            else echo '<span class="fiori-status fiori-status--warning">' . esc($ticket['status']) . '</span>';
-                        ?>
+                        <div class="flex items-center justify-end gap-3">
+                            <?php if ($isClosed && !$hasFeedback): ?>
+                                <button onclick="openFeedbackModal(<?= $ticket['id'] ?>, '<?= esc($ticket['ticket_number']) ?>')" class="fiori-button !bg-emerald-50 !text-emerald-600 border-emerald-100 hover:!bg-emerald-100 !text-[10px] h-7 px-3">
+                                    <span class="material-symbols-outlined text-[14px]">rate_review</span> Rate Service
+                                </button>
+                            <?php endif; ?>
+                            
+                            <?php
+                                if ($ticket['status'] === 'Closed') echo '<span class="fiori-status fiori-status--neutral">Closed</span>';
+                                elseif ($ticket['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
+                                else echo '<span class="fiori-status fiori-status--warning">' . esc($ticket['status']) . '</span>';
+                            ?>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -136,6 +148,55 @@
 </div>
 </div>
 
+<!-- Feedback Modal -->
+<div id="feedback-modal" class="fiori-overlay hidden">
+    <div class="fiori-dialog">
+        <div class="fiori-dialog__header">
+            <h3 class="fiori-dialog__title">Share Your Feedback</h3>
+            <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="fiori-dialog__body">
+            <p class="text-xs text-slate-500 mb-6">How was your experience with Ticket <span id="feedback-ticket-number" class="font-bold text-slate-700"></span>? Your feedback helps us improve our service.</p>
+            
+            <form id="feedback-form" action="" method="POST">
+                <?= csrf_field() ?>
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Your Rating</label>
+                        <div class="flex justify-center gap-4">
+                            <?php for($i=1; $i<=5; $i++): ?>
+                                <label class="cursor-pointer group">
+                                    <input type="radio" name="rating" value="<?= $i ?>" class="hidden peer" required>
+                                    <div class="w-12 h-12 rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-300 transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-600 group-hover:border-emerald-200">
+                                        <span class="material-symbols-outlined text-[24px]"><?= $i <= 2 ? 'sentiment_dissatisfied' : ($i <= 3 ? 'sentiment_neutral' : 'sentiment_satisfied') ?></span>
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 block text-slate-400 peer-checked:text-emerald-600 opacity-60 peer-checked:opacity-100"><?= $i ?></span>
+                                </label>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Additional Comments</label>
+                        <textarea name="comment" class="fiori-input text-xs h-24" placeholder="Any thoughts on how we can do better?"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3">
+                    <button type="button" onclick="closeFeedbackModal()" class="flex-1 fiori-button !bg-slate-100 !text-slate-600 hover:!bg-slate-200">
+                        Maybe Later
+                    </button>
+                    <button type="submit" class="flex-1 fiori-button fiori-button--primary">
+                        Submit Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -149,5 +210,23 @@
             if (nc) document.querySelector('#dashboard-content').innerHTML = nc.innerHTML;
         });
     });
+
+    function openFeedbackModal(ticketId, ticketNumber) {
+        const modal = document.getElementById('feedback-modal');
+        const form = document.getElementById('feedback-form');
+        const ticketNumSpan = document.getElementById('feedback-ticket-number');
+        
+        ticketNumSpan.textContent = ticketNumber;
+        form.action = `<?= base_url('client/submit-feedback') ?>/${ticketId}`;
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeFeedbackModal() {
+        const modal = document.getElementById('feedback-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
 </script>
 <?= $this->endSection() ?>

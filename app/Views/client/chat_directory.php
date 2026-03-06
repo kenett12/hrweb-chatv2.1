@@ -14,6 +14,52 @@
         </div>
     </div>
 
+    <!-- SAP Fiori Filter Bar -->
+    <div class="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <form id="filterForm" method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+            <div class="md:col-span-2">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Search Chats</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input type="text" name="search" value="<?= esc(request()->getGet('search')) ?>" 
+                           placeholder="Ticket #, subject..." 
+                           class="fiori-input !pl-10 !h-10 text-xs auto-apply">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
+                <select name="status" class="fiori-input !h-10 text-xs auto-apply">
+                    <option value="">All Statuses</option>
+                    <?php 
+                    $statuses = ['Open', 'In Progress', 'Closed'];
+                    foreach($statuses as $s): ?>
+                        <option value="<?= $s ?>" <?= request()->getGet('status') == $s ? 'selected' : '' ?>><?= $s ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">From Date</label>
+                <input type="date" name="date_from" value="<?= esc(request()->getGet('date_from')) ?>" class="fiori-input !h-10 text-xs auto-apply">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">To Date</label>
+                <input type="date" name="date_to" value="<?= esc(request()->getGet('date_to')) ?>" class="fiori-input !h-10 text-xs auto-apply">
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" class="fiori-button fiori-button--primary !h-10 flex-1">
+                    Apply
+                </button>
+                <a href="<?= base_url('client/chat') ?>" class="fiori-button !bg-slate-50 !text-slate-500 !border-slate-200 !h-10 px-3 flex items-center justify-center" title="Clear Filters">
+                    <span class="material-symbols-outlined">refresh</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
     <?php if (empty($chats)): ?>
         <div class="fiori-card text-center py-16">
             <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4" style="background:var(--fiori-surface);">
@@ -35,9 +81,8 @@
                                 <?= $chat['ticket_number'] ?>
                             </span>
                             <?php
-                                if ($chat['status'] === 'Resolved') echo '<span class="fiori-status fiori-status--positive">Resolved</span>';
+                                if ($chat['status'] === 'Closed') echo '<span class="fiori-status fiori-status--neutral">Closed</span>';
                                 elseif ($chat['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
-                                elseif ($chat['status'] === 'Closed') echo '<span class="fiori-status" style="background:#e0e0e0; color:#606060;">Closed</span>';
                                 else echo '<span class="fiori-status fiori-status--warning">' . esc($chat['status']) . '</span>';
                             ?>
                         </div>
@@ -77,4 +122,27 @@
         </div>
     <?php endif; ?>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- AUTO-APPLY FILTERS ---
+        let debounceTimer;
+        document.querySelectorAll('.auto-apply').forEach(input => {
+            const events = input.tagName === 'SELECT' || input.type === 'date' ? ['change'] : ['keyup'];
+            
+            events.forEach(action => {
+                input.addEventListener(action, () => {
+                    clearTimeout(debounceTimer);
+                    const delay = (input.tagName === 'INPUT' && input.type === 'text') ? 500 : 0;
+                    
+                    debounceTimer = setTimeout(() => {
+                        document.getElementById('filterForm').submit();
+                    }, delay);
+                });
+            });
+        });
+    });
+</script>
 <?= $this->endSection() ?>

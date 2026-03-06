@@ -31,20 +31,62 @@ class TicketController extends BaseController
 
         $this->viewData['title'] = 'Global Ticket Directory';
         
-        $clientId = $this->request->getGet('client_id');
+        // Filtering parameters
+        $filters = [
+            'search'          => $this->request->getGet('search'),
+            'status'          => $this->request->getGet('status'),
+            'category'        => $this->request->getGet('category'),
+            'date_from'       => $this->request->getGet('date_from'),
+            'date_to'         => $this->request->getGet('date_to'),
+            'client_id'       => $this->request->getGet('client_id'),
+            'close_requested' => $this->request->getGet('tab') === 'closing_requests' ? 1 : $this->request->getGet('close_requested')
+        ];
+        
+        if ($filters['status'] === 'Resolved') {
+            $filters['status'] = 'Closed';
+        }
 
-        // Use the existing method but requesting ALL common status types
-        $tickets = $this->ticketModel->getTicketsInQueue(['Open', 'In Progress', 'Resolved', 'Closed']);
+        // Fetch filtered tickets
+        $tickets = $this->ticketModel->getFilteredTickets($filters);
+
+        // Fetch all pending closure requests for the floating overlay (ignore current table filters)
+        $this->viewData['pending_closures'] = $this->ticketModel->where('close_requested', 1)
+                                                              ->where('status !=', 'Closed')
+                                                              ->orderBy('created_at', 'DESC')
+                                                              ->findAll();
+
+        if ($this->request->getGet('tab') === 'closing_requests') {
+            $this->viewData['title'] = 'Tickets Awaiting Closure';
+        }
         
         // Filter by client if client_id is provided in query string (for View Logs feature)
-        if ($clientId) {
-            $tickets = array_filter($tickets, function($t) use ($clientId) {
-                return $t['client_id'] == $clientId;
+        if ($filters['client_id']) {
+            $tickets = array_filter($tickets, function($t) use ($filters) {
+                return $t['client_id'] == $filters['client_id'];
             });
             $this->viewData['title'] = 'Ticket Logs (Filtered)';
         }
 
         $this->viewData['tickets'] = $tickets;
+
+        // Fetch Categories for the Manager Tab
+        $db = \Config\Database::connect();
+        $categories = $db->table('ticket_categories')
+                         ->where('parent_id', null)
+                         ->orWhere('parent_id', 0)
+                         ->orderBy('name', 'ASC')
+                         ->get()
+                         ->getResultArray();
+
+        foreach ($categories as &$cat) {
+            $cat['subcategories'] = $db->table('ticket_categories')
+                                       ->where('parent_id', $cat['id'])
+                                       ->orderBy('name', 'ASC')
+                                       ->get()
+                                       ->getResultArray();
+        }
+
+        $this->viewData['categories'] = $categories;
 
         return view('admin/tickets/index', $this->viewData);
     }
@@ -83,13 +125,37 @@ class TicketController extends BaseController
         $message = $this->request->getPost('message');
         $adminId = session()->get('id') ?? session()->get('user_id');
 
-        if (!empty(trim($message))) {
+        // --- HANDLE MULTIPLE ATTACHMENTS ---
+        $uploadedFiles = [];
+        $files = $this->request->getFiles();
+        if (isset($files['attachments'])) {
+            foreach ($files['attachments'] as $file) {
+                if ($file->isValid() && !$file->hasMoved()) {
+                    $newName = $file->getRandomName();
+                    $file->move(WRITABLEPATH . 'uploads/tickets', $newName);
+                    $uploadedFiles[] = $newName;
+                }
+            }
+        }
+
+        // --- HANDLE EXTERNAL LINKS ---
+        $links = $this->request->getPost('external_links');
+        $validLinks = [];
+        if (is_array($links)) {
+            foreach ($links as $link) {
+                if (!empty(trim($link))) $validLinks[] = trim($link);
+            }
+        }
+
+        if (!empty(trim($message)) || !empty($uploadedFiles) || !empty($validLinks)) {
             $this->ticketModel->addReply([
-                'ticket_id'  => $id,
-                'user_id'    => $adminId,
-                'message'    => esc($message),
-                'is_bot'     => 0,
-                'created_at' => date('Y-m-d H:i:s')
+                'ticket_id'      => $id,
+                'user_id'        => $adminId,
+                'message'        => esc($message),
+                'attachments'    => !empty($uploadedFiles) ? json_encode($uploadedFiles) : null,
+                'external_links' => !empty($validLinks) ? json_encode($validLinks) : null,
+                'is_bot'         => 0,
+                'created_at'     => date('Y-m-d H:i:s')
             ]);
 
             $this->ticketModel->update($id, [
@@ -136,5 +202,128 @@ class TicketController extends BaseController
             return $this->response->setJSON(['status' => 'success']);
         }
         return redirect()->back()->with('success', 'Reply posted.');
+    }
+
+    /**
+     * storeCategory
+     * Handles creating and updating ticket categories/subcategories.
+     */
+    public function storeCategory()
+    {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        $id       = $this->request->getPost('id');
+        $parentId = $this->request->getPost('parent_id');
+        $name     = $this->request->getPost('name');
+        $desc     = $this->request->getPost('description');
+
+        $db = \Config\Database::connect();
+        $data = [
+            'name'        => esc($name),
+            'parent_id'   => !empty($parentId) ? $parentId : null,
+            'description' => esc($desc),
+            'updated_at'  => date('Y-m-d H:i:s')
+        ];
+
+        if ($id) {
+            $db->table('ticket_categories')->where('id', $id)->update($data);
+        } else {
+            $data['created_at'] = date('Y-m-d H:i:s');
+            $db->table('ticket_categories')->insert($data);
+        }
+
+        return redirect()->to(base_url('superadmin/tickets?tab=manager'))->with('success', 'Category saved.');
+    }
+
+    /**
+     * updateTicket
+     * Quick edit for remarks and due dates from the directory view.
+     */
+    public function updateTicket()
+    {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
+            return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
+        }
+
+        $id = $this->request->getPost('id');
+        $data = [
+            'due_date'             => $this->request->getPost('due_date') ?: null,
+            'dev_remarks_1'        => esc($this->request->getPost('dev_remarks_1')),
+            'support_remarks'      => esc($this->request->getPost('support_remarks')),
+            'dev_remarks_2'        => esc($this->request->getPost('dev_remarks_2')),
+            'reoccurrence_remarks' => esc($this->request->getPost('reoccurrence_remarks')),
+            'updated_at'           => date('Y-m-d H:i:s')
+        ];
+
+        $this->ticketModel->update($id, $data);
+
+        return redirect()->back()->with('success', 'Ticket updated successfully.');
+    }
+
+    /**
+     * resolveTicket
+     * Finalizes a ticket, sets fixed_at timestamp, and notifies client for feedback.
+     */
+    public function resolveTicket($id)
+    {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
+            return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
+        }
+
+        $status = $this->request->getPost('status') ?: 'Closed';
+        
+        $data = [
+            'status'          => $status,
+            'fixed_at'        => date('Y-m-d H:i:s'),
+            'updated_at'      => date('Y-m-d H:i:s'),
+            'close_requested' => 0
+        ];
+
+        $this->ticketModel->update($id, $data);
+
+        // Notify Client for feedback if closed
+        if ($status === 'Closed') {
+            $notifModel = new \App\Models\NotificationModel();
+            $ticketInfo = $this->ticketModel->find($id);
+            $notifModel->sendNotification(
+                $ticketInfo['client_id'], 
+                "Ticket Closed", 
+                "Your ticket (#{$id}) has been marked as Closed. Please let us know your feedback.", 
+                base_url("client/dashboard") // Client will see feedback modal here
+            );
+        }
+
+        // Socket Emit
+        if (function_exists('emit_socket_event')) {
+            emit_socket_event('global_ticket_change', [
+                'type' => 'ticket_resolved',
+                'ticket_id' => $id,
+                'status' => $status
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Ticket marked as {$status}.");
+    }
+
+    /**
+     * deleteCategory
+     * Removes a category or subcategory.
+     */
+    public function deleteCategory($id)
+    {
+        if (!in_array($this->session->get('role'), ['admin', 'superadmin'])) {
+            return redirect()->to(base_url('login'))->with('msg', 'Unauthorized access.');
+        }
+
+        $db = \Config\Database::connect();
+        
+        // If it's a parent, we might want to prevent deletion if it has children, 
+        // or just nullify them. Here we'll just delete the children too for simplicity in management.
+        $db->table('ticket_categories')->where('parent_id', $id)->delete();
+        $db->table('ticket_categories')->where('id', $id)->delete();
+
+        return redirect()->to(base_url('superadmin/tickets?tab=manager'))->with('success', 'Category removed.');
     }
 }

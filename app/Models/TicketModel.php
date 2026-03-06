@@ -17,8 +17,11 @@ class TicketModel extends Model
     
     protected $allowedFields    = [
         'ticket_number', 'client_id', 'assigned_to', 'superadmin_id',
-        'subject', 'description', 'attachment', 
-        'category', 'priority', 'status', 'updated_at'
+        'subject', 'description', 'attachment', 'attachments', 'external_links',
+        'category', 'subcategory', 'priority', 'status', 'updated_at',
+        'due_date', 'fixed_at', 'dev_remarks_1', 'support_remarks',
+        'dev_remarks_2', 'reoccurrence_remarks', 'close_requested',
+        'feedback_rating', 'feedback_comment'
     ];
 
     protected $useTimestamps = true;
@@ -50,6 +53,52 @@ class TicketModel extends Model
     }
 
     /**
+     * getFilteredTickets
+     * Advanced filtering for the admin directory.
+     */
+    public function getFilteredTickets($filters = []): array
+    {
+        $builder = $this->select('tickets.*, COALESCE(c.company_name, u.email) as client_name, u.full_name as creator_name, COALESCE(t.full_name, s.email) as staff_name')
+                    ->join('users u', 'u.id = tickets.client_id', 'left')
+                    ->join('clients c', 'c.id = u.client_id', 'left')
+                    ->join('users s', 's.id = tickets.assigned_to', 'left')
+                    ->join('tsrs t', 't.user_id = s.id', 'left');
+
+        if (!empty($filters['search'])) {
+            $s = $filters['search'];
+            $builder->groupStart()
+                    ->like('tickets.ticket_number', $s)
+                    ->orLike('tickets.subject', $s)
+                    ->orLike('tickets.description', $s)
+                    ->orLike('u.email', $s)
+                    ->orLike('u.full_name', $s)
+                    ->groupEnd();
+        }
+
+        if (!empty($filters['status'])) {
+            $builder->where('tickets.status', $filters['status']);
+        }
+
+        if (!empty($filters['category'])) {
+            $builder->where('tickets.category', $filters['category']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $builder->where('tickets.created_at >=', $filters['date_from'] . ' 00:00:00');
+        }
+
+        if (!empty($filters['date_to'])) {
+            $builder->where('tickets.created_at <=', $filters['date_to'] . ' 23:59:59');
+        }
+
+        if (!empty($filters['close_requested'])) {
+            $builder->where('tickets.close_requested', 1);
+        }
+
+        return $builder->orderBy('tickets.created_at', 'DESC')->findAll();
+    }
+
+    /**
      * getTsrStats
      * Fetches dashboard metric counts for the technical support dashboard.
      */
@@ -63,7 +112,7 @@ class TicketModel extends Model
 
         $openTickets = $this->where('status', 'Open')->countAllResults();
 
-        $resolvedToday = $this->where('status', 'Resolved')
+        $closedToday = $this->where('status', 'Closed')
                               ->where('assigned_to', $tsrId)
                               ->like('updated_at', $today, 'after')
                               ->countAllResults();
@@ -71,7 +120,7 @@ class TicketModel extends Model
         return [
             'active_chats'   => $activeChats,
             'open_tickets'   => $openTickets,
-            'resolved_today' => $resolvedToday
+            'closed_today'   => $closedToday
         ];
     }
 

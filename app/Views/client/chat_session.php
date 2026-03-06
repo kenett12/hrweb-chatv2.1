@@ -160,6 +160,38 @@
                                 <?= nl2br(esc($msg['message'])) ?>
                             <?php endif; ?>
                         </div>
+
+                        <?php 
+                            $attachments = !empty($msg['attachments']) ? json_decode($msg['attachments'], true) : [];
+                            $links = !empty($msg['external_links']) ? json_decode($msg['external_links'], true) : [];
+                        ?>
+
+                        <?php if (!empty($attachments)): ?>
+                            <div class="mt-3 pt-3 border-t border-gray-100/50">
+                                <div class="flex flex-wrap gap-2">
+                                    <?php foreach ($attachments as $file): ?>
+                                        <div class="relative group w-20 h-20">
+                                            <img src="<?= base_url('uploads/tickets/' . $file) ?>" 
+                                                 class="w-full h-full object-cover rounded-lg shadow-sm cursor-zoom-in border border-gray-100/50" 
+                                                 onclick="handleImageClick({target: this})">
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($links)): ?>
+                            <div class="mt-2 space-y-1">
+                                <?php foreach ($links as $link): ?>
+                                    <a href="<?= esc($link) ?>" target="_blank" class="flex items-center gap-2 p-1.5 rounded bg-white/50 border border-gray-100/30 hover:bg-white transition-colors group">
+                                        <span class="material-symbols-outlined text-[14px] text-blue-500">link</span>
+                                        <span class="text-[10px] font-medium text-gray-600 truncate flex-1"><?= esc($link) ?></span>
+                                        <span class="material-symbols-outlined text-[12px] text-gray-300">open_in_new</span>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+
                         <?php if(!$isNewGroup): ?>
                             <div class="text-[9px] mt-1 <?= $isRight ? 'text-left' : 'text-right' ?>" style="color:var(--fiori-text-muted, #89919a);"><?= date('h:i A', strtotime($msg['created_at'])) ?></div>
                         <?php endif; ?>
@@ -186,13 +218,38 @@
             </div>
         </div>
 
+        <div id="reply-extras" class="hidden px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+            <div class="flex flex-col gap-3">
+                <!-- Attachments Preview -->
+                <div id="reply-attachments-preview" class="flex flex-wrap gap-2"></div>
+                
+                <!-- External Links List -->
+                <div id="reply-links-container" class="space-y-2"></div>
+                
+                <div class="flex gap-2">
+                    <button type="button" onclick="document.getElementById('reply-attachments').click()" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[14px]">add_photo_alternate</span> Add Photos
+                    </button>
+                    <button type="button" onclick="addReplyLinkField()" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[14px]">link</span> Add Link
+                    </button>
+                </div>
+                <input type="file" id="reply-attachments" name="attachments[]" multiple class="hidden" accept="image/*" onchange="previewReplyAttachments(this)">
+            </div>
+        </div>
+
         <div class="shrink-0 px-5 py-4 bg-white border-t border-gray-50">
-            <form id="chat-form" class="flex items-center gap-2" style="background:#f4f6f9; border:1.5px solid #e8edf3; border-radius:1.25rem; padding:6px 6px 6px 12px;">
-                <textarea id="user-input" class="flex-1 bg-transparent text-sm resize-none scrollbar-hide focus:outline-none border-0" 
-                    style="min-height:36px; max-height:120px; padding:6px 4px; line-height:1.6;" 
-                    placeholder="Type a message…" rows="1"></textarea>
-                <button type="submit" class="chat-action-btn chat-btn-send shrink-0"><i class="fas fa-paper-plane text-xs"></i></button>
-            </form>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleReplyExtras()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Add attachments or links">
+                    <span class="material-symbols-outlined" id="extras-toggle-icon">add_circle</span>
+                </button>
+                <form id="chat-form" class="flex-1 flex items-center gap-2" style="background:#f4f6f9; border:1.5px solid #e8edf3; border-radius:1.25rem; padding:6px 6px 6px 12px;">
+                    <textarea id="user-input" class="flex-1 bg-transparent text-sm resize-none scrollbar-hide focus:outline-none border-0" 
+                        style="min-height:36px; max-height:120px; padding:6px 4px; line-height:1.6;" 
+                        placeholder="Type a message…" rows="1"></textarea>
+                    <button type="submit" class="chat-action-btn chat-btn-send shrink-0"><i class="fas fa-paper-plane text-xs"></i></button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -355,7 +412,7 @@
                         window.showToast("New Chat Activity", title + " just sent you a message.", null);
                     }
 
-                    window._appendMessage('tsr', data.message, null, data.sender_name, data.time, data.sender_role || 'tsr');
+                    window._appendMessage('tsr', data.message, null, data.sender_name, data.time, data.sender_role || 'tsr', data.attachments || [], data.external_links || []);
                 }
             });
 
@@ -401,6 +458,53 @@
                 chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
             };
 
+            window.toggleReplyExtras = () => {
+                const extras = document.getElementById('reply-extras');
+                const icon = document.getElementById('extras-toggle-icon');
+                extras.classList.toggle('hidden');
+                icon.innerText = extras.classList.contains('hidden') ? 'add_circle' : 'cancel';
+                icon.style.color = extras.classList.contains('hidden') ? '' : '#ef4444';
+            };
+
+            window.addReplyLinkField = () => {
+                const container = document.getElementById('reply-links-container');
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2 group animate-in fade-in slide-in-from-left-2 duration-300';
+                div.innerHTML = `
+                    <div class="flex-1 relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-[14px]">link</span>
+                        <input type="url" name="external_links[]" placeholder="https://..." 
+                            class="w-full pl-9 pr-4 py-2 bg-white border border-emerald-100 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                `;
+                container.appendChild(div);
+            };
+
+            window.previewReplyAttachments = (input) => {
+                const preview = document.getElementById('reply-attachments-preview');
+                preview.innerHTML = '';
+                if (input.files) {
+                    Array.from(input.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const div = document.createElement('div');
+                            div.className = 'relative group w-12 h-12';
+                            div.innerHTML = `
+                                <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-blue-100 shadow-sm">
+                                <span class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[10px]">check</span>
+                                </span>
+                            `;
+                            preview.appendChild(div);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            };
+
             // ── NEW: Feedback Submission Logic ──
             window.sendBotFeedback = async (articleId, isHelpful, btnElement) => {
                 // Change UI immediately to show feedback was received
@@ -420,14 +524,13 @@
                 } catch(e) { console.error("Feedback failed", e); }
             };
 
-            // ── UPGRADED: _appendMessage now accepts articleId and time ──
-            window._appendMessage = (sender, text, articleId = null, senderName = null, time = null, role = 'user') => {
+            // ── UPGRADED: _appendMessage now accepts articleId, time, attachments, and links ──
+            window._appendMessage = (sender, text, articleId = null, senderName = null, time = null, role = 'user', attachments = [], links = []) => {
                 const isMe = sender === 'user';
                 const isBot = sender === 'bot';
                 const isSuper = role === 'superadmin' || role === 'admin';
                 const isStaff = ['admin', 'superadmin', 'tsr', 'tsr_level_1', 'tl', 'supervisor', 'manager', 'dev', 'tsr_level_2', 'it'].includes(role);
                 
-                // Standard Chat POV: My messages on RIGHT, others on LEFT
                 const isRight = isMe;
                 
                 const wrapper = document.createElement('div');
@@ -439,6 +542,40 @@
                     : (text || "");
 
                 const displayTime = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                // --- ATTACHMENTS GALLERY ---
+                let attachmentsHTML = '';
+                if (attachments && attachments.length > 0) {
+                    attachmentsHTML = `
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <div class="flex flex-wrap gap-2">
+                                ${attachments.map(file => `
+                                    <div class="relative group w-20 h-20">
+                                        <img src="${BASE_URL}/uploads/tickets/${file}" 
+                                             class="w-full h-full object-cover rounded-lg shadow-sm cursor-zoom-in border border-gray-100" 
+                                             onclick="handleImageClick({target: this})">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // --- EXTERNAL LINKS ---
+                let linksHTML = '';
+                if (links && links.length > 0) {
+                    linksHTML = `
+                        <div class="mt-2 space-y-1">
+                            ${links.map(link => `
+                                <a href="${link}" target="_blank" class="flex items-center gap-2 p-1.5 rounded bg-white/50 border border-gray-100 hover:bg-white transition-colors group">
+                                    <span class="material-symbols-outlined text-[14px] text-blue-500">link</span>
+                                    <span class="text-[10px] font-medium text-gray-600 truncate flex-1">${link}</span>
+                                    <span class="material-symbols-outlined text-[12px] text-gray-300">open_in_new</span>
+                                </a>
+                            `).join('')}
+                        </div>
+                    `;
+                }
 
                 let feedbackHTML = '';
                 if (isBot && articleId) {
@@ -452,15 +589,9 @@
                 }
 
                 let iconName = isBot ? 'robot_2' : (isSuper ? 'shield_person' : (isStaff ? 'support_agent' : 'person'));
-                const iconHtml = `<span class="material-symbols-outlined text-[20px]">${iconName}</span>`;
-                
-                // Determine Avatar Colors based strictly on role, not alignment
                 let avatarClass = 'bg-white border border-[#ecfdf5] text-[#10b981]'; // Client
-                if (isSuper) {
-                    avatarClass = 'bg-[#e0e7ff] text-[#4f46e5] border border-[#c7d2fe]';
-                } else if (isStaff || isBot) {
-                    avatarClass = 'bg-[#fef3c7] text-[#d97706] border border-[#fde68a]';
-                }
+                if (isSuper) avatarClass = 'bg-[#e0e7ff] text-[#4f46e5] border border-[#c7d2fe]';
+                else if (isStaff || isBot) avatarClass = 'bg-[#fef3c7] text-[#d97706] border border-[#fde68a]';
 
                 const displayName = senderName ? senderName : (isBot ? 'HRWeb Bot' : (isMe ? 'You' : 'Support Team'));
                 const senderColor = isSuper ? 'text-indigo-600' : (isStaff ? 'text-amber-600' : 'text-emerald-600');
@@ -473,7 +604,7 @@
 
                 wrapper.innerHTML = `
                     <div class="msg-avatar shadow-sm ${avatarClass}">
-                        ${iconHtml}
+                        <span class="material-symbols-outlined text-[20px]">${iconName}</span>
                     </div>
                     <div class="msg-content ${msgClass} shadow-sm">
                         <div class="flex items-center justify-between mb-2 ${isRight ? 'flex-row-reverse' : ''}">
@@ -483,6 +614,8 @@
                             <span class="text-[9px]" style="color:var(--fiori-text-muted, #89919a);">${displayTime}</span>
                         </div>
                         <div class="msg-text text-sm" ${!isMe ? 'onclick="handleImageClick(event)"' : ''} style="color:var(--fiori-text-base, #1d2d3e);">${safeText}</div>
+                        ${attachmentsHTML}
+                        ${linksHTML}
                         ${feedbackHTML}
                     </div>`;
 
@@ -493,15 +626,20 @@
             chatForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const text = ui.value.trim();
-                if (!text) return;
+                const attachmentInput = document.getElementById('reply-attachments');
+                const hasFiles = attachmentInput.files && attachmentInput.files.length > 0;
+                const linkInputs = document.querySelectorAll('input[name="external_links[]"]');
+                const hasLinks = Array.from(linkInputs).some(input => input.value.trim() !== '');
+
+                if (!text && !hasFiles && !hasLinks) return;
                 
                 const isQuickQuery = chatForm.dataset.isQuickQuery === 'true';
                 chatForm.dataset.isQuickQuery = 'false';
 
-                window._appendMessage('user', text);
+                // Local Preview of our message (simplified for files)
+                window._appendMessage('user', text, null, null, null, 'user', [], []); 
                 ui.value = '';
                 
-                // Show Bot Typing Indicator specifically when sending to the Bot engine
                 const typingNameLabel = document.getElementById('typing-name');
                 const typingIcon = document.getElementById('typing-icon');
                 const typingBubble = document.getElementById('typing-bubble');
@@ -516,6 +654,20 @@
                 fd.append('message', text);
                 fd.append('is_quick_query', isQuickQuery ? '1' : '0');
                 fd.append(CSRF_NAME, CSRF_TOKEN);
+
+                // Add Attachments
+                if (hasFiles) {
+                    Array.from(attachmentInput.files).forEach(file => {
+                        fd.append('attachments[]', file);
+                    });
+                }
+
+                // Add Links
+                linkInputs.forEach(input => {
+                    if (input.value.trim() !== '') {
+                        fd.append('external_links[]', input.value.trim());
+                    }
+                });
                 
                 try {
                     const res = await fetch(`${BASE_URL}/client/chat/handleBotQuery/${activeTicketId}`, {
@@ -526,8 +678,16 @@
                     const data = await res.json();
                     
                     if (!data.bypassed_bot) {
-                        // Pass data.article_id and time to append the feedback buttons
                         window._appendMessage('bot', data.reply, data.article_id, null, data.time);
+                    } else {
+                        // If it was a human message, we might want to refresh slightly or just wait for socket,
+                        // but since we optimistically appended, we just clear the extra inputs
+                        document.getElementById('reply-attachments-preview').innerHTML = '';
+                        document.getElementById('reply-links-container').innerHTML = '';
+                        attachmentInput.value = '';
+                        if (!document.getElementById('reply-extras').classList.contains('hidden')) {
+                            toggleReplyExtras();
+                        }
                     }
                 } catch (err) { 
                     console.error("Chat Error:", err); 

@@ -21,12 +21,23 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Category</label>
-                <select name="category" class="fiori-input">
+                <select name="category" id="category" class="fiori-input" required>
+                    <option value="" disabled selected>Select Category</option>
                     <?php foreach ($categories as $cat): ?>
-                        <option value="<?= esc($cat['name']) ?>"><?= esc($cat['name']) ?></option>
+                        <option value="<?= esc($cat['name']) ?>" data-id="<?= $cat['id'] ?>"><?= esc($cat['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Subcategory (Optional)</label>
+                <select name="subcategory" id="subcategory" class="fiori-input">
+                    <option value="" selected>Select Subcategory</option>
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Priority</label>
                 <select name="priority" class="fiori-input">
@@ -39,10 +50,10 @@
         </div>
 
         <div class="space-y-2 mt-2">
-            <label class="block text-xs font-semibold uppercase tracking-wider" style="color:var(--fiori-text-secondary);">Attach Photo (Optional)</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider" style="color:var(--fiori-text-secondary);">Attach Photos (Optional)</label>
             <div id="dropzone"
                 class="relative group border-2 border-dashed border-gray-200 hover:border-[#1e72af] hover:bg-blue-50/30 rounded-2xl p-8 transition-all duration-300 text-center cursor-pointer">
-                <input type="file" name="attachment" id="attachment" accept="image/*"
+                <input type="file" name="attachments[]" id="attachments" accept="image/*" multiple
                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                 <div id="dropzone-prompt" class="space-y-3">
                     <div
@@ -50,22 +61,27 @@
                         <span class="material-symbols-outlined text-[28px]">add_a_photo</span>
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-gray-700">Click to upload or drag and drop</p>
-                        <p class="text-[11px] text-gray-400">PNG, JPG or GIF (max. 2MB)</p>
+                        <p class="text-sm font-bold text-gray-700">Click to upload or drag and drop multiple photos</p>
+                        <p class="text-[11px] text-gray-400">PNG, JPG or GIF (max. 2MB per file)</p>
                     </div>
                 </div>
-                <div id="preview-container"
-                    class="hidden mt-2 pt-4 border-t border-gray-100 items-center justify-center gap-4">
-                    <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-                        <img id="image-preview" src="#" class="w-full h-full object-cover">
-                    </div>
-                    <div class="text-left">
-                        <p id="file-name" class="text-xs font-bold text-gray-700 truncate max-w-[150px]"></p>
-                        <button type="button" id="remove-file"
-                            class="text-[10px] text-red-500 font-bold uppercase hover:underline">Remove file</button>
-                    </div>
+                <div id="preview-list" class="hidden mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <!-- Previews will be injected here -->
                 </div>
             </div>
+        </div>
+
+        <div class="mt-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--fiori-text-secondary);">External Links (Optional)</label>
+            <div id="links-container" class="space-y-2">
+                <div class="flex gap-2">
+                    <input type="url" name="external_links[]" class="fiori-input" placeholder="https://example.com/shared-folder">
+                    <button type="button" id="add-link" class="btn btn-outline" style="width:40px; padding:0; flex-shrink:0;">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                    </button>
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1">Add links to Google Drive, Dropbox, or other shared resources.</p>
         </div>
 
         <div class="mt-2">
@@ -81,30 +97,87 @@
 </div>
 
 <script>
-    const attachment = document.getElementById('attachment');
-    const previewContainer = document.getElementById('preview-container');
-    const previewImage = document.getElementById('image-preview');
-    const fileNameText = document.getElementById('file-name');
-    const prompt = document.getElementById('dropzone-prompt');
+    // --- DYNAMIC SUBCATEGORY FILTERING ---
+    const categorySelect = document.getElementById('category');
+    const subcategorySelect = document.getElementById('subcategory');
+    const subcategories = <?= json_encode($subcategories) ?>;
 
-    attachment.addEventListener('change', function (e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                previewImage.src = event.target.result;
-                fileNameText.textContent = file.name;
-                previewContainer.classList.replace('hidden', 'flex');
-                prompt.classList.add('opacity-30');
+    categorySelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const parentId = selectedOption.getAttribute('data-id');
+        
+        // Clear current subcategories
+        subcategorySelect.innerHTML = '<option value="" selected>Select Subcategory</option>';
+        
+        if (parentId) {
+            const filtered = subcategories.filter(sub => sub.parent_id == parentId);
+            
+            if (filtered.length > 0) {
+                filtered.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.name;
+                    option.textContent = sub.name;
+                    subcategorySelect.appendChild(option);
+                });
+                subcategorySelect.disabled = false;
+            } else {
+                subcategorySelect.disabled = true;
             }
-            reader.readAsDataURL(file);
+        } else {
+            subcategorySelect.disabled = true;
         }
     });
 
-    document.getElementById('remove-file').addEventListener('click', function () {
-        attachment.value = '';
-        previewContainer.classList.replace('flex', 'hidden');
-        prompt.classList.remove('opacity-30');
+    // --- MULTIPLE FILE PREVIEWS ---
+    const attachmentsInput = document.getElementById('attachments');
+    const previewList = document.getElementById('preview-list');
+    const prompt = document.getElementById('dropzone-prompt');
+
+    attachmentsInput.addEventListener('change', function (e) {
+        const files = e.target.files;
+        previewList.innerHTML = ''; // Clear existing previews
+        
+        if (files.length > 0) {
+            previewList.classList.replace('hidden', 'grid');
+            prompt.classList.add('opacity-30');
+
+            Array.from(files).forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        const div = document.createElement('div');
+                        div.className = 'relative group/item';
+                        div.innerHTML = `
+                            <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white">
+                                <img src="${event.target.result}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                                <p class="text-[9px] text-white font-bold truncate px-2">${file.name}</p>
+                            </div>
+                        `;
+                        previewList.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        } else {
+            previewList.classList.replace('grid', 'hidden');
+            prompt.classList.remove('opacity-30');
+        }
+    });
+
+    // Dynamic Link Addition
+    document.getElementById('add-link').addEventListener('click', function() {
+        const container = document.getElementById('links-container');
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 mt-2';
+        div.innerHTML = `
+            <input type="url" name="external_links[]" class="fiori-input" placeholder="https://example.com/another-link">
+            <button type="button" class="btn btn-outline text-red-500 hover:bg-red-50" style="width:40px; padding:0; flex-shrink:0;" onclick="this.parentElement.remove()">
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+            </button>
+        `;
+        container.appendChild(div);
     });
 </script>
 <?= $this->endSection() ?>
