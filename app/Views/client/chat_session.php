@@ -154,9 +154,17 @@
                         <?php endif; ?>
                         
                         <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="color:var(--fiori-text-base, #1d2d3e);">
-                            <?php if($isBot): ?>
-                                <?= nl2br(html_entity_decode($msg['message'])) ?>
-                            <?php else: ?>
+                            <?php if($isBot): 
+                                $parsedMsg = html_entity_decode($msg['message']);
+                                $parsedMsg = preg_replace_callback('/\[(.*?)\]\((.*?)\)/', function($m) {
+                                    $url = trim($m[2]);
+                                    if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
+                                        $url = "https://" . ltrim($url, '/');
+                                    }
+                                    return '<a href="' . $url . '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700">' . $m[1] . '</a>';
+                                }, $parsedMsg);
+                                echo nl2br($parsedMsg);
+                            else: ?>
                                 <?= nl2br(esc($msg['message'])) ?>
                             <?php endif; ?>
                         </div>
@@ -218,6 +226,7 @@
             </div>
         </div>
 
+        <?php if (isset($active_ticket) && strtolower($active_ticket['status']) !== 'closed'): ?>
         <div id="reply-extras" class="hidden px-5 py-3 border-t border-gray-50 bg-gray-50/50">
             <div class="flex flex-col gap-3">
                 <!-- Attachments Preview -->
@@ -251,6 +260,15 @@
                 </form>
             </div>
         </div>
+        <?php else: ?>
+        <div class="shrink-0 px-5 py-8 bg-gray-50 border-t border-gray-100 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mb-3 shadow-sm border border-emerald-200">
+                <span class="material-symbols-outlined text-[24px]">task_alt</span>
+            </div>
+            <h3 class="text-sm font-bold text-gray-800 tracking-tight">Ticket Closed</h3>
+            <p class="text-[11px] text-gray-500 font-medium max-w-[240px] mx-auto mt-1">This ticket has been resolved. Thank you for choosing HRWeb Support!</p>
+        </div>
+        <?php endif; ?>
     </div>
 
     <aside class="w-80 flex flex-col fiori-card shrink-0 overflow-hidden" style="padding:0;">
@@ -483,20 +501,42 @@
                 container.appendChild(div);
             };
 
+            let replyFilesDT = new DataTransfer();
+
             window.previewReplyAttachments = (input) => {
+                if (input.files && input.files.length > 0) {
+                    Array.from(input.files).forEach(file => {
+                        replyFilesDT.items.add(file);
+                    });
+                    input.files = replyFilesDT.files;
+                }
+                renderReplyAttachments();
+            };
+
+            window.removeReplyAttachment = (indexToDel) => {
+                const newDT = new DataTransfer();
+                Array.from(replyFilesDT.files).forEach((file, index) => {
+                    if (index !== indexToDel) newDT.items.add(file);
+                });
+                replyFilesDT = newDT;
+                document.getElementById('reply-attachments').files = replyFilesDT.files;
+                renderReplyAttachments();
+            };
+
+            window.renderReplyAttachments = () => {
                 const preview = document.getElementById('reply-attachments-preview');
                 preview.innerHTML = '';
-                if (input.files) {
-                    Array.from(input.files).forEach(file => {
+                if (replyFilesDT.files.length > 0) {
+                    Array.from(replyFilesDT.files).forEach((file, index) => {
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             const div = document.createElement('div');
                             div.className = 'relative group w-12 h-12';
                             div.innerHTML = `
                                 <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-blue-100 shadow-sm">
-                                <span class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-[10px]">check</span>
-                                </span>
+                                <button type="button" onclick="removeReplyAttachment(${index})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer z-10">
+                                    <span class="material-symbols-outlined text-[10px]">close</span>
+                                </button>
                             `;
                             preview.appendChild(div);
                         };
@@ -537,9 +577,20 @@
                 wrapper.className = `msg-row ${isRight ? 'msg-row--right' : ''} mt-6`;
                 wrapper.style.maxWidth = '85%';
                 
+                let parsedText = text || "";
+                if (isBot) {
+                    parsedText = parsedText.replace(/\[(.*?)\]\((.*?)\)/g, (match, p1, p2) => {
+                        let url = p2.trim();
+                        if (!/^https?:\/\//i.test(url)) {
+                            url = 'https://' + url.replace(/^\/+/, '');
+                        }
+                        return '<a href="' + url + '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700 w-full truncate inline-block">' + p1 + '</a>';
+                    });
+                }
+
                 const safeText = isMe 
-                    ? document.createTextNode(text || "").textContent.replace(/\n/g, '<br>')
-                    : (text || "");
+                    ? document.createTextNode(parsedText).textContent.replace(/\n/g, '<br>')
+                    : parsedText.replace(/\n/g, '<br>');
 
                 const displayTime = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 

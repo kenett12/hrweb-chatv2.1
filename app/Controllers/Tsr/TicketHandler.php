@@ -33,7 +33,7 @@ class TicketHandler extends BaseController
         // Filtering parameters
         $filters = [
             'search'    => $this->request->getGet('search'),
-            'status'    => $this->request->getGet('status'),
+            'status'    => $this->request->getGet('status') ?? 'Open',
             'category'  => $this->request->getGet('category'),
             'date_from' => $this->request->getGet('date_from'),
             'date_to'   => $this->request->getGet('date_to')
@@ -73,7 +73,7 @@ class TicketHandler extends BaseController
     {
         $filters = [
             'search'    => $this->request->getGet('search'),
-            'status'    => $this->request->getGet('status'),
+            'status'    => $this->request->getGet('status') ?? 'Open',
             'category'  => $this->request->getGet('category'),
             'date_from' => $this->request->getGet('date_from'),
             'date_to'   => $this->request->getGet('date_to')
@@ -357,15 +357,35 @@ class TicketHandler extends BaseController
 
             $this->ticketModel->update($id, $updateData);
 
+            // Availability Reset Logic: If moving away from 'In Progress', check if TSR is now free
+            if ($status !== 'In Progress') {
+                $activeCount = $this->ticketModel->where('assigned_to', $staffId)
+                                               ->where('status', 'In Progress')
+                                               ->countAllResults();
+                if ($activeCount == 0) {
+                    $db = \Config\Database::connect();
+                    $db->table('users')->where('id', $staffId)->update(['availability_status' => 'active']);
+                    
+                    if (function_exists('emit_socket_event')) {
+                        emit_socket_event('staff_status_update', [
+                            'staff_id' => $staffId,
+                            'status'   => 'active'
+                        ]);
+                    }
+                }
+            }
+
             // Notify Client
             $notifModel = new \App\Models\NotificationModel();
             $ticketInfo = $this->ticketModel->find($id);
-            $notifModel->sendNotification(
-                $ticketInfo['client_id'], 
-                "Ticket Status Updated", 
-                "Your ticket (#{$id}) status has been updated to: {$status}.", 
-                base_url("client/chat/{$id}")
-            );
+            if ($ticketInfo) {
+                $notifModel->sendNotification(
+                    $ticketInfo['client_id'], 
+                    "Ticket Status Updated", 
+                    "Your ticket (#{$id}) status has been updated to: {$status}.", 
+                    base_url("client/tickets/view/{$id}")
+                );
+            }
 
             // Socket Emit
             if (function_exists('emit_socket_event')) {

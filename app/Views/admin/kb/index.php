@@ -53,24 +53,26 @@
                         <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Bot Instructions</label>
                         <textarea name="answer" rows="6" required placeholder="1. Go to Transaction Menu...&#10;[IMAGE:1]&#10;2. Click Save..."
                             class="fiori-input" style="height:auto; padding:10px 12px; resize:vertical;"></textarea>
-                        <div class="mt-2 p-3 rounded" style="background:var(--fiori-blue-light); border:1px solid #b3d4fb; border-radius:4px;">
+                        <div class="mt-2 p-3 rounded space-y-2" style="background:var(--fiori-blue-light); border:1px solid #b3d4fb; border-radius:4px;">
                             <p class="text-xs" style="color:var(--fiori-blue);">
-                                <span class="font-semibold">Tip:</span> Type <code class="bg-white px-1 rounded border border-blue-200">[IMAGE:1]</code> to embed the first uploaded image inline, <code class="bg-white px-1 rounded border border-blue-200">[IMAGE:2]</code> for the second, etc.
+                                <span class="font-semibold">Tip (Images):</span> Type <code class="bg-white px-1 rounded border border-blue-200">[IMAGE:1]</code> to embed the first uploaded image inline, <code class="bg-white px-1 rounded border border-blue-200">[IMAGE:2]</code> for the second, etc.
+                            </p>
+                            <p class="text-xs" style="color:var(--fiori-blue);">
+                                <span class="font-semibold">Tip (Links):</span> Type <code class="bg-white px-1 rounded border border-blue-200">[Click to open](https://example.com)</code> to create a hidden, clickable text link.
                             </p>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--fiori-text-secondary);">Attach Visuals</label>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-semibold uppercase tracking-wider" style="color:var(--fiori-text-secondary);">Attach Visuals</label>
+                            <span id="file-count-label" class="text-[10px] font-bold text-emerald-600 hidden bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100"></span>
+                        </div>
                         <label for="kb_images" class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded cursor-pointer transition-colors hover:bg-blue-50"
                             style="border-color:var(--fiori-border); border-radius:4px;">
-                            <div id="ph" class="text-center">
+                            <div class="text-center">
                                 <span class="material-symbols-outlined text-[28px] block mb-1" style="color:var(--fiori-text-muted);">cloud_upload</span>
-                                <p class="text-xs font-medium" style="color:var(--fiori-text-muted);">Click to upload files</p>
-                            </div>
-                            <div id="pv" class="hidden flex-col items-center justify-center">
-                                <span class="material-symbols-outlined text-[28px] block mb-1" style="color:var(--fiori-positive);">check_circle</span>
-                                <p id="fn" class="text-xs font-semibold" style="color:var(--fiori-positive);"></p>
+                                <p class="text-xs font-medium" style="color:var(--fiori-text-muted);">Click to upload more files</p>
                             </div>
                             <input id="kb_images" name="kb_images[]" type="file" accept="image/*" class="hidden" multiple onchange="previewFiles(this)">
                         </label>
@@ -190,29 +192,56 @@
 
 <?= $this->section('scripts') ?>
 <script>
+let kbFilesDT = new DataTransfer();
+
 function previewFiles(input) {
-    const container = document.getElementById('file-list-container');
-    container.innerHTML = '';
     if (input.files && input.files.length > 0) {
-        document.getElementById('fn').textContent = input.files.length + (input.files.length === 1 ? ' File Selected' : ' Files Selected');
-        document.getElementById('pv').classList.remove('hidden');
-        document.getElementById('ph').classList.add('hidden');
+        Array.from(input.files).forEach(file => {
+            kbFilesDT.items.add(file);
+        });
+        // Important: Update the input element's files property to our cumulative list
+        input.files = kbFilesDT.files;
+    }
+    renderKbFiles();
+}
+
+function removeKbFile(indexToDel) {
+    const newDT = new DataTransfer();
+    Array.from(kbFilesDT.files).forEach((file, index) => {
+        if (index !== indexToDel) newDT.items.add(file);
+    });
+    kbFilesDT = newDT;
+    document.getElementById('kb_images').files = kbFilesDT.files;
+    renderKbFiles();
+}
+
+function renderKbFiles() {
+    const container = document.getElementById('file-list-container');
+    const countLabel = document.getElementById('file-count-label');
+    container.innerHTML = '';
+    
+    if (kbFilesDT.files.length > 0) {
+        countLabel.textContent = kbFilesDT.files.length + (kbFilesDT.files.length === 1 ? ' File Selected' : ' Files Selected');
+        countLabel.classList.remove('hidden');
         container.classList.remove('hidden');
-        Array.from(input.files).forEach((file, index) => {
+        
+        Array.from(kbFilesDT.files).forEach((file, index) => {
             const item = document.createElement('div');
-            item.className = 'flex items-center gap-3 p-2 rounded border';
+            item.className = 'flex items-center gap-3 p-2 rounded border relative pr-8';
             item.style = 'border-color:var(--fiori-border); background:#fff; border-radius:4px;';
             item.innerHTML = `
                 <span class="material-symbols-outlined text-[16px]" style="color:var(--fiori-blue); flex-shrink:0;">image</span>
                 <div class="flex-1 min-w-0">
                     <p class="text-xs font-medium truncate" style="color:var(--fiori-text-base);">${file.name}</p>
                     <p class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--fiori-text-muted);">[IMAGE:${index + 1}]</p>
-                </div>`;
+                </div>
+                <button type="button" onclick="removeKbFile(${index})" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors">
+                    <span class="material-symbols-outlined text-[14px]">close</span>
+                </button>`;
             container.appendChild(item);
         });
     } else {
-        document.getElementById('pv').classList.add('hidden');
-        document.getElementById('ph').classList.remove('hidden');
+        countLabel.classList.add('hidden');
         container.classList.add('hidden');
     }
 }

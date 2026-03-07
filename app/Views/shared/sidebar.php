@@ -101,7 +101,7 @@ html.sidebar-is-collapsed #sidebar .nav-item-icon { margin: 0; }
            onmouseover="this.style.background='var(--fiori-sidenav-hover)'"
            onmouseout="if(!this.classList.contains('is-active'))this.style.background=''; else this.style.background='rgba(0,112,242,0.18)'">
             <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none" style="<?= url_is('group-chat*') ? 'color:#0070f2' : 'color:var(--fiori-sidenav-text)' ?>">forum</span>
-            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Group Chats</span>
+            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Chats</span>
         </a>
         <?php endif; ?>
 
@@ -117,21 +117,13 @@ html.sidebar-is-collapsed #sidebar .nav-item-icon { margin: 0; }
             <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none" style="<?= url_is('tsr/tickets*') ? 'color:#0070f2' : 'color:var(--fiori-sidenav-text)' ?>">confirmation_number</span>
             <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Manage Tickets</span>
         </a>
-        <a href="<?= base_url('tsr/chat') ?>"
-           class="nav-item flex items-center gap-3 px-3 py-2.5 mx-1 rounded transition-colors <?= url_is('tsr/chat*') ? 'is-active' : '' ?>"
-           style="<?= url_is('tsr/chat*') ? 'background:rgba(0,112,242,0.18); color:#ffffff; border-left:3px solid #0070f2; padding-left:9px;' : 'color:var(--fiori-sidenav-text);' ?>"
-           onmouseover="this.style.background='var(--fiori-sidenav-hover)'"
-           onmouseout="if(!this.classList.contains('is-active'))this.style.background=''; else this.style.background='rgba(0,112,242,0.18)'">
-            <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none" style="<?= url_is('tsr/chat*') ? 'color:#0070f2' : 'color:var(--fiori-sidenav-text)' ?>">chat</span>
-            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Chats</span>
-        </a>
         <a href="<?= base_url('group-chat') ?>"
-           class="nav-item flex items-center gap-3 px-3 py-2.5 mx-1 rounded transition-colors <?= url_is('group-chat*') ? 'is-active' : '' ?>"
-           style="<?= url_is('group-chat*') ? 'background:rgba(0,112,242,0.18); color:#ffffff; border-left:3px solid #0070f2; padding-left:9px;' : 'color:var(--fiori-sidenav-text);' ?>"
+           class="nav-item flex items-center gap-3 px-3 py-2.5 mx-1 rounded transition-colors <?= url_is('group-chat*') || url_is('tsr/chat*') ? 'is-active' : '' ?>"
+           style="<?= url_is('group-chat*') || url_is('tsr/chat*') ? 'background:rgba(0,112,242,0.18); color:#ffffff; border-left:3px solid #0070f2; padding-left:9px;' : 'color:var(--fiori-sidenav-text);' ?>"
            onmouseover="this.style.background='var(--fiori-sidenav-hover)'"
            onmouseout="if(!this.classList.contains('is-active'))this.style.background=''; else this.style.background='rgba(0,112,242,0.18)'">
-            <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none" style="<?= url_is('group-chat*') ? 'color:#0070f2' : 'color:var(--fiori-sidenav-text)' ?>">forum</span>
-            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Group Chats</span>
+            <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none" style="<?= url_is('group-chat*') || url_is('tsr/chat*') ? 'color:#0070f2' : 'color:var(--fiori-sidenav-text)' ?>">forum</span>
+            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Chats</span>
         </a>
         <?php endif; ?>
 
@@ -147,21 +139,13 @@ html.sidebar-is-collapsed #sidebar .nav-item-icon { margin: 0; }
             <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none">confirmation_number</span>
             <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Support Tickets</span>
         </a>
-        <a href="<?= base_url('client/chat') ?>"
-           class="nav-item flex items-center gap-3 px-3 py-2.5 mx-1 rounded transition-colors <?= url_is('client/chat*') ? 'is-active' : '' ?>"
-           style="<?= url_is('client/chat*') ? 'background:rgba(0,112,242,0.18); color:#ffffff; border-left:3px solid #0070f2; padding-left:9px;' : 'color:var(--fiori-sidenav-text);' ?>"
-           onmouseover="this.style.background='var(--fiori-sidenav-hover)'"
-           onmouseout="if(!this.classList.contains('is-active'))this.style.background=''; else this.style.background='rgba(0,112,242,0.18)'">
-            <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none">chat</span>
-            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Chat</span>
-        </a>
         <a href="<?= base_url('group-chat') ?>"
-           class="nav-item flex items-center gap-3 px-3 py-2.5 mx-1 rounded transition-colors <?= url_is('group-chat*') ? 'is-active' : '' ?>"
-           style="<?= url_is('group-chat*') ? 'background:rgba(0,112,242,0.18); color:#ffffff; border-left:3px solid #0070f2; padding-left:9px;' : 'color:var(--fiori-sidenav-text);' ?>"
+           class="nav-item flex items-center gap-3 px-3 py-2.5 mx-1 rounded transition-colors <?= url_is('group-chat*') || url_is('client/chat*') ? 'is-active' : '' ?>"
+           style="<?= url_is('group-chat*') || url_is('client/chat*') ? 'background:rgba(0,112,242,0.18); color:#ffffff; border-left:3px solid #0070f2; padding-left:9px;' : 'color:var(--fiori-sidenav-text);' ?>"
            onmouseover="this.style.background='var(--fiori-sidenav-hover)'"
            onmouseout="if(!this.classList.contains('is-active'))this.style.background=''; else this.style.background='rgba(0,112,242,0.18)'">
-            <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none" style="<?= url_is('group-chat*') ? 'color:#0070f2' : 'color:var(--fiori-sidenav-text)' ?>">forum</span>
-            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Group Chats</span>
+            <span class="material-symbols-outlined nav-item-icon text-[20px] flex-none" style="<?= url_is('group-chat*') || url_is('client/chat*') ? 'color:#0070f2' : 'color:var(--fiori-sidenav-text)' ?>">forum</span>
+            <span class="nav-label text-sm font-medium whitespace-nowrap truncate">Chats</span>
         </a>
 
         <div class="nav-section-title px-3 pt-4 pb-1">

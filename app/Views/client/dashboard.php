@@ -148,6 +148,9 @@
 </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
 <!-- Feedback Modal -->
 <div id="feedback-modal" class="fiori-overlay hidden">
     <div class="fiori-dialog">
@@ -185,10 +188,10 @@
                 </div>
 
                 <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="closeFeedbackModal()" class="flex-1 fiori-button !bg-slate-100 !text-slate-600 hover:!bg-slate-200">
+                    <button type="button" onclick="closeFeedbackModal()" class="flex-1 btn btn-outline border-slate-200 text-slate-600 hover:bg-slate-50">
                         Maybe Later
                     </button>
-                    <button type="submit" class="flex-1 fiori-button fiori-button--primary">
+                    <button type="submit" class="flex-1 btn btn-accent">
                         Submit Feedback
                     </button>
                 </div>
@@ -196,7 +199,7 @@
         </div>
     </div>
 </div>
-
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

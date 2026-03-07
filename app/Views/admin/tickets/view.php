@@ -231,9 +231,17 @@
                         <?php endif; ?>
 
                         <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="color:var(--fiori-text-base, #1d2d3e);">
-                            <?php if($isBot): ?>
-                                <?= nl2br(html_entity_decode($msg['message'])) ?>
-                            <?php else: ?>
+                            <?php if($isBot): 
+                                $parsedMsg = html_entity_decode($msg['message']);
+                                $parsedMsg = preg_replace_callback('/\[(.*?)\]\((.*?)\)/', function($m) {
+                                    $url = trim($m[2]);
+                                    if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
+                                        $url = "https://" . ltrim($url, '/');
+                                    }
+                                    return '<a href="' . $url . '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700">' . $m[1] . '</a>';
+                                }, $parsedMsg);
+                                echo nl2br($parsedMsg);
+                            else: ?>
                                 <?= nl2br(esc($msg['message'])) ?>
                             <?php endif; ?>
                         </div>
@@ -325,6 +333,7 @@
             <?php endforeach; ?>
         </div>
         
+                <?php if ($ticket['status'] !== 'Closed'): ?>
                 <div id="reply-extras" class="hidden px-5 py-3 border-t border-gray-50 bg-gray-50/50">
                     <div class="flex flex-col gap-3">
                         <div id="reply-attachments-preview" class="flex flex-wrap gap-2"></div>
@@ -363,6 +372,12 @@
                         </form>
                     </div>
                 </div>
+                <?php else: ?>
+                <div class="p-6 border-t bg-slate-50 text-center" style="border-color:var(--fiori-border);">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Session Closed</p>
+                    <p class="text-xs text-slate-500 font-medium italic">This ticket is resolved and the chat is now read-only.</p>
+                </div>
+                <?php endif; ?>
         </div>
     </div>
 
@@ -441,24 +456,7 @@
                             <input type="date" name="due_date" value="<?= $ticket['due_date'] ? date('Y-m-d', strtotime($ticket['due_date'])) : '' ?>" class="fiori-input text-xs">
                         </div>
 
-                        <div class="grid grid-cols-1 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Dev Remarks 1 <span class="material-symbols-outlined text-[14px] text-slate-300">terminal</span></label>
-                                <textarea name="dev_remarks_1" class="fiori-input text-xs h-16" placeholder="Initial dev notes..."><?= esc($ticket['dev_remarks_1']) ?></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Support Remarks <span class="material-symbols-outlined text-[14px] text-slate-300">chat_bubble</span></label>
-                                <textarea name="support_remarks" class="fiori-input text-xs h-16" placeholder="TSR notes..."><?= esc($ticket['support_remarks']) ?></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Dev Remarks 2 <span class="material-symbols-outlined text-[14px] text-slate-300">code_blocks</span></label>
-                                <textarea name="dev_remarks_2" class="fiori-input text-xs h-16" placeholder="Final dev notes..."><?= esc($ticket['dev_remarks_2']) ?></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">Re-occurrence Remarks <span class="material-symbols-outlined text-[14px] text-slate-300">history</span></label>
-                                <textarea name="reoccurrence_remarks" class="fiori-input text-xs h-16" placeholder="Case history..."><?= esc($ticket['reoccurrence_remarks']) ?></textarea>
-                            </div>
-                        </div>
+
 
                         <button type="submit" class="w-full fiori-button fiori-button--primary !text-[10px] h-9">Apply Management Changes</button>
                     </form>
@@ -670,7 +668,20 @@
                             <span class="text-[9px]" style="color:var(--fiori-text-muted, #89919a);">${data.time || 'Just now'}</span>
                         </div>
                         <div class="msg-text text-sm" style="color:var(--fiori-text-base, #1d2d3e);">
-                            ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}
+                            ${(() => {
+                                let parsedMsg = data.message;
+                                if (isBot) {
+                                    parsedMsg = parsedMsg.replace(/\[(.*?)\]\((.*?)\)/g, (match, p1, p2) => {
+                                        let url = p2.trim();
+                                        if (!/^https?:\/\//i.test(url)) {
+                                            url = 'https://' + url.replace(/^\/+/, '');
+                                        }
+                                        return '<a href="' + url + '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700 w-full truncate inline-block">' + p1 + '</a>';
+                                    });
+                                    return parsedMsg.replace(/\n/g, '<br>');
+                                }
+                                return parsedMsg.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+                            })()}
                         </div>
                         ${data.attachments && data.attachments.length > 0 ? `
                             <div class="mt-3 pt-3 border-t border-gray-100/50">
@@ -709,7 +720,20 @@
                 newSegment.className = "mt-2 pt-2 border-t border-gray-100 flex flex-col gap-1";
                 newSegment.innerHTML = `
                     <div class="msg-text text-sm" style="color:var(--fiori-text-base, #1d2d3e);">
-                        ${isBot ? data.message : data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}
+                        ${(() => {
+                            let parsedMsg = data.message;
+                            if (isBot) {
+                                parsedMsg = parsedMsg.replace(/\[(.*?)\]\((.*?)\)/g, (match, p1, p2) => {
+                                    let url = p2.trim();
+                                    if (!/^https?:\/\//i.test(url)) {
+                                        url = 'https://' + url.replace(/^\/+/, '');
+                                    }
+                                    return '<a href="' + url + '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700 w-full truncate inline-block">' + p1 + '</a>';
+                                });
+                                return parsedMsg.replace(/\n/g, '<br>');
+                            }
+                            return parsedMsg.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+                        })()}
                     </div>
                     ${data.attachments && data.attachments.length > 0 ? `
                         <div class="mt-2 pt-2 border-t border-gray-100/30">
@@ -764,6 +788,27 @@
 
             appendMessageToUI(data);
         });
+
+        socket.on('global_ticket_change', function(data) {
+            // If a ticket is closed or modified, fetch the latest HTML and swap out the sidebar and title area
+            fetch(window.location.href).then(r => r.text()).then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                
+                // Refresh Sidebar Metadata
+                const newSidebar = doc.querySelector('.fiori-card.p-6.sticky.top-8');
+                const currentSidebar = document.querySelector('.fiori-card.p-6.sticky.top-8');
+                if (newSidebar && currentSidebar) {
+                    currentSidebar.innerHTML = newSidebar.innerHTML;
+                }
+
+                // Refresh Header Badges/Buttons (Closure status, tags)
+                const newHeaderActions = doc.querySelector('.flex.items-center.gap-3');
+                const currentHeaderActions = document.querySelector('.flex.items-center.gap-3');
+                if (newHeaderActions && currentHeaderActions) {
+                    currentHeaderActions.innerHTML = newHeaderActions.innerHTML;
+                }
+            });
+        });
         
         // --- NEW: ADMIN REPLY HELPERS ---
         window.toggleReplyExtras = () => {
@@ -791,20 +836,42 @@
             container.appendChild(div);
         };
 
+        let replyFilesDT = new DataTransfer();
+
         window.previewReplyAttachments = (input) => {
+            if (input.files && input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    replyFilesDT.items.add(file);
+                });
+                input.files = replyFilesDT.files;
+            }
+            renderReplyAttachments();
+        };
+
+        window.removeReplyAttachment = (indexToDel) => {
+            const newDT = new DataTransfer();
+            Array.from(replyFilesDT.files).forEach((file, index) => {
+                if (index !== indexToDel) newDT.items.add(file);
+            });
+            replyFilesDT = newDT;
+            document.getElementById('reply-attachments').files = replyFilesDT.files;
+            renderReplyAttachments();
+        };
+
+        window.renderReplyAttachments = () => {
             const preview = document.getElementById('reply-attachments-preview');
             preview.innerHTML = '';
-            if (input.files) {
-                Array.from(input.files).forEach(file => {
+            if (replyFilesDT.files.length > 0) {
+                Array.from(replyFilesDT.files).forEach((file, index) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const div = document.createElement('div');
                         div.className = 'relative group w-12 h-12';
                         div.innerHTML = `
                             <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-blue-100 shadow-sm">
-                            <span class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center">
-                                <span class="material-symbols-outlined text-[10px]">check</span>
-                            </span>
+                            <button type="button" onclick="removeReplyAttachment(${index})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer z-10">
+                                <span class="material-symbols-outlined text-[10px]">close</span>
+                            </button>
                         `;
                         preview.appendChild(div);
                     };

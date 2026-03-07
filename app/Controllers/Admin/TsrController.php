@@ -52,10 +52,13 @@ class TsrController extends BaseController
         $kpiData = [];
         foreach ($tsrList as $tsr) {
             $kpiData[$tsr['email']] = [
+                'id' => $tsr['id'],
                 'name' => $tsr['full_name'],
                 'leads' => 0,
                 'coleads' => 0,
-                'utilization' => 0
+                'utilization' => 0,
+                'avg_rating' => 0.0,
+                'total_ratings' => 0
             ];
         }
 
@@ -104,6 +107,34 @@ class TsrController extends BaseController
         foreach ($kpiData as $email => &$data) {
             if ($minTarget > 0) {
                 $data['utilization'] = round(($data['leads'] / $minTarget) * 100);
+            }
+        }
+        unset($data);
+
+        // Fetch Feedback Ratings Aggregated by assigned TSR
+        $ratingsQuery = $db->table('tickets')
+                           ->select('assigned_to, AVG(feedback_rating) as avg_rating, COUNT(feedback_rating) as total_ratings')
+                           ->where('feedback_rating IS NOT NULL')
+                           ->groupBy('assigned_to')
+                           ->get()
+                           ->getResultArray();
+
+        $ratingsMap = [];
+        foreach ($ratingsQuery as $row) {
+            if ($row['assigned_to']) {
+                $ratingsMap[$row['assigned_to']] = [
+                    'avg' => round($row['avg_rating'], 1),
+                    'total' => $row['total_ratings']
+                ];
+            }
+        }
+
+        // Merge ratings into KPI Data
+        foreach ($kpiData as $email => &$data) {
+            $tsrId = $data['id'];
+            if (isset($ratingsMap[$tsrId])) {
+                $data['avg_rating'] = $ratingsMap[$tsrId]['avg'];
+                $data['total_ratings'] = $ratingsMap[$tsrId]['total'];
             }
         }
         unset($data);

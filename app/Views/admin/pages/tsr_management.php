@@ -184,6 +184,7 @@
                         <th class="text-center">Lead Clients</th>
                         <th class="text-center">Co-Leads</th>
                         <th class="text-center">Utilization %</th>
+                        <th class="text-center">Customer Rating</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -212,10 +213,21 @@
                                 ?>
                                 <span class="fiori-status <?= $statusClass ?> font-semibold"><?= $util ?>%</span>
                             </td>
+                            <td class="text-center">
+                                <?php if ($data['total_ratings'] > 0): ?>
+                                    <div class="flex items-center justify-center gap-1" style="color:var(--fiori-warning);">
+                                        <span class="material-symbols-outlined text-[16px]">star</span>
+                                        <span class="font-bold text-sm" style="color:var(--fiori-text-base);"><?= rtrim(rtrim(number_format($data['avg_rating'], 1), '0'), '.') ?></span>
+                                        <span class="text-[10px]" style="color:var(--fiori-text-muted);">/ 5 (<?= $data['total_ratings'] ?>)</span>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-[10px] italic" style="color:var(--fiori-text-muted);">No Ratings</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                    <tr><td colspan="4" class="py-10 text-center text-sm" style="color:var(--fiori-text-muted);">No KPI data available</td></tr>
+                    <tr><td colspan="5" class="py-10 text-center text-sm" style="color:var(--fiori-text-muted);">No KPI data available</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

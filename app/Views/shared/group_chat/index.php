@@ -152,40 +152,52 @@
 <?= $this->section('content') ?>
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 tracking-tight" id="pageTitle">Group Chats</h1>
-            <p class="text-sm text-gray-500 mt-1" id="pageSubtitle">Collaborate with multiple team members</p>
+            <h1 class="text-2xl font-bold text-gray-800 tracking-tight" id="pageTitle"><?= $activeTab === 'tickets' ? 'Support Tickets' : ($activeTab === 'manager' ? 'Group Manager' : 'Direct Chats') ?></h1>
+            <p class="text-sm text-gray-500 mt-1" id="pageSubtitle"><?= $activeTab === 'tickets' ? 'Resume ticket-based support conversations' : ($activeTab === 'manager' ? 'Superadmin group oversight' : 'Collaborate with team members in real-time') ?></p>
         </div>
 
-        <?php if ($isAdmin): ?>
         <!-- Fiori-style Tab Segment -->
-        <div class="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-sm self-stretch md:self-auto">
-            <button onclick="switchTab('chats')" id="tab-chats" class="flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all duration-200 bg-white text-blue-700 shadow-sm border border-gray-200">
+        <div class="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-sm self-stretch md:self-auto overflow-x-auto">
+            <a href="<?= base_url('group-chat?tab=direct') ?>" id="tab-direct" class="flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 <?= $activeTab === 'direct' ? 'bg-white text-blue-700 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700' ?>">
                 <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[18px]">forum</span>
-                    Active Chats
+                    <span class="material-symbols-outlined text-[18px]">person</span>
+                    Direct
                 </div>
-            </button>
-            <button onclick="switchTab('manager')" id="tab-manager" class="flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all duration-200 text-gray-500 hover:text-gray-700">
+            </a>
+            <a href="<?= base_url('group-chat?tab=groups') ?>" id="tab-groups" class="flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 <?= $activeTab === 'groups' ? 'bg-white text-blue-700 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700' ?>">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">groups</span>
+                    Groups
+                </div>
+            </a>
+            <a href="<?= base_url('group-chat?tab=tickets') ?>" id="tab-tickets" class="flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 <?= $activeTab === 'tickets' ? 'bg-white text-blue-700 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700' ?>">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">confirmation_number</span>
+                    Tickets
+                </div>
+            </a>
+            <?php if ($isAdmin): ?>
+            <a href="<?= base_url('group-chat?tab=manager') ?>" id="tab-manager" class="flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 <?= $activeTab === 'manager' ? 'bg-white text-blue-700 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700' ?>">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">settings_suggest</span>
-                    Group Manager
+                    Manager
                 </div>
-            </button>
+            </a>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
 
-    <!-- CHATS TAB CONTENT -->
-    <div id="content-chats" class="tab-content transition-all duration-300">
+    <!-- CHAT (DIRECT/GROUPS) TAB CONTENT -->
+    <div id="content-chat" class="tab-content transition-all duration-300 <?= in_array($activeTab, ['direct', 'groups']) ? '' : 'hidden' ?>">
 
     <div class="fiori-container">
         <!-- Sidebar -->
         <div class="fiori-sidebar">
             <div class="fiori-sidebar-header">
-                <h3 class="font-semibold text-gray-700">My Groups</h3>
+                <h3 class="font-semibold text-gray-700"><?= $activeTab === 'direct' ? 'Direct Messages' : 'Project Groups' ?></h3>
                 <?php if (in_array(session()->get('role'), ['admin', 'superadmin', 'tsr', 'tsr_level_1', 'tsr_level_2'])): ?>
-                <button onclick="const m = document.getElementById('createGroupModal'); m.classList.remove('hidden'); m.classList.add('flex');" class="text-[#0a6ed1] hover:bg-blue-50 p-2 rounded-full transition-colors" title="Create New Group">
-                    <span class="material-symbols-outlined">group_add</span>
+                <button onclick="const m = document.getElementById('createGroupModal'); m.classList.remove('hidden'); m.classList.add('flex');" class="text-[#0a6ed1] hover:bg-blue-50 p-2 rounded-full transition-colors" title="<?= $activeTab === 'direct' ? 'New Message' : 'Create New Group' ?>">
+                    <span class="material-symbols-outlined"><?= $activeTab === 'direct' ? 'chat_bubble' : 'group_add' ?></span>
                 </button>
                 <?php endif; ?>
             </div>
@@ -194,51 +206,56 @@
             <div class="px-4 py-2 border-bottom">
                 <div class="relative">
                     <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                    <input type="text" id="roomSearch" onkeyup="filterRoomList()" placeholder="Filter groups..." class="w-full pl-8 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                    <input type="text" id="roomSearch" onkeyup="filterRoomList()" placeholder="Filter <?= $activeTab === 'direct' ? 'people' : 'groups' ?>..." class="w-full pl-8 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
             </div>
 
             <div class="overflow-y-auto flex-1 h-full" id="roomList">
                 
+                <?php 
+                    $roomsToDisplay = ($activeTab === 'direct') ? $directRooms : $groupRooms;
+                    $pendingToDisplay = ($activeTab === 'groups') ? $pendingRooms : []; 
+                ?>
+
                 <div class="px-4 py-2 mt-2">
-                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Active Groups</div>
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><?= $activeTab === 'direct' ? 'Recent Conversations' : 'Active Groups' ?></div>
                 </div>
 
-                <?php if (empty($activeRooms) && empty($pendingRooms)): ?>
+                <?php if (empty($roomsToDisplay) && empty($pendingToDisplay)): ?>
                     <div class="p-8 text-center text-gray-500 text-sm">
-                        You are not in any groups yet.
+                        No <?= $activeTab === 'direct' ? 'messages' : 'groups' ?> found.
                     </div>
                 <?php else: ?>
                     
                     <!-- Render Active Rooms -->
-                    <?php foreach ($activeRooms as $room): ?>
+                    <?php foreach ($roomsToDisplay as $room): ?>
                         <div class="fiori-room-item" data-id="<?= $room['id'] ?>" 
-                             onclick="loadRoom(<?= $room['id'] ?>, '<?= esc($room['name'] ?? 'Group Chat ' . $room['id']) ?>', '<?= !empty($room['room_image']) ? base_url('uploads/group_photos/' . $room['room_image']) : '' ?>')">
+                             onclick="loadRoom(<?= $room['id'] ?>, '<?= esc($room['name'] ?? 'Chat') ?>', '<?= !empty($room['room_image']) ? base_url('uploads/group_photos/' . $room['room_image']) : '' ?>')">
                             <div class="flex items-center gap-3">
                                 <?php if (!empty($room['room_image'])): ?>
                                     <img src="<?= base_url('uploads/group_photos/' . $room['room_image']) ?>" class="w-10 h-10 rounded-full object-cover">
                                 <?php else: ?>
                                     <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                        <span class="material-symbols-outlined">forum</span>
+                                        <span class="material-symbols-outlined"><?= $activeTab === 'direct' ? 'person' : 'forum' ?></span>
                                     </div>
                                 <?php endif; ?>
                                 <div>
-                                    <div class="room-name"><?= esc($room['name'] ?? 'Group Chat ' . $room['id']) ?></div>
-                                    <div class="text-xs text-gray-500 mt-0.5">Click to view</div>
+                                    <div class="room-name"><?= esc($room['name'] ?? 'Chat') ?></div>
+                                    <div class="text-xs text-gray-500 mt-0.5"><?= $activeTab === 'direct' ? 'Online' : 'Click to view' ?></div>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
 
-                    <!-- Render Pending Rooms (TSR view) -->
-                    <?php foreach ($pendingRooms as $room): ?>
+                    <!-- Render Pending Rooms (TSR view) - Only for Groups -->
+                    <?php foreach ($pendingToDisplay as $room): ?>
                         <div class="fiori-room-item opacity-60 cursor-not-allowed">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold">
                                     <span class="material-symbols-outlined">pending</span>
                                 </div>
                                 <div>
-                                    <div class="room-name text-gray-600"><?= esc($room['name'] ?? 'Group Chat ' . $room['id']) ?></div>
+                                    <div class="room-name text-gray-600"><?= esc($room['name'] ?? 'Pending Group') ?></div>
                                     <div class="text-[10px] text-amber-600 font-semibold mt-0.5 bg-amber-50 px-1.5 py-0.5 rounded inline-block">Pending Admin Approval</div>
                                 </div>
                             </div>
@@ -261,7 +278,7 @@
                             </div>
                         </div>
                         <div>
-                            <h2 class="text-lg font-bold text-gray-800 leading-tight" id="activeRoomName">Select a Group</h2>
+                            <h2 class="text-lg font-bold text-gray-800 leading-tight" id="activeRoomName">Select a <?= $activeTab === 'direct' ? 'Conversation' : 'Group' ?></h2>
                             <div class="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-0.5">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Live Connection
                             </div>
@@ -302,11 +319,140 @@
             </div>
         </div>
     </div> <!-- End fiori-container -->
-    </div> <!-- End content-chats -->
+    </div> <!-- End content-direct -->
+
+    <!-- TICKETS TAB CONTENT -->
+    <div id="content-tickets" class="tab-content transition-all duration-300 <?= $activeTab === 'tickets' ? '' : 'hidden' ?>">
+        <!-- Ticket Filter Bar (Copied & Adapted) -->
+        <div class="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+            <form id="ticketFilterForm" method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                <input type="hidden" name="tab" value="tickets">
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Search Tickets</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input type="text" name="search" value="<?= esc(request()->getGet('search')) ?>" 
+                               placeholder="Ticket #, subject..." 
+                               class="fiori-input !pl-10 !h-10 text-xs auto-apply-ticket"
+                               oninput="clearTimeout(this.delay); this.delay = setTimeout(() => this.form.submit(), 500)">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
+                    <select name="status" class="fiori-input !h-10 text-xs auto-apply-ticket" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <?php 
+                        $statuses = ['Open', 'In Progress', 'Closed'];
+                        $currentStatus = request()->getGet('status');
+                        if ($currentStatus === null) $currentStatus = 'Open';
+                        foreach($statuses as $s): ?>
+                            <option value="<?= $s ?>" <?= $currentStatus == $s ? 'selected' : '' ?>><?= $s ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">From Date</label>
+                    <input type="date" name="date_from" value="<?= esc(request()->getGet('date_from')) ?>" class="fiori-input !h-10 text-xs auto-apply-ticket" onchange="this.form.submit()">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">To Date</label>
+                    <input type="date" name="date_to" value="<?= esc(request()->getGet('date_to')) ?>" class="fiori-input !h-10 text-xs auto-apply-ticket" onchange="this.form.submit()">
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="fiori-button fiori-button--primary !h-10 flex-1">
+                        Apply
+                    </button>
+                    <a href="<?= base_url('group-chat?tab=tickets') ?>" class="fiori-button !bg-slate-50 !text-slate-500 !border-slate-200 !h-10 px-3 flex items-center justify-center" title="Clear Filters">
+                        <span class="material-symbols-outlined">refresh</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <?php if (empty($tickets)): ?>
+            <div class="fiori-card text-center py-16">
+                <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4" style="background:var(--fiori-surface);">
+                    <span class="material-symbols-outlined text-[32px]" style="color:var(--fiori-border);">confirmation_number</span>
+                </div>
+                <h3 class="fiori-card__title text-lg mb-2">No Ticket Conversations</h3>
+                <p class="text-sm mb-4" style="color:var(--fiori-text-secondary);">There are no active ticket chats matching your criteria.</p>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <?php foreach ($tickets as $t): ?>
+                    <?php 
+                        $targetUrl = base_url('client/chat/' . $t['id']);
+                        if (session()->get('role') !== 'client') {
+                            $targetUrl = base_url('tsr/tickets/view/' . $t['id']);
+                            if (in_array(session()->get('role'), ['admin', 'superadmin'])) {
+                                $targetUrl = base_url('superadmin/tickets/view/' . $t['id']);
+                            }
+                        }
+                    ?>
+                    <a href="<?= $targetUrl ?>" 
+                       class="fiori-card flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden p-5" style="cursor:pointer; display:flex; text-decoration:none; min-height: 180px;">
+                        
+                        <div>
+                            <div class="flex justify-between items-start mb-3 relative">
+                                <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded" style="background:var(--fiori-surface); color:var(--fiori-text-muted);">
+                                    <?= $t['ticket_number'] ?: '#'.$t['id'] ?>
+                                </span>
+                                <?php
+                                    if ($t['status'] === 'Closed') echo '<span class="fiori-status fiori-status--neutral">Closed</span>';
+                                    elseif ($t['status'] === 'In Progress') echo '<span class="fiori-status fiori-status--information">In Progress</span>';
+                                    else echo '<span class="fiori-status fiori-status--warning">' . esc($t['status']) . '</span>';
+                                ?>
+                            </div>
+
+                            <h3 class="fiori-card__title text-base mb-2 line-clamp-2" style="color:var(--fiori-text-primary);">
+                                <?= esc($t['subject'] ?: 'Support Request') ?>
+                            </h3>
+                            
+                            <p class="fiori-card__content text-xs line-clamp-2 mb-4" style="color:var(--fiori-text-secondary); padding:0;">
+                                <?= esc($t['description']) ?>
+                            </p>
+                        </div>
+
+                        <div class="pt-3 border-t flex items-center justify-between mt-auto" style="border-color:var(--fiori-border);">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded flex items-center justify-center shrink-0" style="background:var(--fiori-surface); border:1px solid var(--fiori-border);">
+                                    <?php if (empty($t['assigned_to'])): ?>
+                                        <span class="material-symbols-outlined text-[14px]" style="color:var(--fiori-text-muted);">smart_toy</span>
+                                    <?php else: ?>
+                                        <span class="material-symbols-outlined text-[14px]" style="color:var(--fiori-blue);">support_agent</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-semibold uppercase tracking-wider" style="color:var(--fiori-text-muted);">Handling Agent</span>
+                                    <span class="text-[11px] font-medium truncate max-w-[100px]" style="color:var(--fiori-text-primary);">
+                                        <?= empty($t['assigned_to']) ? 'HRWeb Bot' : esc($t['staff_name']) ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right flex flex-col items-end gap-2">
+                                <div>
+                                    <span class="text-[9px] font-semibold uppercase tracking-wider" style="color:var(--fiori-text-muted);">Created</span>
+                                    <div class="text-[10px] font-medium mt-0.5" style="color:var(--fiori-text-secondary);"><?= date('M d, H:i', strtotime($t['created_at'])) ?></div>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] font-semibold uppercase tracking-wider" style="color:var(--fiori-text-muted);">Last Update</span>
+                                    <div class="text-[10px] font-medium mt-0.5" style="color:var(--fiori-text-secondary);"><?= date('M d, H:i', strtotime($t['updated_at'])) ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div> <!-- End content-tickets -->
 
     <?php if ($isAdmin): ?>
     <!-- MANAGER TAB CONTENT -->
-    <div id="content-manager" class="tab-content hidden transition-all duration-300">
+    <div id="content-manager" class="tab-content transition-all duration-300 <?= $activeTab === 'manager' ? '' : 'hidden' ?>">
         <!-- MANAGER TAB Content (Filter Bar) -->
         <div class="mb-4 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
             <form id="chatFilterForm" method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
@@ -318,13 +464,14 @@
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
                         <input type="text" name="search" value="<?= esc(request()->getGet('search')) ?>" 
                                placeholder="Group name or creator..." 
-                               class="fiori-input !pl-10 !h-10 text-xs auto-apply-chat">
+                               class="fiori-input !pl-10 !h-10 text-xs auto-apply-chat"
+                               oninput="clearTimeout(this.delay); this.delay = setTimeout(() => this.form.submit(), 500)">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
-                    <select name="status" class="fiori-input !h-10 text-xs auto-apply-chat">
+                    <select name="status" class="fiori-input !h-10 text-xs auto-apply-chat" onchange="this.form.submit()">
                         <option value="">All Statuses</option>
                         <option value="approved" <?= request()->getGet('status') == 'approved' ? 'selected' : '' ?>>Approved</option>
                         <option value="pending" <?= request()->getGet('status') == 'pending' ? 'selected' : '' ?>>Pending</option>
@@ -334,7 +481,7 @@
 
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Category</label>
-                    <select name="filter_category" class="fiori-input !h-10 text-xs auto-apply-chat">
+                    <select name="filter_category" class="fiori-input !h-10 text-xs auto-apply-chat" onchange="this.form.submit()">
                         <option value="">All Categories</option>
                         <option value="general" <?= request()->getGet('filter_category') == 'general' ? 'selected' : '' ?>>General</option>
                         <option value="confidential" <?= request()->getGet('filter_category') == 'confidential' ? 'selected' : '' ?>>Confidential</option>
@@ -451,8 +598,8 @@
             </div>
         </div>
     </div>
-
     <?php endif; ?>
+<?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
     <!-- Member Management Modal (Fiori Style) -->
@@ -487,7 +634,11 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Group Category</label>
                     <div class="flex items-center gap-4">
                         <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="group_category" value="general" class="text-blue-600 focus:ring-blue-500 w-4 h-4" checked onchange="filterMembersByCategory()">
+                            <input type="radio" name="group_category" value="direct" class="text-blue-600 focus:ring-blue-500 w-4 h-4" <?= $activeTab === 'direct' ? 'checked' : '' ?> onchange="filterMembersByCategory()">
+                            <span class="ml-2 text-sm text-gray-700 font-medium">Direct (1:1)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="group_category" value="general" class="text-blue-600 focus:ring-blue-500 w-4 h-4" <?= $activeTab === 'groups' ? 'checked' : '' ?> onchange="filterMembersByCategory()">
                             <span class="ml-2 text-sm text-gray-700 font-medium">General</span>
                         </label>
                         <label class="flex items-center cursor-pointer">
@@ -530,7 +681,6 @@
         </div>
     </div>
 <?= $this->endSection() ?>
-<?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <!-- Socket.IO Client -->
@@ -568,13 +718,26 @@ let currentRoomCategory = null; // Tracks category of the active room
 
     async function createGroup(e) {
         e.preventDefault();
-        const nameInput = document.getElementById('newGroupName').value;
         const categoryInput = document.querySelector('input[name="group_category"]:checked').value;
+        let nameInput = document.getElementById('newGroupName').value;
         const checkboxes = document.querySelectorAll('input[name="members[]"]:checked');
         const memberIds = Array.from(checkboxes).map(cb => cb.value);
 
         if (memberIds.length === 0) {
             alert("Please select at least one member.");
+            return;
+        }
+
+        if (categoryInput === 'direct') {
+            if (memberIds.length > 1) {
+                alert("Direct chats are 1-on-1. Please select only one member.");
+                return;
+            }
+            // Auto-generate name from the selected member
+            const memberName = checkboxes[0].closest('.member-row').querySelector('.member-name').innerText.trim().split('(')[0].trim();
+            nameInput = memberName;
+        } else if (!nameInput) {
+            alert("Please enter a group name.");
             return;
         }
 
@@ -741,7 +904,17 @@ let currentRoomCategory = null; // Tracks category of the active room
     function filterMembersByCategory() {
         const cat = document.querySelector('input[name="group_category"]:checked').value;
         const allowedConfidential = ['EXECOM', 'AUDITOR', 'PAYROLL 1', 'PAYROLL 2'];
+        const nameInput = document.getElementById('newGroupName');
         
+        // Auto-handle name for Direct
+        if (cat === 'direct') {
+            nameInput.placeholder = "Auto-generated from member name";
+            // nameInput.disabled = true; // We'll handle this in createGroup
+        } else {
+            nameInput.placeholder = "e.g. Project Alpha Team";
+            nameInput.disabled = false;
+        }
+
         document.querySelectorAll('.member-row').forEach(row => {
             const role = row.getAttribute('data-client-role');
             const cb = row.querySelector('.member-checkbox');
@@ -769,6 +942,18 @@ let currentRoomCategory = null; // Tracks category of the active room
                 row.style.display = 'flex';
             }
         });
+
+        // Add event listener for single selection if direct
+        document.querySelectorAll('.member-checkbox').forEach(cb => {
+            cb.onclick = function() {
+                if (cat === 'direct' && this.checked) {
+                    // Uncheck others
+                    document.querySelectorAll('.member-checkbox').forEach(other => {
+                        if (other !== this) other.checked = false;
+                    });
+                }
+            };
+        });
     }
 
     // Initialize list states immediately on load
@@ -783,36 +968,10 @@ let currentRoomCategory = null; // Tracks category of the active room
             .replace(/'/g, "&#039;");
     }
 
+    // Note: switchTab is now mostly handled by server-side tab param for durability, 
+    // but we'll keep the JS helper for smooth transitions if needed.
     function switchTab(tab) {
-        // Toggle Buttons
-        const chatsBtn = document.getElementById('tab-chats');
-        const managerBtn = document.getElementById('tab-manager');
-        const chatsContent = document.getElementById('content-chats');
-        const managerContent = document.getElementById('content-manager');
-        const pageTitle = document.getElementById('pageTitle');
-        const pageSubtitle = document.getElementById('pageSubtitle');
-
-        if (tab === 'chats') {
-            chatsBtn.classList.add('bg-white', 'text-blue-700', 'shadow-sm', 'border', 'border-gray-200');
-            chatsBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
-            managerBtn.classList.remove('bg-white', 'text-blue-700', 'shadow-sm', 'border', 'border-gray-200');
-            managerBtn.classList.add('text-gray-500', 'hover:text-gray-700');
-            
-            chatsContent.classList.remove('hidden');
-            managerContent.classList.add('hidden');
-            pageTitle.innerText = "Group Chats";
-            pageSubtitle.innerText = "Collaborate with multiple team members";
-        } else {
-            managerBtn.classList.add('bg-white', 'text-blue-700', 'shadow-sm', 'border', 'border-gray-200');
-            managerBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
-            chatsBtn.classList.remove('bg-white', 'text-blue-700', 'shadow-sm', 'border', 'border-gray-200');
-            chatsBtn.classList.add('text-gray-500', 'hover:text-gray-700');
-
-            managerContent.classList.remove('hidden');
-            chatsContent.classList.add('hidden');
-            pageTitle.innerText = "Group Chat Manager";
-            pageSubtitle.innerText = "Holistic oversight of all collaboration spaces";
-        }
+        window.location.href = `<?= base_url('group-chat?tab=') ?>${tab}`;
     }
 
     async function viewMembers(roomId, name) {
@@ -926,22 +1085,6 @@ let currentRoomCategory = null; // Tracks category of the active room
         }
     }
 
-    // --- AUTO-APPLY CHAT FILTERS ---
-    let chatDebounceTimer;
-    document.querySelectorAll('.auto-apply-chat').forEach(input => {
-        const events = input.tagName === 'SELECT' ? ['change'] : ['keyup'];
-        
-        events.forEach(action => {
-            input.addEventListener(action, () => {
-                clearTimeout(chatDebounceTimer);
-                const delay = (input.tagName === 'INPUT') ? 500 : 0;
-                
-                chatDebounceTimer = setTimeout(() => {
-                    const form = document.getElementById('chatFilterForm');
-                    if (form) form.submit();
-                }, delay);
-            });
-        });
-    });
+    // Auto-apply logic is now handled via inline onchange/oninput handlers for better reliability.
 </script>
 <?= $this->endSection() ?>

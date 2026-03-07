@@ -40,7 +40,7 @@ class TicketController extends BaseController
 
         $filters = [
             'search'    => $this->request->getGet('search'),
-            'status'    => $this->request->getGet('status'),
+            'status'    => $this->request->getGet('status') ?? 'Open',
             'date_from' => $this->request->getGet('date_from'),
             'date_to'   => $this->request->getGet('date_to')
         ];

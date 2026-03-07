@@ -62,8 +62,9 @@ $clientFilter = request()->getGet('client_id');
                     <option value="">All Statuses</option>
                     <?php 
                     $statuses = ['Open', 'In Progress', 'Closed'];
+                    $currentStatus = request()->getGet('status') ?? 'Open';
                     foreach($statuses as $s): ?>
-                        <option value="<?= $s ?>" <?= request()->getGet('status') == $s ? 'selected' : '' ?>><?= $s ?></option>
+                        <option value="<?= $s ?>" <?= $currentStatus === $s ? 'selected' : '' ?>><?= $s ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -105,14 +106,23 @@ $clientFilter = request()->getGet('client_id');
                         <th class="w-40">DUE DATE</th>
                         <th class="w-48">STATUS</th>
                         <th class="w-40">ATTENDED BY</th>
-                        <th class="w-72">REMARKS</th>
                         <th class="sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.05)] w-24 text-center">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody id="ticket-queue-body">
                     <?php if (!empty($tickets)): ?>
-                        <?php foreach ($tickets as $ticket): ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
+                        <?php foreach ($tickets as $ticket): 
+                            $s = $ticket['status'];
+                            $rowColor = '';
+                            if ($s === 'Open') $rowColor = 'bg-blue-100 hover:bg-blue-200';
+                            elseif ($s === 'In Progress') $rowColor = 'bg-emerald-100 hover:bg-emerald-200';
+                            elseif ($s === 'Closed') $rowColor = 'bg-slate-100 hover:bg-slate-200 opacity-90';
+
+                            if (!empty($ticket['close_requested']) && $s !== 'Closed') {
+                                $rowColor = 'bg-yellow-200 hover:bg-yellow-300 animate-pulse';
+                            }
+                        ?>
+                        <tr class="<?= $rowColor ?> transition-colors cursor-pointer" onclick="window.location='<?= base_url('superadmin/tickets/view/' . $ticket['id']) ?>'">
                             <td class="font-mono text-xs text-slate-500">#<?= (int)$ticket['id'] ?></td>
                             <td class="text-xs">
                                 <div class="font-medium"><?= date('M d, Y', strtotime($ticket['created_at'])) ?></div>
@@ -192,31 +202,14 @@ $clientFilter = request()->getGet('client_id');
                                     </span>
                                 </div>
                             </td>
-                            <!-- Remarks Collapsible -->
-                            <td class="align-top">
-                                <details class="group bg-slate-50 border border-slate-200 rounded-lg p-1 w-72">
-                                    <summary class="text-[10px] font-bold text-slate-500 uppercase cursor-pointer list-none flex justify-between items-center px-2 py-1 hover:text-blue-600 transition-colors">
-                                        View Remarks
-                                        <span class="material-symbols-outlined text-[14px] group-open:rotate-180 transition-transform">expand_more</span>
-                                    </summary>
-                                    <div class="mt-2 text-xs text-slate-600 px-2 pb-2 space-y-2 border-t border-slate-200 pt-2">
-                                        <?php if($ticket['dev_remarks_1']): ?><div><strong class="block text-[9px] text-slate-400">DEV 1:</strong> <?= esc($ticket['dev_remarks_1']) ?></div><?php endif; ?>
-                                        <?php if($ticket['support_remarks']): ?><div><strong class="block text-[9px] text-slate-400">SUPPORT:</strong> <?= esc($ticket['support_remarks']) ?></div><?php endif; ?>
-                                        <?php if($ticket['dev_remarks_2']): ?><div><strong class="block text-[9px] text-slate-400">DEV 2:</strong> <?= esc($ticket['dev_remarks_2']) ?></div><?php endif; ?>
-                                        <?php if($ticket['reoccurrence_remarks']): ?><div><strong class="block text-[9px] text-slate-400">RE-OCCURRENCE:</strong> <?= esc($ticket['reoccurrence_remarks']) ?></div><?php endif; ?>
-                                        <?php if(!$ticket['dev_remarks_1'] && !$ticket['support_remarks'] && !$ticket['dev_remarks_2'] && !$ticket['reoccurrence_remarks']): ?>
-                                            <span class="italic text-slate-400 text-[10px]">No remarks added.</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </details>
-                            </td>
+
                             
-                            <td class="sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.05)] text-center">
-                                <div class="flex justify-center gap-1 px-2">
-                                    <a href="<?= base_url('superadmin/tickets/view/'.$ticket['id']) ?>" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors" title="View Thread">
+                            <td class="sticky right-0 shadow-[-4px_0_8px_rgba(0,0,0,0.05)] text-center" style="background-color: inherit;">
+                                <div class="flex justify-center gap-1 px-2" onclick="event.stopPropagation()">
+                                    <a href="<?= base_url('superadmin/tickets/view/'.$ticket['id']) ?>" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 hover:bg-white/50 transition-colors" title="View Thread">
                                         <span class="material-symbols-outlined text-[18px]">forum</span>
                                     </a>
-                                    <button onclick="openEditTicketModal(<?= htmlspecialchars(json_encode($ticket)) ?>)" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Quick Edit Remarks/Due Date">
+                                    <button onclick="openEditTicketModal(<?= htmlspecialchars(json_encode($ticket)) ?>)" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-700 hover:bg-white/50 transition-colors" title="Quick Edit Remarks/Due Date">
                                         <span class="material-symbols-outlined text-[18px]">edit_note</span>
                                     </button>
                                 </div>
@@ -317,20 +310,20 @@ $clientFilter = request()->getGet('client_id');
 
 <!-- Floating Closing Requests Overlay -->
 <?php if (!empty($pending_closures)): ?>
-<div id="closing-requests-overlay" class="fixed bottom-6 right-6 z-[2000] w-80 bg-white rounded-xl shadow-2xl border border-slate-200 transition-all duration-300 flex flex-col max-h-[400px]">
-    <div class="flex items-center justify-between p-3 border-b border-slate-100 bg-amber-50 rounded-t-xl cursor-pointer" onclick="toggleOverlay()">
+<div id="closing-requests-overlay" class="fixed bottom-6 right-6 z-[2000] w-80 bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col max-h-[400px]">
+    <div id="overlay-header" class="flex items-center justify-between p-3 border-b border-slate-100 bg-amber-50 rounded-t-xl cursor-move select-none">
         <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-amber-600 animate-pulse text-[18px]">rule</span>
             <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Review Requests (<?= count($pending_closures) ?>)</span>
         </div>
         <div class="flex items-center gap-1">
-            <button id="overlay-toggle-btn" class="w-6 h-6 rounded hover:bg-amber-100 flex items-center justify-center text-amber-600 transition-colors">
+            <button id="overlay-toggle-btn" onclick="toggleOverlay()" class="w-6 h-6 rounded hover:bg-amber-100 flex items-center justify-center text-amber-600 transition-colors cursor-pointer">
                 <span class="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
             </button>
         </div>
     </div>
     
-    <div id="overlay-content" class="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin">
+    <div id="overlay-content" class="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin transition-all duration-300">
         <?php foreach ($pending_closures as $req): ?>
         <a href="<?= base_url('superadmin/tickets/view/' . $req['id']) ?>" class="block p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group">
             <div class="flex items-center justify-between mb-1">
@@ -379,6 +372,94 @@ $clientFilter = request()->getGet('client_id');
             }
         }
     });
+
+    // Draggable logic
+    const overlayElement = document.getElementById('closing-requests-overlay');
+    const headerElement = document.getElementById('overlay-header');
+    
+    if (overlayElement && headerElement) {
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+        let animationFrameId = null;
+
+        const savedPos = sessionStorage.getItem('overlayPosition');
+        if (savedPos) {
+            try {
+                const pos = JSON.parse(savedPos);
+                overlayElement.style.margin = '0'; // Remove any conflicting margins
+                overlayElement.style.bottom = 'auto';
+                overlayElement.style.right = 'auto';
+                overlayElement.style.left = pos.left;
+                overlayElement.style.top = pos.top;
+            } catch (e) {}
+        }
+
+        headerElement.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#overlay-toggle-btn')) return;
+            
+            isDragging = true;
+            
+            const rect = overlayElement.getBoundingClientRect();
+            
+            // Calculate the exact offset of the mouse relative to the top-left of the overlay
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            
+            // Clear right/bottom positioning and switch strictly to left/top
+            overlayElement.style.margin = '0';
+            overlayElement.style.transform = 'none'; // Clear any transform affecting offset calculations
+            overlayElement.style.bottom = 'auto';
+            overlayElement.style.right = 'auto';
+            overlayElement.style.left = rect.left + 'px';
+            overlayElement.style.top = rect.top + 'px';
+
+            overlayElement.style.opacity = '0.9';
+            overlayElement.style.willChange = 'left, top';
+            headerElement.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            animationFrameId = requestAnimationFrame(() => {
+                // Determine new positions by subtracting the internal offset from current cursor
+                let newLeft = e.clientX - startX;
+                let newTop = e.clientY - startY;
+
+                // Keep it within the viewport bounds
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - overlayElement.offsetWidth));
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - overlayElement.offsetHeight));
+
+                overlayElement.style.left = newLeft + 'px';
+                overlayElement.style.top = newTop + 'px';
+            });
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                overlayElement.style.opacity = '1';
+                overlayElement.style.willChange = 'auto';
+                headerElement.style.cursor = 'move';
+                document.body.style.userSelect = '';
+                
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                
+                sessionStorage.setItem('overlayPosition', JSON.stringify({
+                    left: overlayElement.style.left,
+                    top: overlayElement.style.top
+                }));
+            }
+        });
+    }
 </script>
 <?php endif; ?>
 
@@ -500,24 +581,6 @@ $clientFilter = request()->getGet('client_id');
                         <input type="date" name="due_date" id="edit-ticket-due" class="fiori-input">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Dev Remarks 1</label>
-                            <textarea name="dev_remarks_1" id="edit-ticket-dev1" class="fiori-input h-24 text-xs" placeholder="Primary developer notes..."></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Support Remarks</label>
-                            <textarea name="support_remarks" id="edit-ticket-support" class="fiori-input h-24 text-xs" placeholder="TSR/Support notes..."></textarea>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Dev Remarks 2</label>
-                            <textarea name="dev_remarks_2" id="edit-ticket-dev2" class="fiori-input h-24 text-xs" placeholder="Secondary developer notes..."></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Re-occurrence Remarks</label>
-                            <textarea name="reoccurrence_remarks" id="edit-ticket-reoccurrence" class="fiori-input h-24 text-xs" placeholder="Notes on issue persistence..."></textarea>
-                        </div>
                     </div>
                 </div>
 
@@ -601,6 +664,14 @@ $clientFilter = request()->getGet('client_id');
 <script>
     const socket = io('http://localhost:3001');
     socket.on('global_ticket_change', () => {
+        refreshAdminTicketsUI();
+    });
+
+    socket.on('new_ticket_message', () => {
+        refreshAdminTicketsUI();
+    });
+
+    function refreshAdminTicketsUI() {
         // Always refresh the overlay if we receive a change
         fetch(window.location.href).then(r => r.text()).then(html => {
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -630,11 +701,11 @@ $clientFilter = request()->getGet('client_id');
                 const nc = doc.querySelector('#directory');
                 if (nc) {
                     document.querySelector('#directory').innerHTML = nc.innerHTML;
-                    initAutoApply();
+                    if(typeof initAutoApply === 'function') initAutoApply();
                 }
             }
         });
-    });
+    }
 
     // --- TAB SWITCHING ---
     function switchTab(evt, tabName) {
@@ -817,25 +888,13 @@ $clientFilter = request()->getGet('client_id');
         const modal = document.getElementById('edit-ticket-modal');
         const idInput = document.getElementById('edit-ticket-id');
         const dueInput = document.getElementById('edit-ticket-due');
-        const dev1Input = document.getElementById('edit-ticket-dev1');
-        const supportInput = document.getElementById('edit-ticket-support');
-        const dev2Input = document.getElementById('edit-ticket-dev2');
-        const reoccurrenceInput = document.getElementById('edit-ticket-reoccurrence');
 
         if (typeof ticketData === 'number') {
             idInput.value = ticketData;
             dueInput.value = '';
-            dev1Input.value = '';
-            supportInput.value = '';
-            dev2Input.value = '';
-            reoccurrenceInput.value = '';
         } else {
             idInput.value = ticketData.id;
             dueInput.value = ticketData.due_date ? ticketData.due_date.split(' ')[0] : '';
-            dev1Input.value = ticketData.dev_remarks_1 || '';
-            supportInput.value = ticketData.support_remarks || '';
-            dev2Input.value = ticketData.dev_remarks_2 || '';
-            reoccurrenceInput.value = ticketData.reoccurrence_remarks || '';
         }
 
         modal.classList.remove('hidden');

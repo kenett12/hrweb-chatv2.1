@@ -11,6 +11,7 @@ class GroupChatController extends BaseController
     protected $memberModel;
     protected $messageModel;
     protected $userModel;
+    protected $ticketModel;
 
     public function __construct()
     {
@@ -18,6 +19,7 @@ class GroupChatController extends BaseController
         $this->memberModel  = new \App\Models\ChatRoomMemberModel();
         $this->messageModel = new \App\Models\ChatRoomMessageModel();
         $this->userModel    = new \App\Models\UserModel();
+        $this->ticketModel  = new \App\Models\TicketModel();
     }
 
     /**
@@ -41,14 +43,23 @@ class GroupChatController extends BaseController
         $myMemberships = $this->memberModel->where('user_id', $userId)->findAll();
         $roomIds = array_column($myMemberships, 'room_id');
 
-        $activeRooms = [];
+        $directRooms = [];
+        $groupRooms = [];
         $pendingRooms = []; // Groups awaiting admin approval
         
         if (!empty($roomIds)) {
-            $activeRooms = $this->roomModel->whereIn('id', $roomIds)
+            $allMyRooms = $this->roomModel->whereIn('id', $roomIds)
                                            ->where('status', 'active')
                                            ->where('approval_status', 'approved')
                                            ->findAll();
+            
+            foreach ($allMyRooms as $room) {
+                if ($room['category'] === 'direct') {
+                    $directRooms[] = $room;
+                } else {
+                    $groupRooms[] = $room;
+                }
+            }
 
             // Fetch pending rooms to notify the TSR that their group is awaiting approval
             $pendingRooms = $this->roomModel->whereIn('id', $roomIds)
@@ -100,13 +111,70 @@ class GroupChatController extends BaseController
 
         $allUsers = array_merge($allStaff, $allClients);
 
-        $this->viewData['activeRooms'] = $activeRooms;
+        // --- UNIFIED TABS LOGIC ---
+        $activeTab = $this->request->getGet('tab') ?? 'direct';
+        $tickets = [];
+
+    if ($activeTab === 'tickets') {
+        $role = session()->get('role');
+        
+        $statusParam = $this->request->getGet('status');
+        $filters = [
+            'search'    => $this->request->getGet('search'),
+            'status'    => ($statusParam === null) ? 'Open' : $statusParam,
+            'date_from' => $this->request->getGet('date_from'),
+            'date_to'   => $this->request->getGet('date_to'),
+            'category'  => $this->request->getGet('category')
+        ];
+
+        if ($role === 'client') {
+            $user = $this->userModel->find($userId);
+            $companyId = $user['client_id'];
+            $companyUsers = $companyId ? $this->userModel->where('client_id', $companyId)->findColumn('id') : [$userId];
+            
+            $builder = $this->ticketModel
+                ->select('tickets.*, COALESCE(t.full_name, s.email) as staff_name')
+                ->join('users s', 's.id = tickets.assigned_to', 'left')
+                ->join('tsrs t', 't.user_id = s.id', 'left')
+                ->whereIn('tickets.client_id', $companyUsers);
+
+            if (!empty($filters['search'])) {
+                $s = $filters['search'];
+                $builder->groupStart()
+                        ->like('tickets.ticket_number', $s)
+                        ->orLike('tickets.subject', $s)
+                        ->orLike('tickets.category', $s)
+                        ->groupEnd();
+            }
+            if (!empty($filters['status'])) {
+                $builder->where('tickets.status', $filters['status']);
+            }
+            if (!empty($filters['date_from'])) {
+                $builder->where('tickets.created_at >=', $filters['date_from'] . ' 00:00:00');
+            }
+            if (!empty($filters['date_to'])) {
+                $builder->where('tickets.created_at <=', $filters['date_to'] . ' 23:59:59');
+            }
+
+            $tickets = $builder->orderBy('tickets.updated_at', 'DESC')->findAll();
+        } else if (in_array($role, ['admin', 'superadmin'])) {
+            $tickets = $this->ticketModel->getFilteredTickets($filters);
+        } else {
+            // TSR/Staff - Now respects filters using the same model method
+            $tickets = $this->ticketModel->getFilteredTickets($filters);
+        }
+    }
+
+        $this->viewData['directRooms'] = $directRooms;
+        $this->viewData['groupRooms'] = $groupRooms;
         $this->viewData['pendingRooms'] = $pendingRooms;
         $this->viewData['allRoomsForManager'] = $allRoomsForManager;
         $this->viewData['isAdmin'] = $isAdmin;
         $this->viewData['allUsers'] = $allUsers;
         $this->viewData['currentUserId'] = $userId;
-        $this->viewData['title'] = 'Group Chats';
+        $this->viewData['activeTab'] = $activeTab;
+        $this->viewData['tickets'] = $tickets;
+        $this->viewData['title'] = 'Chat Center';
 
         return view('shared/group_chat/index', $this->viewData);
     }
@@ -172,8 +240,8 @@ class GroupChatController extends BaseController
 
         $approvalStatus = in_array($creatorRole, ['admin', 'superadmin']) ? 'approved' : 'pending';
 
-        // Set category to general safely if invalid
-        if (!in_array($category, ['general', 'confidential'])) {
+        // Set category safely
+        if (!in_array($category, ['general', 'confidential', 'direct'])) {
             $category = 'general';
         }
 

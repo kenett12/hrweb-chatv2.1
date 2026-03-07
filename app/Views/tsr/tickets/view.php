@@ -238,9 +238,17 @@
                                 </div>
                                 
                                 <div class="msg-text text-sm" <?= $isBot ? 'onclick="handleImageClick(event)"' : '' ?> style="color:var(--fiori-text-base);">
-                                    <?php if($isBot): ?>
-                                        <?= nl2br(html_entity_decode($reply['message'])) ?>
-                                    <?php else: ?>
+                                    <?php if($isBot): 
+                                        $parsedMsg = html_entity_decode($reply['message']);
+                                        $parsedMsg = preg_replace_callback('/\[(.*?)\]\((.*?)\)/', function($m) {
+                                            $url = trim($m[2]);
+                                            if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
+                                                $url = "https://" . ltrim($url, '/');
+                                            }
+                                            return '<a href="' . $url . '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700">' . $m[1] . '</a>';
+                                        }, $parsedMsg);
+                                        echo nl2br($parsedMsg);
+                                    else: ?>
                                         <?= nl2br(esc($reply['message'])) ?>
                                     <?php endif; ?>
                                 </div>
@@ -280,6 +288,7 @@
                     <?php endforeach; ?>
                 </div>
 
+                <?php if ($ticket['status'] !== 'Closed'): ?>
                 <div id="reply-extras" class="hidden px-5 py-3 border-t border-gray-50 bg-gray-50/50">
                     <div class="flex flex-col gap-3">
                         <div id="reply-attachments-preview" class="flex flex-wrap gap-2"></div>
@@ -317,6 +326,12 @@
                         </form>
                     </div>
                 </div>
+                <?php else: ?>
+                <div class="p-6 border-t bg-slate-50 text-center" style="border-color:var(--fiori-border);">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Session Closed</p>
+                    <p class="text-xs text-slate-500 font-medium italic">This ticket is resolved and the chat is now read-only.</p>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -358,25 +373,7 @@
                         </div>
                     </div>
 
-                    <!-- TSR Remarks Section -->
-                    <form action="<?= base_url('tsr/tickets/update-remarks/' . $ticket['id']) ?>" method="POST" class="space-y-4 pt-2">
-                        <?= csrf_field() ?>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1.5 flex justify-between">
-                                Support Remarks
-                                <span class="material-symbols-outlined text-[14px] text-slate-300">chat_bubble</span>
-                            </label>
-                            <textarea name="support_remarks" class="fiori-input text-xs h-20" placeholder="Add TSR notes..."><?= esc($ticket['support_remarks']) ?></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1.5 flex justify-between">
-                                Re-occurrence Remarks
-                                <span class="material-symbols-outlined text-[14px] text-slate-300">history</span>
-                            </label>
-                            <textarea name="reoccurrence_remarks" class="fiori-input text-xs h-20" placeholder="Does this happen often?"><?= esc($ticket['reoccurrence_remarks']) ?></textarea>
-                        </div>
-                        <button type="submit" class="w-full fiori-button !bg-slate-100 !text-slate-600 hover:!bg-slate-200 !text-[10px] h-8">Update Remarks</button>
-                    </form>
+
                 </div>
                 
                 <?php if (empty($ticket['assigned_to'])): ?>
@@ -384,24 +381,36 @@
                         <a href="<?= base_url('tsr/tickets/claim/' . $ticket['id']) ?>" class="btn btn-accent w-full text-center items-center justify-center flex">Assign to Me</a>
                     </div>
                 <?php else: ?>
-                    <div class="border-t p-4 flex flex-col gap-2" style="border-color:var(--fiori-border); background:#fafafa;">
+                    <div class="pt-6 mt-6 border-t space-y-3" style="border-color:var(--fiori-border);">
+                        <?php if ($ticket['status'] !== 'Closed'): ?>
                         <?php if ($ticket['close_requested']): ?>
-                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
-                                <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest block mb-1">Waiting for Review</span>
-                                <p class="text-[9px] text-amber-700">Closure requested. A Superadmin will review and finalize this ticket.</p>
+                            <div class="p-4 bg-amber-50 rounded border border-amber-200 mb-4 animate-pulse">
+                                <div class="flex items-center gap-2 text-amber-800 font-bold text-[10px] uppercase tracking-widest">
+                                    <span class="material-symbols-outlined text-[18px]">verified</span>
+                                    Close Request Pending
+                                </div>
+                                <p class="text-[11px] text-amber-700 mt-1 font-medium italic">You already requested to mark this as closed.</p>
                             </div>
                         <?php else: ?>
-                            <form action="<?= base_url('tsr/tickets/request-closure/' . $ticket['id']) ?>" method="POST">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-accent w-full flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px]">done_all</span> Requst Mark as Closed
-                                </button>
-                            </form>
+                            <button onclick="confirmAction(event, '<?= base_url('tsr/tickets/requestClose/'.$ticket['id']) ?>', 'Request Mark as Closed?', 'This will notify the Admin that you have finished the task.', 'Request Close', 'var(--fiori-positive)')"
+                                class="btn btn-outline w-full flex items-center justify-center gap-2 py-2.5 transition-all text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+                                <span class="material-symbols-outlined text-[18px]">done_all</span> Requst Mark as Closed
+                            </button>
                         <?php endif; ?>
 
-                        <button onclick="toggleModal('forwardTicketModal')" class="btn btn-outline w-full text-center items-center justify-center flex">
+                        <button onclick="toggleModal('esc-modal')"
+                            class="btn btn-outline w-full flex items-center justify-center gap-2 py-2.5 transition-all text-blue-600 border-blue-200 hover:bg-blue-50">
                             <span class="material-symbols-outlined text-[16px] mr-1">forward_to_inbox</span> Forward / Escalate
                         </button>
+                        <?php else: ?>
+                            <div class="p-4 bg-slate-50 rounded border border-slate-200 text-center">
+                                <div class="flex items-center justify-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
+                                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                                    Status Locked
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1 font-medium italic">Ticket is resolved.</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -604,6 +613,9 @@
                 window.showToast("New Chat Activity", title + " sent a message via Ticket #" + ticketId, null);
             }
 
+            // Optional: If you want to also force-refresh the metadata sidebar on every single message (to update "Last Updated"), you can call this:
+            // fetchSidebarUpdate();
+
 
                 let msgClass = 'msg-client';
                 let avatarIcon = 'person';
@@ -643,7 +655,20 @@
                                 <span class="text-[9px]" style="color:var(--fiori-text-muted);">${data.time || 'Just now'}</span>
                             </div>
                             <div class="msg-text text-sm" style="color:var(--fiori-text-base);">
-                                ${data.message.replace(/\n/g, '<br>')}
+                                ${(() => {
+                                    let parsedMsg = data.message;
+                                    if (data.is_bot) {
+                                        parsedMsg = parsedMsg.replace(/\[(.*?)\]\((.*?)\)/g, (match, p1, p2) => {
+                                            let url = p2.trim();
+                                            if (!/^https?:\/\//i.test(url)) {
+                                                url = 'https://' + url.replace(/^\/+/, '');
+                                            }
+                                            return '<a href="' + url + '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700 w-full truncate inline-block">' + p1 + '</a>';
+                                        });
+                                        return parsedMsg.replace(/\n/g, '<br>');
+                                    }
+                                    return parsedMsg.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+                                })()}
                             </div>
                             ${data.attachments && data.attachments.length > 0 ? `
                                 <div class="mt-3 pt-3 border-t border-gray-100/50">
@@ -675,6 +700,30 @@
                     container.scrollTop = container.scrollHeight;
                 }
         });
+
+        socket.on('global_ticket_change', function(data) {
+            fetchSidebarUpdate();
+        });
+
+        function fetchSidebarUpdate() {
+            fetch(window.location.href).then(r => r.text()).then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                
+                // Refresh Sidebar Metadata
+                const newSidebar = doc.querySelector('.fiori-card.p-6.sticky.top-8');
+                const currentSidebar = document.querySelector('.fiori-card.p-6.sticky.top-8');
+                if (newSidebar && currentSidebar) {
+                    currentSidebar.innerHTML = newSidebar.innerHTML;
+                }
+
+                // Refresh Header Badges (Closure status, tags)
+                const newHeaderActions = doc.querySelector('.flex.items-center.gap-3');
+                const currentHeaderActions = document.querySelector('.flex.items-center.gap-3');
+                if (newHeaderActions && currentHeaderActions) {
+                    currentHeaderActions.innerHTML = newHeaderActions.innerHTML;
+                }
+            });
+        }
         
         // --- NEW: TSR REPLY HELPERS ---
         window.toggleReplyExtras = () => {
@@ -702,20 +751,42 @@
             container.appendChild(div);
         };
 
+        let replyFilesDT = new DataTransfer();
+
         window.previewReplyAttachments = (input) => {
+            if (input.files && input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    replyFilesDT.items.add(file);
+                });
+                input.files = replyFilesDT.files;
+            }
+            renderReplyAttachments();
+        };
+
+        window.removeReplyAttachment = (indexToDel) => {
+            const newDT = new DataTransfer();
+            Array.from(replyFilesDT.files).forEach((file, index) => {
+                if (index !== indexToDel) newDT.items.add(file);
+            });
+            replyFilesDT = newDT;
+            document.getElementById('reply-attachments').files = replyFilesDT.files;
+            renderReplyAttachments();
+        };
+
+        window.renderReplyAttachments = () => {
             const preview = document.getElementById('reply-attachments-preview');
             preview.innerHTML = '';
-            if (input.files) {
-                Array.from(input.files).forEach(file => {
+            if (replyFilesDT.files.length > 0) {
+                Array.from(replyFilesDT.files).forEach((file, index) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const div = document.createElement('div');
                         div.className = 'relative group w-12 h-12';
                         div.innerHTML = `
                             <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-blue-100 shadow-sm">
-                            <span class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center">
-                                <span class="material-symbols-outlined text-[10px]">check</span>
-                            </span>
+                            <button type="button" onclick="removeReplyAttachment(${index})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-md flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer z-10">
+                                <span class="material-symbols-outlined text-[10px]">close</span>
+                            </button>
                         `;
                         preview.appendChild(div);
                     };

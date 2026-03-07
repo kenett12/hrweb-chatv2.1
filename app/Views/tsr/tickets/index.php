@@ -31,8 +31,9 @@
                 <option value="">All Statuses</option>
                 <?php 
                 $statuses = ['Open', 'In Progress', 'Closed'];
+                $currentStatus = request()->getGet('status') ?? 'Open';
                 foreach($statuses as $s): ?>
-                    <option value="<?= $s ?>" <?= request()->getGet('status') == $s ? 'selected' : '' ?>><?= $s ?></option>
+                    <option value="<?= $s ?>" <?= $currentStatus === $s ? 'selected' : '' ?>><?= $s ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -73,14 +74,23 @@
                     <th class="w-32 text-left">DUE DATE</th>
                     <th class="w-48 text-left">STATUS</th>
                     <th class="w-40 text-left">ATTENDED BY</th>
-                    <th class="w-48 text-left">REMARKS</th>
                     <th class="sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.05)] w-24 text-center">ACTIONS</th>
                 </tr>
             </thead>
             <tbody id="ticket-queue-body">
                 <?php if (!empty($tickets)): ?>
-                    <?php foreach ($tickets as $ticket): ?>
-                    <tr class="hover:bg-slate-50/50 transition-colors" onclick="window.location='<?= base_url('tsr/tickets/view/' . $ticket['id']) ?>'" style="cursor:pointer;">
+                    <?php foreach ($tickets as $ticket): 
+                    $s = $ticket['status'];
+                    $rowColor = '';
+                    if ($s === 'Open') $rowColor = 'bg-blue-100 hover:bg-blue-200';
+                    elseif ($s === 'In Progress') $rowColor = 'bg-emerald-100 hover:bg-emerald-200';
+                    elseif ($s === 'Closed') $rowColor = 'bg-slate-100 hover:bg-slate-200 opacity-90';
+
+                    if (!empty($ticket['close_requested']) && $s !== 'Closed') {
+                        $rowColor = 'bg-yellow-200 hover:bg-yellow-300 animate-pulse';
+                    }
+                ?>
+                    <tr class="<?= $rowColor ?> transition-colors cursor-pointer" onclick="window.location='<?= base_url('tsr/tickets/view/' . $ticket['id']) ?>'">
                         <td class="font-mono text-xs text-slate-500">#<?= (int)$ticket['id'] ?></td>
                         <td class="text-xs">
                             <div class="font-bold text-slate-700"><?= date('M d, Y', strtotime($ticket['created_at'])) ?></div>
@@ -138,12 +148,9 @@
                                 </span>
                             </div>
                         </td>
-                        <td>
-                            <div class="text-[10px] text-slate-500 line-clamp-2 italic"><?= esc($ticket['support_remarks'] ?: '---') ?></div>
-                        </td>
-                        <td class="sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.05)] text-center">
+                        <td class="sticky right-0 shadow-[-4px_0_8px_rgba(0,0,0,0.05)] text-center" style="background-color: inherit;">
                             <div class="flex justify-center gap-1" onclick="event.stopPropagation()">
-                                <a href="<?= base_url('tsr/tickets/view/' . $ticket['id']) ?>" class="p-1.5 hover:bg-blue-50 rounded text-blue-600 transition-colors" title="View Details">
+                                <a href="<?= base_url('tsr/tickets/view/' . $ticket['id']) ?>" class="p-1.5 hover:bg-white/50 rounded text-blue-600 transition-colors" title="View Details">
                                     <span class="material-symbols-outlined text-[18px]">visibility</span>
                                 </a>
                             </div>
@@ -232,7 +239,7 @@
                                     <span class="text-[10px] text-slate-600 font-medium whitespace-nowrap">${ticket.staff_name || 'Pending'}</span>
                                 </div>
                             </td>`;
-                            const remarksTd = `<td><div class="text-[10px] text-slate-500 line-clamp-2 italic">${ticket.support_remarks || '---'}</div></td>`;
+
                             const actionTd = `<td class="sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.05)] text-center">
                                 <div class="flex justify-center gap-1" onclick="event.stopPropagation()">
                                     <a href="${viewBaseUrl}${ticket.id}" class="p-1.5 hover:bg-blue-50 rounded text-blue-600 transition-colors">
@@ -241,7 +248,7 @@
                                 </div>
                             </td>`;
                             
-                            tr.innerHTML = idTd + dateTd + clientTd + typeTd + subjectTd + fixedTd + dueTd + statusTd + staffTd + remarksTd + actionTd;
+                            tr.innerHTML = idTd + dateTd + clientTd + typeTd + subjectTd + fixedTd + dueTd + statusTd + staffTd + actionTd;
                             queueBody.appendChild(tr);
                         });
                     } else {
@@ -259,6 +266,9 @@
             const socket = io('http://localhost:3001');
             socket.on('global_ticket_change', (data) => {
                 // Instantly fetch the fresh queue from the database when a ticket event fires anywhere
+                fetchLiveQueue();
+            });
+            socket.on('new_ticket_message', (data) => {
                 fetchLiveQueue();
             });
             console.log("TSR Ticket Queue Real-Time Sync Active.");

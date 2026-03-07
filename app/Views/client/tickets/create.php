@@ -133,15 +133,36 @@
     const previewList = document.getElementById('preview-list');
     const prompt = document.getElementById('dropzone-prompt');
 
+    let ticketFilesDT = new DataTransfer();
+
     attachmentsInput.addEventListener('change', function (e) {
-        const files = e.target.files;
-        previewList.innerHTML = ''; // Clear existing previews
+        if (e.target.files && e.target.files.length > 0) {
+            Array.from(e.target.files).forEach(file => {
+                ticketFilesDT.items.add(file);
+            });
+            attachmentsInput.files = ticketFilesDT.files;
+        }
+        renderTicketPreviews();
+    });
+
+    window.removeTicketFile = (indexToDel) => {
+        const newDT = new DataTransfer();
+        Array.from(ticketFilesDT.files).forEach((file, index) => {
+            if (index !== indexToDel) newDT.items.add(file);
+        });
+        ticketFilesDT = newDT;
+        attachmentsInput.files = ticketFilesDT.files;
+        renderTicketPreviews();
+    };
+
+    window.renderTicketPreviews = () => {
+        previewList.innerHTML = '';
         
-        if (files.length > 0) {
+        if (ticketFilesDT.files.length > 0) {
             previewList.classList.replace('hidden', 'grid');
             prompt.classList.add('opacity-30');
 
-            Array.from(files).forEach((file, index) => {
+            Array.from(ticketFilesDT.files).forEach((file, index) => {
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     reader.onload = function (event) {
@@ -151,9 +172,12 @@
                             <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white">
                                 <img src="${event.target.result}" class="w-full h-full object-cover">
                             </div>
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                                <p class="text-[9px] text-white font-bold truncate px-2">${file.name}</p>
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-lg p-2">
+                                <p class="text-[9px] text-white font-bold truncate w-full text-center">${file.name}</p>
                             </div>
+                            <button type="button" onclick="removeTicketFile(${index})" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors opacity-0 group-hover/item:opacity-100 cursor-pointer z-10" title="Remove image">
+                                <span class="material-symbols-outlined text-[12px]">close</span>
+                            </button>
                         `;
                         previewList.appendChild(div);
                     }
@@ -164,7 +188,7 @@
             previewList.classList.replace('grid', 'hidden');
             prompt.classList.remove('opacity-30');
         }
-    });
+    };
 
     // Dynamic Link Addition
     document.getElementById('add-link').addEventListener('click', function() {

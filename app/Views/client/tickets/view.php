@@ -168,8 +168,17 @@
                                             <?= date('H:i', strtotime($reply['created_at'])) ?>
                                         </span>
                                     </div>
-                                    <?php if ($isBot): ?>
-                                        <div class="text-sm leading-relaxed msg-text pb-2"><?= $reply['message'] ?></div>
+                                    <?php if ($isBot): 
+                                        $parsedMsg = html_entity_decode($reply['message']);
+                                        $parsedMsg = preg_replace_callback('/\[(.*?)\]\((.*?)\)/', function($m) {
+                                            $url = trim($m[2]);
+                                            if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
+                                                $url = "https://" . ltrim($url, '/');
+                                            }
+                                            return '<a href="' . $url . '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700">' . $m[1] . '</a>';
+                                        }, $parsedMsg);
+                                    ?>
+                                        <div class="text-sm leading-relaxed msg-text pb-2"><?= nl2br($parsedMsg) ?></div>
                                     <?php else: ?>
                                         <p class="text-sm leading-relaxed"><?= nl2br(esc($reply['message'])) ?></p>
                                     <?php endif; ?>
@@ -237,6 +246,9 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
 <!-- Feedback Modal -->
 <div id="feedback-modal" class="fiori-overlay hidden">
     <div class="fiori-dialog">
@@ -274,10 +286,10 @@
                 </div>
 
                 <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="closeFeedbackModal()" class="flex-1 fiori-button !bg-slate-100 !text-slate-600 hover:!bg-slate-200">
+                    <button type="button" onclick="closeFeedbackModal()" class="flex-1 btn btn-outline border-slate-200 text-slate-600 hover:bg-slate-50">
                         Maybe Later
                     </button>
-                    <button type="submit" class="flex-1 fiori-button fiori-button--primary">
+                    <button type="submit" class="flex-1 btn btn-accent">
                         Submit Feedback
                     </button>
                 </div>
@@ -296,6 +308,9 @@
         class="max-w-full max-h-full rounded-lg shadow-2xl object-contain transform scale-95 transition-transform duration-300">
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
     // 1. Auto-scroll to latest message
@@ -317,6 +332,27 @@
         }
     });
 
+    socket.on('global_ticket_change', function(data) {
+        // If ticket is updated by TSR/Admin, refresh the sidebar and header dynamically
+        fetch(window.location.href).then(r => r.text()).then(html => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            
+            // Refresh Sidebar Metadata
+            const newSidebar = doc.querySelector('.fiori-card.p-6.sticky.top-8');
+            const currentSidebar = document.querySelector('.fiori-card.p-6.sticky.top-8');
+            if (newSidebar && currentSidebar) {
+                currentSidebar.innerHTML = newSidebar.innerHTML;
+            }
+
+            // Refresh Header Actions & Badges
+            const newHeaderActions = doc.querySelector('.flex.items-center.gap-3');
+            const currentHeaderActions = document.querySelector('.flex.items-center.gap-3');
+            if (newHeaderActions && currentHeaderActions) {
+                currentHeaderActions.innerHTML = newHeaderActions.innerHTML;
+            }
+        });
+    });
+
     /**
      * appendMessageToUI
      * Adds a new message bubble to the preview without refreshing the page.
@@ -329,12 +365,23 @@
         // Determine if message is from me or others
         const isMe = (data.sender_id == currentUserId && !data.is_bot);
         
+        let parsedMsg = data.message;
+        if (data.is_bot) {
+            parsedMsg = parsedMsg.replace(/\[(.*?)\]\((.*?)\)/g, (match, p1, p2) => {
+                let url = p2.trim();
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'https://' + url.replace(/^\/+/, '');
+                }
+                return '<a href="' + url + '" target="_blank" class="text-blue-500 underline font-semibold hover:text-blue-700 w-full truncate inline-block">' + p1 + '</a>';
+            });
+        }
+
         const bubbleHtml = `
             <div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-1">
                 <div class="max-w-[80%] ${isMe ? 'bg-[#1e72af] text-white ml-auto rounded-l-xl rounded-tr-xl' : 'bg-gray-100 text-gray-800 mr-auto rounded-r-xl rounded-tl-xl'} p-4 shadow-sm">
                     </div>
                     ${data.is_bot ? 
-                        `<div class="text-sm leading-relaxed msg-text pb-2">${data.message}</div>` : 
+                        `<div class="text-sm leading-relaxed msg-text pb-2">${parsedMsg}</div>` : 
                         `<p class="text-sm leading-relaxed">${data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>`
                     }
                 </div>

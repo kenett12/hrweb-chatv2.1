@@ -34,7 +34,7 @@ class TicketController extends BaseController
         // Filtering parameters
         $filters = [
             'search'          => $this->request->getGet('search'),
-            'status'          => $this->request->getGet('status'),
+            'status'          => $this->request->getGet('tab') === 'closing_requests' ? '' : ($this->request->getGet('status') ?? 'Open'),
             'category'        => $this->request->getGet('category'),
             'date_from'       => $this->request->getGet('date_from'),
             'date_to'         => $this->request->getGet('date_to'),
@@ -57,6 +57,11 @@ class TicketController extends BaseController
 
         if ($this->request->getGet('tab') === 'closing_requests') {
             $this->viewData['title'] = 'Tickets Awaiting Closure';
+            
+            // Exclude already-closed tickets from the Closing Requests table view
+            $tickets = array_filter($tickets, function($t) {
+                return $t['status'] !== 'Closed';
+            });
         }
         
         // Filter by client if client_id is provided in query string (for View Logs feature)
@@ -302,6 +307,33 @@ class TicketController extends BaseController
                 'ticket_id' => $id,
                 'status' => $status
             ]);
+        }
+
+        // Reset TSR availability if closing
+        if ($status === 'Closed') {
+            // Re-fetch ticket info to be absolutely sure we have latest assigned_to
+            $finalTicket = $this->ticketModel->find($id);
+            if (!empty($finalTicket['assigned_to'])) {
+                $staffId = $finalTicket['assigned_to'];
+                $db = \Config\Database::connect();
+                
+                // Count remaining In Progress tickets for this TSR
+                $activeCount = $this->ticketModel->where('assigned_to', $staffId)
+                                               ->where('status', 'In Progress')
+                                               ->countAllResults();
+                
+                if ($activeCount == 0) {
+                    $db->table('users')->where('id', $staffId)->update(['availability_status' => 'active']);
+                    
+                    // Emit separate event for TSR status update to trigger UI refresh if needed
+                    if (function_exists('emit_socket_event')) {
+                        emit_socket_event('staff_status_update', [
+                            'staff_id' => $staffId,
+                            'status'   => 'active'
+                        ]);
+                    }
+                }
+            }
         }
 
         return redirect()->back()->with('success', "Ticket marked as {$status}.");
